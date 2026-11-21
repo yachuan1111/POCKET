@@ -352,6 +352,58 @@ h1.clk{font-size:64px;margin-top:20px}
 .mpa button{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--mut)}.mpa button.on{color:var(--fg)}.mpa svg{width:15px;height:15px}
 .mpl,.mpc{margin-top:6px;font-size:12px;background:var(--soft);padding:6px 10px;border-radius:10px;color:var(--fg)}
 .mpl svg{width:11px;height:11px;margin-right:4px;vertical-align:-1px}
+*{scrollbar-width:none}*::-webkit-scrollbar{display:none}
+.scroll{overscroll-behavior:contain}
+#ph{-webkit-user-select:none;user-select:none}input,textarea,.m,.am,.b,.mpb p,.ne{-webkit-user-select:text;user-select:text}
+.li:active,.dr:active{background:var(--soft)}
+.pager{position:absolute;inset:30px 0 0 0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory}
+.pager>.scroll{flex:0 0 100%;scroll-snap-align:start;padding-bottom:80px}
+.pdots{position:absolute;bottom:18px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:2;pointer-events:none}
+.pdots i{width:5px;height:5px;border-radius:50%;background:var(--mut);opacity:.4;transition:.4s}.pdots i.on{opacity:1;background:var(--fg)}
+.grid{grid-template-columns:repeat(4,1fr);gap:18px 4px}
+.ap b{font-size:9.5px;letter-spacing:.12em;text-indent:.12em}.bd2{left:calc(50% + 10px)}
+#a-home{color:var(--fg)}
+.wp-plain #hbg,.wp-aurora #hbg{display:none}
+.wp-aurora::before{content:"";position:absolute;inset:-20%;background:radial-gradient(circle at 20% 30%,rgba(140,150,255,.35),transparent 40%),radial-gradient(circle at 80% 20%,rgba(255,170,200,.3),transparent 38%),radial-gradient(circle at 60% 85%,rgba(120,220,200,.3),transparent 42%);filter:blur(30px);animation:au 18s ease-in-out infinite alternate;z-index:0}
+@keyframes au{to{transform:translate(4%,3%) rotate(6deg) scale(1.1)}}
+.wp-moon,.wp-photo{--fg:#fff;--bg:#000;--mut:rgba(255,255,255,.6);--ln:rgba(255,255,255,.2);--soft:rgba(255,255,255,.1);background-color:#000}
+.wp-photo{background-size:cover;background-position:center}
+.wp-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.6));pointer-events:none;z-index:0}
+.wp-moon::before{content:"";position:absolute;width:280px;height:280px;border-radius:50%;right:-70px;top:90px;background:radial-gradient(circle,rgba(255,255,255,.2),transparent 65%)}
+#ph:has(#a-home.on.wp-moon) #sb,#ph:has(#a-home.on.wp-photo) #sb{color:#fff}
+.wcard{display:flex;flex-direction:column;gap:4px;text-align:left;border:1px solid var(--ln);border-radius:22px;padding:14px 16px;background:color-mix(in srgb,var(--bg) 70%,transparent);flex:1;margin-top:10px;color:var(--fg)}
+.wcard b{font:300 28px var(--serif)}
+.wcard.dk{flex-direction:row;align-items:center;gap:16px;background:#000;color:#fff;border-color:#000;width:100%}
+.wcard.dk b{font-size:26px;display:block}.wcard.dk .mono{color:rgba(255,255,255,.6);display:block;margin-top:4px}
+.wrow{display:flex;gap:10px}.quote2{margin-top:26px;text-align:center;font:italic 300 20px/1.4 var(--serif)}
+.lkw{width:min(340px,calc(100% - 40px));margin-bottom:14px}
+.lkn{display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.1);border-radius:16px;padding:8px 12px;margin-bottom:6px;color:#fff}
+.lkn div{min-width:0}.lkn b{font-size:12px;display:block}.lkn small{display:block;font-size:11.5px;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cdp{margin:26px 0 18px;text-align:right}.cdp b{display:block;font:300 60px/1.1 var(--serif);letter-spacing:-.02em;word-break:break-all}
+.ckp{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:340px;margin:0 auto;width:100%}
+.ck{aspect-ratio:1;border-radius:50%;border:1px solid var(--ln);font:300 22px var(--serif);transition:.4s var(--ez)}.ck:active{background:var(--soft)}
+.ck.op{background:var(--pill);color:#fff;border-color:var(--pill)}
+.ck.z{grid-column:span 2;aspect-ratio:auto;border-radius:999px;text-align:left;padding-left:8%}
+.hd label.pl{position:absolute;right:0;bottom:6px;width:34px;height:34px;border:1px solid var(--ln);border-radius:50%;display:grid;place-items:center;cursor:pointer}
+.pg3{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-top:12px}
+.pg3 button{aspect-ratio:1;background-size:cover;background-position:center;border-radius:6px}
+.lbx{position:absolute;inset:0;background:#000;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 0 20px;animation:appIn .6s var(--ez)}
+.lbx img{max-width:100%;max-height:80%;object-fit:contain}
+.lbb{display:flex;gap:10px;margin-top:18px}.lbb .bt{color:#fff;border-color:rgba(255,255,255,.4)}
+.plp{display:flex;gap:18px;padding:10px var(--px)}
+.pl2{display:flex;flex-direction:column;align-items:center;gap:6px;font:400 9px var(--mono);letter-spacing:.14em;color:var(--mut);cursor:pointer}
+.pl2 svg{width:44px;height:44px;padding:12px;border:1px solid var(--ln);border-radius:16px;color:var(--fg)}
+.m.rp,.m.u.rp{width:180px;background:#0b0b0c;color:#fff;border-color:#0b0b0c;display:flex;flex-direction:column;gap:2px}
+.m.rp .mono{color:rgba(255,255,255,.55)}.m.rp b{font:300 26px var(--serif)}.m.rp small{font-size:12px;opacity:.7}
+.m.rp em{font:400 9px var(--mono);letter-spacing:.2em;font-style:normal;opacity:.6;margin-top:6px}
+.m.mim,.m.u.mim{padding:3px;background:transparent;border:0}.mim img{max-width:170px;border-radius:14px;display:block}
+.b.me{align-self:flex-end;background:var(--pill);color:#fff}
+.b.me.last::before{left:auto;right:-6px;background:var(--pill);border-radius:0 0 0 14px}
+.b.me.last::after{left:auto;right:-9px;background:var(--bg);border-radius:0 0 0 10px}
+.b.ty{display:flex;gap:4px;padding:12px 14px}.dv{align-self:flex-end;font-size:11px;color:var(--mut);margin:-4px 2px 6px}
+input.pill{flex:1;border:.5px solid var(--mut);border-radius:18px;padding:6px 12px;font-size:16px;outline:0;background:transparent;color:var(--fg)}
+.sf .pc.ok{background:var(--pill);color:#fff}
+.aiin .gh2{background:transparent;color:var(--fg);border:1px solid var(--ln)}
 </style>
 </head>
 <body>
@@ -384,19 +436,20 @@ h1.clk{font-size:64px;margin-top:20px}
 <symbol id="lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
 <symbol id="moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></symbol>
 <symbol id="expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+<symbol id="mic" viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
 <symbol id="uplus" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></symbol>
 </svg>
 
 <div id="ph">
   <div id="sb" data-act="nc"><span id="sbt">9:41</span><span><svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4"/><rect x="5" y="5" width="3" height="7"/><rect x="10" y="2" width="3" height="10"/><rect x="15" y="0" width="3" height="12" opacity=".3"/></svg><svg viewBox="0 0 26 12"><rect x=".7" y=".7" width="21" height="10.6" rx="2.5" fill="none" stroke="currentColor"/><rect x="2.5" y="2.5" width="14" height="7" rx="1"/><rect x="23" y="4" width="2" height="4"/></svg></span></div>
 
-  <section class="app on" id="a-home"><canvas id="hbg"></canvas><div class="scroll hs">
+  <section class="app on" id="a-home"><canvas id="hbg"></canvas><div class="pager" id="pager"><div class="scroll hs" id="pg1">
     <div class="mono">Pocket — Nocturne</div>
     <h1 class="clk" id="clk">00:00</h1>
     <div class="mono" id="dt" style="margin-top:6px"></div>
     <button class="wd" data-act="app:sky"><span id="hmoon"></span><div><b id="hmn"></b><span class="mono" id="hms"></span></div></button>
     <div class="grid" id="hg"></div>
-  </div></section>
+  </div><div class="scroll hs" id="wg"></div></div><div class="pdots" id="pdots"><i class="on"></i><i></i></div></section>
 
   <section class="app" id="a-set"></section>
   <section class="app" id="a-wx"></section>
@@ -407,6 +460,8 @@ h1.clk{font-size:64px;margin-top:20px}
   <section class="app" id="a-clk"></section>
   <section class="app" id="a-nox"></section>
   <section class="app" id="a-tar"></section>
+  <section class="app" id="a-calc"></section>
+  <section class="app" id="a-ph"></section>
 
   <div id="sheet"></div>
   <div id="sp"></div>
@@ -426,7 +481,7 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 const defAPI=()=>({type:'openai',url:'',key:'',model:'',models:[],raw:false,stream:'auto',temp:0.7,effort:'off'});
 let D={presets:[{name:'默认预设',main:defAPI(),sub:defAPI()}],cur:0,main:defAPI(),sub:defAPI(),me:null,friends:[],chats:{},sms:[{from:'中国移动',text:'【中国移动】欢迎使用本机短信服务。验证码将在这里送达。',t:Date.now()-864e5,read:true}],codes:{},bl:[]};
 try{const s=JSON.parse(localStorage.getItem('pocket-mag')||'null');if(s)D=Object.assign(D,s)}catch(e){}
-D.unread=D.unread||{};D.cfg=Object.assign({sys:'',nick:'',about:'',len:'short',lang:'auto',split:1,mem:30,maxTok:1024,topP:1,timeout:60,fallback:1,memOn:1,memories:[],lib:[],showKey:0,calm:0,showTok:0},D.cfg||{});D.stat=Object.assign({calls:0,fails:0,ms:0},D.stat||{});D.set=Object.assign({notif:1,detail:1,dnd:0,font:13,enter:1,theme:'auto',autofill:1,mute:0},D.set||{});if(!D.set.v5){D.set.v5=1;if(D.set.font>=15)D.set.font=13}D.nf=D.nf||[];D.al=D.al||[];D.tar=D.tar||[];D.mo=D.mo||[];D.nt=D.nt||[];D.ai=D.ai||{convs:[],cur:null};const save=()=>{try{localStorage.setItem('pocket-mag',JSON.stringify(D))}catch(e){}};
+D.unread=D.unread||{};if(D.me&&!D.acct)D.acct=D.me;D.cfg=Object.assign({sys:'',nick:'',about:'',len:'short',lang:'auto',split:1,mem:30,maxTok:1024,topP:1,timeout:60,fallback:1,memOn:1,memories:[],lib:[],showKey:0,calm:0,showTok:0},D.cfg||{});D.stat=Object.assign({calls:0,fails:0,ms:0},D.stat||{});D.set=Object.assign({notif:1,detail:1,dnd:0,font:13,enter:1,theme:'auto',autofill:1,mute:0,wp:'stars'},D.set||{});if(!D.set.v5){D.set.v5=1;if(D.set.font>=15)D.set.font=13}D.nf=D.nf||[];D.al=D.al||[];D.wallet=D.wallet||{bal:1000,log:[]};D.fav=D.fav||[];D.ph=D.ph||[];D.tar=D.tar||[];D.mo=D.mo||[];D.nt=D.nt||[];D.ai=D.ai||{convs:[],cur:null};const save=()=>{try{if(D.me)D.acct=D.me;localStorage.setItem('pocket-mag',JSON.stringify(D))}catch(e){}};
 const fT=t=>new Date(t).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});
 let tt;const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2600)};
 const ic=(n,s)=>`<svg class="i"${s?` style="${s}"`:''}><use href="#${n}"/></svg>`;
@@ -439,7 +494,7 @@ const ill=p=>Math.round((1-Math.cos(2*Math.PI*p))/2*100);
 function moonD(cx,cy,r,p){const w=p>.5,q=w?1-p:p,k=Math.cos(2*Math.PI*q),rx=Math.abs(k)*r;return {w,d:`M${cx} ${cy-r}A${r} ${r} 0 0 1 ${cx} ${cy+r}A${rx} ${r} 0 0 ${k>0?0:1} ${cx} ${cy-r}Z`}}
 function moonSVG(sz,p,neg){const R=sz/2-2,m=moonD(sz/2,sz/2,R,p);return `<svg viewBox="0 0 ${sz} ${sz}" width="${sz}" height="${sz}"><circle cx="${sz/2}" cy="${sz/2}" r="${R}" fill="${neg?'#0b0b0c':'none'}" stroke="currentColor" stroke-width=".6" opacity=".5"/><path d="${m.d}" fill="${neg?'#fff':'currentColor'}"${m.w?` transform="translate(${sz} 0) scale(-1 1)"`:''}/></svg>`}
 const zodiac=(d=new Date())=>['摩羯','水瓶','双鱼','白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手','摩羯'][d.getDate()<[20,19,21,20,21,22,23,23,23,24,23,22][d.getMonth()]?d.getMonth():d.getMonth()+1];
-const CON={clk:{p:[[50,20],[71,29],[80,50],[71,71],[50,80],[29,71],[20,50],[29,29]],e:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,0]]},nox:{p:[[14,60],[30,46],[46,60],[62,46],[78,60],[88,42]],e:[[0,1],[1,2],[2,3],[3,4],[4,5]]},tar:{p:[[50,16],[60,40],[84,40],[64,56],[72,82],[50,66],[28,82],[36,56],[16,40],[40,40]],e:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,0]]},wx:{p:[[18,66],[34,48],[50,60],[66,38],[84,52]],e:[[0,1],[1,2],[2,3],[3,4]]},sms:{p:[[14,34],[32,62],[50,40],[68,64],[86,30]],e:[[0,1],[1,2],[2,3],[3,4]]},set:{p:[[50,50],[50,18],[80,34],[80,66],[50,82],[20,66],[20,34]],e:[[1,2],[2,3],[3,4],[4,5],[5,6],[6,1],[0,1],[0,3],[0,5]]},sky:{p:[[24,30],[40,36],[56,42],[76,26],[30,72],[72,76]],e:[[0,1],[1,2],[2,3],[1,4],[2,5]]},nt:{p:[[12,34],[28,40],[44,46],[56,56],[78,60],[84,38],[58,30]],e:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,3]]},ai:{p:[[50,16],[58,42],[84,50],[58,58],[50,84],[42,58],[16,50],[42,42]],e:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,0]]}};
+const CON={calc:{p:[[30,30],[70,30],[30,70],[70,70],[50,50]],e:[[0,4],[1,4],[2,4],[3,4],[0,1],[2,3]]},ph:{p:[[16,72],[34,44],[50,60],[66,36],[84,68]],e:[[0,1],[1,2],[2,3],[3,4]]},clk:{p:[[50,20],[71,29],[80,50],[71,71],[50,80],[29,71],[20,50],[29,29]],e:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,0]]},nox:{p:[[14,60],[30,46],[46,60],[62,46],[78,60],[88,42]],e:[[0,1],[1,2],[2,3],[3,4],[4,5]]},tar:{p:[[50,16],[60,40],[84,40],[64,56],[72,82],[50,66],[28,82],[36,56],[16,40],[40,40]],e:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,0]]},wx:{p:[[18,66],[34,48],[50,60],[66,38],[84,52]],e:[[0,1],[1,2],[2,3],[3,4]]},sms:{p:[[14,34],[32,62],[50,40],[68,64],[86,30]],e:[[0,1],[1,2],[2,3],[3,4]]},set:{p:[[50,50],[50,18],[80,34],[80,66],[50,82],[20,66],[20,34]],e:[[1,2],[2,3],[3,4],[4,5],[5,6],[6,1],[0,1],[0,3],[0,5]]},sky:{p:[[24,30],[40,36],[56,42],[76,26],[30,72],[72,76]],e:[[0,1],[1,2],[2,3],[1,4],[2,5]]},nt:{p:[[12,34],[28,40],[44,46],[56,56],[78,60],[84,38],[58,30]],e:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,3]]},ai:{p:[[50,16],[58,42],[84,50],[58,58],[50,84],[42,58],[16,50],[42,42]],e:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,0]]}};
 function appIcon(id,sz){const c=CON[id];let art='';
   if(id=='wx'){const m=moonD(44,50,26,.13);art=`<path d="${m.d}" fill="#fff"/><circle cx="74" cy="30" r="2.4" fill="#fff" class="tw"/><circle cx="82" cy="58" r="1.6" fill="#fff" class="tw" style="animation-delay:.8s"/><circle cx="66" cy="78" r="1.2" fill="#fff" class="tw" style="animation-delay:1.4s"/>`}
   if(id=='sky'){const m=moonD(72,70,12,.4);art=`<circle cx="72" cy="70" r="12" fill="none" stroke="#fff" stroke-width=".6" opacity=".5"/><path d="${m.d}" fill="#fff"/>`}
@@ -447,21 +502,22 @@ function appIcon(id,sz){const c=CON[id];let art='';
   if(id=='clk')art='<path d="M50 50V31M50 50L63 58" stroke="#fff" stroke-width="1.8" stroke-linecap="round" fill="none"/><circle cx="50" cy="50" r="2.4" fill="#fff"/>';
   if(id=='nox'){const m=moonD(72,26,12,.8);art=`<circle cx="72" cy="26" r="12" fill="none" stroke="#fff" stroke-width=".6" opacity=".5"/><path d="${m.d}" fill="#fff" transform="translate(144 0) scale(-1 1)"/>`}
   if(id=='tar')art='<rect x="27" y="13" width="46" height="74" rx="7" fill="none" stroke="#fff" stroke-width=".6" opacity=".4"/>';
+  if(id=='ph')art='<circle cx="72" cy="26" r="8" fill="none" stroke="#fff" stroke-width=".8"/>';
   const dust=[...Array(9)].map((_,i)=>`<circle cx="${(i*47+13)%88+6}" cy="${(i*29+7)%88+6}" r=".7" fill="#fff" opacity=".45"/>`).join('');
   const lines=id=='wx'?'':c.e.map(([a,b])=>`<path d="M${c.p[a]}L${c.p[b]}" stroke="#fff" stroke-width=".8" opacity=".5" fill="none"/>`).join('')+c.p.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="${i%3==0?2.6:1.7}" fill="#fff" class="tw" style="animation-delay:${i*.37}s"/>`).join('');
   return `<svg class="ap-i" viewBox="0 0 100 100" width="${sz}" height="${sz}"><rect width="100" height="100" rx="24" fill="#0b0b0c"/>${dust}${art}${lines}</svg>`}
 function splashArt(id){const c=CON[id];return `<svg class="cs" viewBox="0 0 100 100">${c.e.map(([a,b],i)=>`<path d="M${c.p[a]}L${c.p[b]}" pathLength="1" style="animation-delay:${.15+i*.14}s"/>`).join('')}${c.p.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="${i%3==0?2.6:1.8}" style="animation-delay:${i*.12}s,${1+i*.2}s"/>`).join('')}</svg>`}
-const APPS=[['wx','微信','WeChat'],['sms','短信','Messages'],['ai','助手','Muse'],['nt','备忘录','Notes'],['sky','天象','Sky'],['clk','时钟','Clock'],['nox','夜航','Drift'],['tar','星签','Arcana'],['set','设置','Settings']];
-$('#hg').innerHTML=APPS.map(a=>`<button class="ap" data-act="app:${a[0]}">${appIcon(a[0],56)}<b>${a[1]}</b><em>${a[2]}</em><i class="bd2" id="b-${a[0]}"></i></button>`).join('');
+const APPS=[['wx','微信','WeChat'],['sms','短信','Messages'],['ai','助手','Muse'],['nt','备忘录','Notes'],['sky','天象','Sky'],['clk','时钟','Clock'],['nox','夜航','Drift'],['tar','星签','Arcana'],['calc','计算器','Calc'],['ph','相册','Photos'],['set','设置','Settings']];
+$('#hg').innerHTML=APPS.map(a=>`<button class="ap" data-act="app:${a[0]}">${appIcon(a[0],52)}<b>${a[1]}</b><em>${a[2]}</em><i class="bd2" id="b-${a[0]}"></i></button>`).join('');
 /* clock */
 function tick(){const d=new Date();$('#clk').textContent=fT(d);$('#sbt').textContent=fT(d);$('#dt').textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});const p=mPhase();$('#hmoon').innerHTML=moonSVG(38,p,true);$('#hmn').textContent=mName(p)+' · '+zodiac()+'座';$('#hms').textContent='月龄 '+mAge().toFixed(1)+' · 照明 '+ill(p)+'%'}
 tick();setInterval(tick,20000);
 
 /* nav & splash */
-const META={clk:{n:'07',t:'Clock',ic:'clk'},nox:{n:'08',t:'Drift',ic:'nox'},tar:{n:'09',t:'Arcana',ic:'tar'},sky:{n:'04',t:'Sky',ic:'sky'},nt:{n:'05',t:'Notes',ic:'nt'},ai:{n:'06',t:'Muse',ic:'ai'},set:{n:'01',t:'Settings',ic:'sliders'},wx:{n:'02',t:'WeChat',ic:'chat'},sms:{n:'03',t:'Messages',ic:'sms'}};
+const META={calc:{n:'10',t:'Calc',ic:'calc'},ph:{n:'11',t:'Photos',ic:'ph'},clk:{n:'07',t:'Clock',ic:'clk'},nox:{n:'08',t:'Drift',ic:'nox'},tar:{n:'09',t:'Arcana',ic:'tar'},sky:{n:'04',t:'Sky',ic:'sky'},nt:{n:'05',t:'Notes',ic:'nt'},ai:{n:'06',t:'Muse',ic:'ai'},set:{n:'01',t:'Settings',ic:'sliders'},wx:{n:'02',t:'WeChat',ic:'chat'},sms:{n:'03',t:'Messages',ic:'sms'}};
 let busy=false;
 function show(id){document.querySelectorAll('.app').forEach(a=>a.classList.remove('on'));$('#a-'+id).classList.add('on');
-  if(id=='set'){sst=[];renderSet()}if(id=='wx'&&!$('#a-wx').innerHTML)renderWX();if(id=='sms'){sv=goSms;goSms=null;renderSMS()}if(id=='wx'&&goChat!=null&&D.me){const k=goChat;goChat=null;openChat(k)}if(id=='sky')renderSky();if(id=='nt'){ntc=-1;renderNt()}if(id=='ai')renderAi();if(id=='clk')renderClk();if(id=='nox')renderNox();if(id=='tar')renderTar()}
+  if(id=='set'){sst=[];renderSet()}if(id=='wx'&&!$('#a-wx').innerHTML)renderWX();if(id=='sms'){sv=goSms;goSms=null;renderSMS()}if(id=='wx'&&goChat!=null&&D.me){const k=goChat;goChat=null;openChat(k)}if(id=='sky')renderSky();if(id=='nt'){ntc=-1;renderNt()}if(id=='ai')renderAi();if(id=='clk')renderClk();if(id=='nox')renderNox();if(id=='tar')renderTar();if(id=='calc')renderCalc();if(id=='ph'){phv=null;renderPh()}}
 function openApp(id){if(busy)return;busy=true;ncClose();const m=META[id],long=id=='wx';
   $('#sp').innerHTML=`${splashArt(id)}<div class="n">APP Nº ${m.n}</div><div class="t">${[...m.t].map((c,i)=>`<span style="animation-delay:${.3+i*.06}s">${c}</span>`).join('')}</div><div class="mo" style="margin-top:16px">${moonSVG(22,mPhase(),true)}</div>`;
   $('#sp').className='on';
@@ -475,43 +531,44 @@ ${fld('API 类型',`<select data-o="${o}" data-k="type">${[['openai','OpenAI 兼
 ${fld('API 地址',`<input data-o="${o}" data-k="url" value="${esc(a.url)}" placeholder="https://api.example.com/v1" autocapitalize="off">`)}
 ${fld('API 密钥',`<input type="${D.cfg.showKey?'text':'password'}" data-o="${o}" data-k="key" value="${esc(a.key)}" placeholder="sk-…" autocomplete="off">`)}
 ${fld('选择模型',`<select data-o="${o}" data-k="model">${(a.models.length?a.models:[a.model||'']).map(m=>`<option ${m==a.model?'selected':''}>${esc(m)}</option>`).join('')}</select>`)}
-<div class="row"><button class="bt" data-act="pull:${o}">拉取模型</button><button class="bt" data-act="test:${o}">链接测试</button><button class="bt" data-act="bl">重置流式黑名单</button></div>
+${fld('或手动输入模型名',`<input data-o="${o}" data-k="model" value="${esc(a.model)}" placeholder="例如 gpt-4o-mini" autocapitalize="off">`)}<div class="row"><button class="bt" data-act="pull:${o}">拉取模型</button><button class="bt" data-act="test:${o}">链接测试</button><button class="bt" data-act="bl">重置流式黑名单</button></div>
 <div class="tr"><span>裸反代 Anthropic 格式</span><button class="tg ${a.raw?'on':''}" data-act="tg:${o}"><i></i></button></div>
 <div class="f"><span class="mono">流式模式</span><div class="tabs" style="margin-top:6px">${[['auto','自动（推荐）'],['off','强制非流式'],['on','强制流式']].map(([v,t])=>`<button class="${a.stream==v?'a':''}" data-act="seg:${o}:${v}">${t}</button>`).join('')}</div></div>
 ${fld('温度',`<div class="cd"><input type="range" min="0" max="2" step="0.1" value="${a.temp}" data-o="${o}" data-k="temp"><output class="mono" style="color:var(--fg)">${a.temp}</output></div>`)}
 ${fld('推理深度',`<select data-o="${o}" data-k="effort">${[['off','关闭'],['low','低'],['medium','中'],['high','高']].map(([v,t])=>`<option value="${v}" ${a.effort==v?'selected':''}>${t}</option>`).join('')}</select>`)}`}
 let sst=[];
-const ST={ntf:'通知',api:'模型与 API',dlg:'对话',par:'生成参数与网络',mem:'记忆',lib:'提示词库',look:'外观与交互',data:'数据管理',use:'用量统计',priv:'隐私与安全',abt:'关于'};
+const ST={wp:'壁纸',ntf:'通知',api:'模型与 API',dlg:'对话',par:'生成参数与网络',mem:'记忆',lib:'提示词库',look:'外观与交互',data:'数据管理',use:'用量统计',priv:'隐私与安全',abt:'关于'};
 const TPLS=[{n:'温柔陪伴',t:'你是一位温柔耐心的倾听者，先共情再回应，少说教，多追问细节。'},{n:'毒舌损友',t:'你是我最熟的损友，说话直接、爱调侃，但关键时刻靠谱。'},{n:'专业翻译',t:'你是专业的中英互译者。收到中文就译成英文，收到其他语言就译成中文，只输出译文。'},{n:'写作搭子',t:'你是敏锐的写作搭档，帮我打磨措辞、梳理结构，给出具体可执行的修改建议。'}];
 const OPT=(v,arr)=>arr.map(([k,t])=>`<option value="${k}" ${v==k?'selected':''}>${t}</option>`).join('');
 const RG=(k,min,max,step)=>`<div class="cd"><input type="range" min="${min}" max="${max}" step="${step}" value="${D.cfg[k]}" data-cf="${k}"><output class="mono" style="color:var(--fg)">${D.cfg[k]}</output></div>`;
 const NOTE=t=>`<p class="mono" style="margin-top:16px;text-transform:none;letter-spacing:.05em;line-height:1.7">${t}</p>`;
 const SP={
+ wp:()=>`<div class="snd" style="grid-template-columns:repeat(2,1fr)">${[['stars','星尘'],['plain','纯白'],['aurora','极光'],['moon','夜空']].map(([k,t])=>`<button class="${D.set.wp==k?'on':''}" data-act="wps:${k}">${t}</button>`).join('')}</div>${D.set.wpid&&D.ph.find(p=>p.id==D.set.wpid)?`<button class="bt w" data-act="wps:photo">使用相册壁纸${D.set.wp=='photo'?'（当前）':''}</button>`:NOTE('在相册中打开一张照片，可设为主屏壁纸。')}`,
  ntf:()=>T('接收新消息通知',D.set.notif,'st:notif')+T('通知显示消息详情',D.set.detail,'st:detail')+T('勿扰模式',D.set.dnd,'st:dnd')+T('静音通知（无提示音）',D.set.mute,'st:mute')+T('验证码自动填充',D.set.autofill,'st:autofill')+'<button class="bt w" data-act="nclr">清空通知历史</button>',
  api:()=>{const P=D.presets[D.cur];const body=stab=='preset'?`${fld('选择预设',`<select id="psel">${D.presets.map((p,i)=>`<option value="${i}" ${i==D.cur?'selected':''}>${esc(p.name)}</option>`).join('')}</select>`)}${fld('预设名称',`<input id="pn" value="${esc(P.name)}">`)}<div class="row"><button class="bt k" data-act="pupd">更新当前</button><button class="bt" data-act="psave">另存为新</button><button class="bt" data-act="pdel">删除此预设</button></div>`:apiForm(stab);
   return `<div class="tabs" style="margin-top:6px">${[['preset','API 预设'],['main','主 API'],['sub','副 API']].map(([v,t])=>`<button class="${stab==v?'a':''}" data-act="stab:${v}">${t}</button>`).join('')}</div>${body}`},
  dlg:()=>fld('全局系统提示词（对所有好友生效）',`<textarea data-cf="sys" rows="5" placeholder="例如：保持温柔，少用感叹号…">${esc(D.cfg.sys)}</textarea>`)+fld('希望角色如何称呼你',`<input data-cf="nick" value="${esc(D.cfg.nick)}">`)+fld('关于你（让角色更了解你）',`<textarea data-cf="about" rows="3" placeholder="职业、兴趣、作息…">${esc(D.cfg.about)}</textarea>`)+fld('回复长度',`<select data-cf="len">${OPT(D.cfg.len,[['short','简短（微信风格）'],['mid','适中'],['long','详细']])}</select>`)+fld('回复语言',`<select data-cf="lang">${OPT(D.cfg.lang,[['auto','跟随对话'],['zh','中文'],['en','English'],['ja','日本語']])}</select>`)+T('默认分段回复',D.cfg.split,'cf:split')+fld('默认记忆条数',RG('mem',4,60,2)),
  par:()=>fld('最大输出 tokens',RG('maxTok',128,4096,64))+fld('Top P',RG('topP',0.1,1,0.05))+fld('请求超时（秒）',RG('timeout',10,180,5))+T('失败时使用本地回复',D.cfg.fallback,'cf:fallback')+NOTE('温度、推理深度、流式模式请在「模型与 API」中设置。Top P 为 1 时不会发送。'),
- mem:()=>T('启用记忆',D.cfg.memOn,'cf:memOn')+NOTE('记忆会注入每位角色的提示词，让 TA 记得关于你的事。')+fld('添加一条记忆','<input id="mnew" placeholder="例如：我对花生过敏">')+'<div class="row"><button class="bt k" data-act="mema">添加</button><button class="bt" data-act="memc">清空</button></div>'+D.cfg.memories.map((m,i)=>`<div class="dr"><b style="font-size:16px">${esc(m)}</b><button data-act="memd:${i}">${ic('trash')}</button></div>`).join(''),
+ mem:()=>T('启用记忆',D.cfg.memOn,'cf:memOn')+NOTE('记忆会注入每位角色的提示词，让 TA 记得关于你的事。')+fld('添加一条记忆','<input id="mnew" placeholder="例如：我对花生过敏">')+'<div class="row"><button class="bt k" data-act="mema">添加</button><button class="bt" data-act="memc">清空</button></div>'+D.cfg.memories.map((m,i)=>`<div class="dr"><b style="font-size:16px">${esc(m)}</b><button data-act="memd:${i}">${ic('trash')}</button></div>`).join('')+(D.cfg.memories.length?'':'<p class="empty" style="font-size:16px">暂无记忆</p>'),
  lib:()=>[...TPLS,...D.cfg.lib].map((t,i)=>`<div class="lb"><div><b>${esc(t.n)}</b><small>${esc(t.t)}</small></div><button class="bt" data-act="tpl:${i}">应用</button>${i>=TPLS.length?`<button data-act="ldel:${i-TPLS.length}">${ic('trash')}</button>`:''}</div>`).join('')+fld('新建模板名称','<input id="lnn">')+fld('模板内容（留空则使用当前全局提示词）','<textarea id="lnt" rows="3"></textarea>')+'<button class="bt k w" data-act="ladd">保存到提示词库</button>'+NOTE('点「应用」会把模板设为全局系统提示词。'),
  look:()=>`<div class="f"><span class="mono">深色模式</span><div class="tabs">${[['auto','跟随系统'],['light','浅色'],['dark','深色']].map(([v,t])=>`<button class="${D.set.theme==v?'a':''}" data-act="th:${v}">${t}</button>`).join('')}</div></div>`+fld('聊天字体大小',`<div class="cd"><input type="range" min="11" max="18" step="1" value="${D.set.font}" data-sk="font"><output class="mono" style="color:var(--fg)">${D.set.font}</output></div>`)+T('回车键发送',D.set.enter,'st:enter')+T('减少动态效果',D.cfg.calm,'cf:calm')+T('聊天页显示 token 估算',D.cfg.showTok,'cf:showTok'),
- data:()=>fld('导出 / 导入内容',`<textarea id="dx" rows="7" placeholder="点「导出」生成 JSON；导入时把 JSON 粘贴到这里"></textarea>`)+'<div class="row"><button class="bt k" data-act="dexp">导出</button><button class="bt" data-act="dcp">复制</button><button class="bt" data-act="dimp">导入</button></div>'+NOTE('导出内容包含好友、角色与聊天记录，不含 API 密钥。')+`<div class="dr" style="margin-top:14px"><span class="mono" style="width:70px">存储</span><b style="font-size:17px">${Math.round(JSON.stringify(D).length/1024)} KB</b></div><button class="bt w" data-act="allclr">清空全部聊天记录</button><button class="bt w" style="margin-top:12px" data-act="rst">重置所有数据</button>`,
+ data:()=>fld('导出 / 导入内容',`<textarea id="dx" rows="7" placeholder="点「导出」生成 JSON；导入时把 JSON 粘贴到这里"></textarea>`)+'<div class="row"><button class="bt k" data-act="dexp">导出</button><button class="bt" data-act="dcp">复制</button><button class="bt" data-act="dimp">导入</button><label class="bt" style="cursor:pointer">从文件读取<input type="file" accept=".json,application/json" hidden id="dxf"></label></div>'+NOTE('导出内容包含好友、角色与聊天记录，不含 API 密钥。')+`<div class="dr" style="margin-top:14px"><span class="mono" style="width:70px">存储</span><b style="font-size:17px">${Math.round(JSON.stringify(D).length/1024)} KB</b></div><button class="bt w" data-act="allclr">清空全部聊天记录</button><button class="bt w" style="margin-top:12px" data-act="rst">重置所有数据</button>`,
  use:()=>{let n=0,u=0,ch=0,tok=0;D.friends.forEach(f=>(D.chats[f.id]||[]).forEach(m=>{n++;if(m.r=='u')u++;ch+=m.t.length;tok+=estTok(m.t)}));const st=D.stat,c=(v,l)=>`<div><b>${v}</b><span class="mono">${l}</span></div>`;
   return `<div class="sg">${c(D.friends.length,'好友')}${c(n,'消息')}${c(u,'我发出')}${c(n-u,'AI 回复')}${c(ch,'字数')}${c('≈'+tok,'Tokens')}${c(st.calls,'成功请求')}${c(st.fails,'失败请求')}</div>${NOTE('最近一次响应：'+(st.ms?st.ms+' ms':'—'))}`},
  priv:()=>fld('锁屏密码（4 位数字，留空关闭）',`<input id="pinf" inputmode="numeric" maxlength="4" value="${esc(D.set.pin||'')}">`)+'<div class="row"><button class="bt k" data-act="pinsave">保存</button><button class="bt" data-act="lockn">立即锁屏</button></div>'+T('在输入框中显示 API 密钥',D.cfg.showKey,'cf:showKey')+NOTE('所有数据（含 API 密钥）只保存在本机浏览器的 localStorage 中，不会上传到任何服务器。')+'<button class="bt w" data-act="kclr">清除全部 API 密钥</button>',
  abt:()=>`<h2 class="big" style="font-size:44px;margin-top:20px">POCKET<br><i>v0.5</i></h2>${NOTE('一部极简的 AI 小手机：多角色聊天、记忆、提示词库、流式输出与用量统计。')}`
 };
 function renderSet(anim){const A=$('#a-set');
-  if(!sst.length){A.innerHTML=`<div class="scroll"><div class="mono">01 / Settings</div><hr class="k"><h2 class="big">设置</h2><div class="card"><span class="mono">当前模型</span><b>${esc(D.main.model||'尚未配置')}</b><span class="mono">${esc(D.presets[D.cur].name)} · ${{openai:'OpenAI 兼容',anthropic:'Anthropic',gemini:'Gemini'}[D.main.type]}</span></div><div class="mono sec">AI</div>${R('spark','模型与 API','','sn:api')}${R('chat','对话','','sn:dlg')}${R('sliders','生成参数与网络','','sn:par')}${R('star','记忆',D.cfg.memories.length+' 条','sn:mem')}${R('edit','提示词库','','sn:lib')}<div class="mono sec">APP</div>${R('bell','通知','','sn:ntf')}${R('compass','外观与交互','','sn:look')}${R('copy','数据管理','','sn:data')}${R('up','用量统计','','sn:use')}${R('lock','隐私与安全','','sn:priv')}${R('info','关于','v0.5','sn:abt')}</div>`;return}
+  if(!sst.length){A.innerHTML=`<div class="scroll"><div class="mono">01 / Settings</div><hr class="k"><h2 class="big">设置</h2><div class="card"><span class="mono">当前模型</span><b>${esc(D.main.model||'尚未配置')}</b><span class="mono">${esc(D.presets[D.cur].name)} · ${{openai:'OpenAI 兼容',anthropic:'Anthropic',gemini:'Gemini'}[D.main.type]}</span></div><div class="mono sec">AI</div>${R('spark','模型与 API','','sn:api')}${R('chat','对话','','sn:dlg')}${R('sliders','生成参数与网络','','sn:par')}${R('star','记忆',D.cfg.memories.length+' 条','sn:mem')}${R('edit','提示词库','','sn:lib')}<div class="mono sec">APP</div>${R('compass','壁纸','','sn:wp')}${R('bell','通知','','sn:ntf')}${R('compass','外观与交互','','sn:look')}${R('copy','数据管理','','sn:data')}${R('up','用量统计','','sn:use')}${R('lock','隐私与安全','','sn:priv')}${R('info','关于','v0.5','sn:abt')}</div>`;return}
   const n=sst[sst.length-1];A.innerHTML=`<div class="chh"><button data-act="sb">${ic('back')}</button><b class="pt">${ST[n]}</b><span style="width:24px"></span></div><div class="scroll${anim?' pgin':''}">${SP[n]()}</div>`}
 const URLS=(a,list)=>{const b=a.url.replace(/\/+$/,'');if(!b)throw Error('未填写 API 地址');return b};
-async function pull(o){const a=D[o];try{const b=URLS(a);let u,h={};
+async function pull0(o){const a=D[o];try{const b=URLS(a);let u,h={};
   if(a.type=='gemini')u=`${b}/v1beta/models?key=${a.key}`;
   else if(a.type=='anthropic'){u=b+(a.raw?'':'/v1')+'/models';h={'x-api-key':a.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}}
   else{u=b+'/models';h={Authorization:'Bearer '+a.key}}
   const r=await fetch(u,{headers:h});if(!r.ok)throw Error('HTTP '+r.status);const j=await r.json();
   a.models=(j.data||j.models||[]).map(m=>String(m.id||m.name||'').replace('models/',''));if(!a.model||!a.models.includes(a.model))a.model=a.models[0]||'';
-  save();renderSet();toast('已拉取 '+a.models.length+' 个模型')}catch(e){toast('拉取失败：'+e.message)}}
+  save();renderSet();toast(a.models.length?'已拉取 '+a.models.length+' 个模型':'接口未返回任何模型，请手动输入模型名')}catch(e){toast('拉取失败：'+errMsg(e))}}
 async function ask(a,sys,ms,sig,onTok){const b=URLS(a);let u,hd={'Content-Type':'application/json'},body;
   if(a.type=='anthropic'){u=b+(a.raw?'':'/v1')+'/messages';Object.assign(hd,{'x-api-key':a.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'});body={model:a.model,max_tokens:1024,system:sys,messages:ms,temperature:Math.min(a.temp,1),stream:!!onTok}}
   else if(a.type=='gemini'){u=`${b}/v1beta/models/${a.model}:generateContent?key=${a.key}`;body={systemInstruction:{parts:[{text:sys}]},contents:ms.map(m=>({role:m.role=='user'?'user':'model',parts:[{text:m.content}]})),generationConfig:{temperature:a.temp}}}
@@ -531,15 +588,23 @@ async function ask(a,sys,ms,sig,onTok){const b=URLS(a);let u,hd={'Content-Type':
 /* sms */
 let sv=null;
 function pushSms(from,text){D.sms.push({from,text,t:Date.now(),read:false});save();autoFill(from,text);notify({app:'sms',title:from,text,go:'sms:'+from});if($('#a-sms').classList.contains('on'))renderSMS()}
-function renderSMS(){const th={};D.sms.forEach(m=>(th[m.from]=th[m.from]||[]).push(m));const names=Object.keys(th).sort((a,b)=>th[b].at(-1).t-th[a].at(-1).t);const A=$('#a-sms');
-  if(!sv){A.innerHTML=`<div class="sh"><span>编辑</span></div><div class="stt">信息</div><div class="srch">${ic('search')}搜索</div><div class="scroll">${names.map(n=>{const l=th[n].at(-1),un=th[n].some(m=>!m.read);return `<button class="sr" data-act="thr:${esc(n)}">${un?'<span class="dot" style="position:relative;left:-6px;margin:0 -4px 0 0;width:10px;height:10px;border-radius:50%;background:var(--fg);flex:none"></span>':''}<span class="ci">${ic('user')}</span><span class="bd"><b>${esc(n)}</b><small>${esc(l.text)}</small><span class="tm">${fT(l.t)} ›</span></span></button>`}).join('')}</div>`;return}
-  th[sv].forEach(m=>m.read=true);save();refreshBadges();const ms=th[sv]||[];
-  A.innerHTML=`<div class="sd"><button data-act="sback" style="display:flex;align-items:center;gap:0">${ic('back','width:26px;height:26px')}<span>信息</span></button><span class="c"><i>${ic('user')}</i>${esc(sv)} ›</span><span style="width:60px"></span></div><div class="sm" id="smm"><div class="ts">短信/彩信<br>今天 ${fT(ms[0].t)}</div>${ms.map((m,i)=>`<div class="b ${i==ms.length-1?'last':''}">${esc(m.text)}</div>`).join('')}</div><div class="sf"><span class="pc">${ic('plus')}</span><span class="pill">短信/彩信</span><span class="pc">${ic('up')}</span></div>`;
+let smq='',smTy=null;
+const smD=t=>{const d=new Date(t),n=new Date(),y=new Date(n-864e5);return d.toDateString()==n.toDateString()?fT(d):d.toDateString()==y.toDateString()?'昨天':(d.getMonth()+1)+'/'+d.getDate()};
+const smH=t=>{const d=new Date(t);return (d.toDateString()==new Date().toDateString()?'今天':(d.getMonth()+1)+'月'+d.getDate()+'日')+' '+fT(d)};
+const smCan=n=>D.friends.some(f=>f.name==n);
+function smList(){const th={};D.sms.forEach(m=>(th[m.from]=th[m.from]||[]).push(m));
+  const names=Object.keys(th).filter(n=>!smq||n.includes(smq)||th[n].some(m=>m.text.includes(smq))).sort((a,b)=>th[b][th[b].length-1].t-th[a][th[a].length-1].t);
+  $('#sl').innerHTML=names.map(n=>{const l=th[n][th[n].length-1],un=th[n].some(m=>!m.read);return `<button class="sr" data-act="thr:${esc(n)}">${un?'<span style="position:relative;left:-6px;margin:0 -4px 0 0;width:10px;height:10px;border-radius:50%;background:var(--fg);flex:none"></span>':''}<span class="ci">${ic('user')}</span><span class="bd"><b>${esc(n)}</b><small>${l.me?'你：':''}${esc(l.text)}</small><span class="tm">${smD(l.t)} ›</span></span></button>`}).join('')||'<p class="empty" style="text-align:center">无信息</p>'}
+function renderSMS(){const A=$('#a-sms');
+  if(!sv){A.innerHTML=`<div class="sh"><span>编辑</span><button data-act="smc">${ic('edit','width:20px;height:20px;stroke-width:1.6')}</button></div><div class="stt">信息</div><label class="srch">${ic('search')}<input id="sq" placeholder="搜索" value="${esc(smq)}" style="flex:1;border:0;background:transparent;outline:0;font:inherit;color:var(--fg)"></label><div class="scroll" id="sl"></div>`;smList();return}
+  const ms=D.sms.filter(m=>m.from==sv);ms.forEach(m=>m.read=true);save();refreshBadges();const can=smCan(sv);
+  A.innerHTML=`<div class="sd"><button data-act="sback" style="display:flex;align-items:center;gap:0">${ic('back','width:26px;height:26px;stroke-width:1.6')}<span>信息</span></button><span class="c"><i>${ic('user')}</i>${esc(sv)} ›</span><span style="width:60px"></span></div><div class="sm" id="smm">${ms.length?`<div class="ts">短信/彩信<br>${smH(ms[0].t)}</div>`:''}${ms.map((m,i)=>{const nx=ms[i+1],last=!nx||!!nx.me!=!!m.me;return `<div class="b${m.me?' me':''}${last?' last':''}">${esc(m.text)}</div>`}).join('')}${ms.length&&ms[ms.length-1].me&&smTy!=sv?'<div class="dv">已送达</div>':''}${smTy==sv?'<div class="b ty"><i></i><i></i><i></i></div>':''}</div><div class="sf"><span class="pc">${ic('plus')}</span><input id="smi" class="pill" ${can?'':'disabled'} placeholder="${can?'短信/彩信':'无法回复此发件人'}"><button class="pc ${can?'ok':''}" data-act="smsend">${ic('up')}</button></div>`;
   const e=$('#smm');e.scrollTop=e.scrollHeight}
 
 /* wechat */
 let wtab=0,tav='',cur=0;
 function renderWX(){stk=[];const w=$('#a-wx');
+  if(!D.me&&D.acct){w.innerHTML=loginHTML();return}
   if(!D.me){w.innerHTML=`<div class="scroll"><div class="mono">Register — 新成员</div><hr class="k"><h2 class="big">加入<br><i>WeChat</i></h2>
 <label class="av"><input type="file" accept="image/*" hidden id="avf"><span id="avi">${ic('camera')}</span><em class="mono">头像</em></label>
 ${fld('个性签名','<input id="r-sig" maxlength="30">')}${fld('微信号','<input id="r-id" autocapitalize="off">')}${fld('手机号','<input id="r-ph" inputmode="numeric" maxlength="11">')}${fld('QQ号','<input id="r-qq" inputmode="numeric">')}${fld('密码','<input id="r-pw" type="password">')}
@@ -555,22 +620,24 @@ const R=(i,t,r,act)=>`<button class="dr" data-act="${act}">${ic(i)}<b>${t}</b>${
 const T=(t,on,act)=>`<div class="tr"><span>${t}</span><button class="tg ${on?'on':''}" data-act="${act}"><i></i></button></div>`;
 const fa=(k,i)=>`data-fk="${k}" data-fi="${i}"`;
 const ok2=t=>{if(t.dataset.c)return true;t.dataset.c=1;t._o=t.textContent;t.textContent='再点一次确认';setTimeout(()=>{if(t.isConnected){delete t.dataset.c;t.textContent=t._o}},3000);return false};
-function applySet(){const r=document.documentElement;if(D.set.theme=='auto')r.removeAttribute('data-theme');else r.dataset.theme=D.set.theme;ph.style.setProperty('--fs',D.set.font+'px');ph.classList.toggle('calm',!!D.cfg.calm)}
+function applySet(){const r=document.documentElement;if(D.set.theme=='auto')r.removeAttribute('data-theme');else r.dataset.theme=D.set.theme;ph.style.setProperty('--fs',D.set.font+'px');ph.classList.toggle('calm',!!D.cfg.calm);{const h=$('#a-home');if(h){[...h.classList].filter(c=>c.indexOf('wp-')==0).forEach(c=>h.classList.remove(c));let w=D.set.wp||'stars';const pi=w=='photo'?D.ph.find(p=>p.id==D.set.wpid):null;if(w=='photo'&&!pi)w='stars';h.classList.add('wp-'+w);h.style.backgroundImage=pi?'url('+pi.d+')':''}}}
 function autoFill(from,text){if(!D.set.autofill)return;const m=text.match(/\d{6}/);if(!m||!['微信','腾讯QQ'].includes(from))return;const e=$(from=='微信'?'#r-c1':'#r-c2');if(e&&!e.value){e.value=m[0];e.classList.add('flash');e.closest('.f').dataset.af=1}}
 function chatList(){const q=($('#cq')||{}).value||'';
   const ix=D.friends.map((f,k)=>k).filter(k=>(D.friends[k].name+(D.friends[k].remark||'')).includes(q)).sort((a,b)=>{const A=D.friends[a],B=D.friends[b];if(!!A.pin!=!!B.pin)return A.pin?-1:1;return lt(B)-lt(A)});
   $('#cl').innerHTML=ix.length?ix.map(k=>{const f=D.friends[k],c=D.chats[f.id]||[],l=c[c.length-1],u=D.unread[f.id]||0;
-   return `<button class="li${f.pin?' pin':''}" data-act="chat:${k}" data-lp="${k}">${avh(f)}<div><b>${esc(f.remark||f.name)}</b><small>${esc(l?l.t:'暂无消息')}</small></div>${u>0?(f.mute?'<span class="dotm"></span>':`<span class="bdg">${u}</span>`):''}${l&&l.ts?`<span class="mono">${fT(l.ts)}</span>`:''}</button>`}).join(''):'<p class="empty">还没有故事。<br>去「通讯录」添加一位好友，并为 TA 写下角色。</p>'}
+   return `<button class="li${f.pin?' pin':''}" data-act="chat:${k}" data-lp="${k}">${avh(f)}<div><b>${esc(f.remark||f.name)}</b><small>${esc(l?l.t:'暂无消息')}</small></div>${u>0?(f.mute?'<span class="dotm"></span>':`<span class="bdg">${u}</span>`):''}${l&&l.ts?`<span class="mono">${fT(l.ts)}</span>`:''}</button>`}).join(''):(q?'<p class="empty">没有匹配的会话</p>':'<p class="empty">还没有故事。<br>去「通讯录」添加一位好友，并为 TA 写下角色。</p>')}
 function contList(){const q=($('#kq')||{}).value||'',nm=k=>D.friends[k].remark||D.friends[k].name;
   const L=D.friends.map((f,k)=>k).filter(k=>(D.friends[k].name+(D.friends[k].remark||'')).includes(q)),sg=L.filter(k=>D.friends[k].star),rs=L.filter(k=>!D.friends[k].star).sort((a,b)=>nm(a).localeCompare(nm(b),'zh'));
   const row=k=>`<button class="li" data-act="nav:prof:${k}">${avh(D.friends[k])}<div><b>${esc(nm(k))}</b><small>${esc(D.friends[k].role)}</small></div></button>`;
   let h='',last='';if(sg.length)h+='<div class="mono sec">星标朋友</div>'+sg.map(row).join('');
   rs.forEach(k=>{let c=nm(k)[0].toUpperCase();if(!/[A-Z]/.test(c))c='#';if(c!=last){h+=`<div class="mono sec">${c}</div>`;last=c}h+=row(k)});
-  $('#kl').innerHTML=h||'<p class="empty">没有找到好友</p>'}
+  $('#kl').innerHTML=h||(D.friends.length?'<p class="empty">没有找到匹配的好友</p>':'<p class="empty">通讯录还是空的。<br>点右上角添加第一位好友。</p>')}
 function rowMenu(k){const f=D.friends[k],s=$('#sheet');s.className='on s';
   s.innerHTML=`<div style="width:100%"><div class="mono">${esc(f.remark||f.name)}</div><hr class="k">${R('pin',f.pin?'取消置顶':'置顶聊天','','rp:'+k)}${R('chat',D.unread[f.id]?'标为已读':'标为未读','','ru:'+k)}${R('trash','删除聊天记录','','rd:'+k)}<button class="bt w" style="margin-top:20px" data-act="sx">取消</button></div>`}
-const TT={mo:'朋友圈',set:'设置',acct:'账号与安全',pw:'修改密码',notif:'新消息通知',chat:'聊天',gen:'通用',about:'关于',me:'个人信息',prof:'详细资料',persona:'编辑人设'};
+const TT={wallet:'钱包',fav:'收藏',mo:'朋友圈',set:'设置',acct:'账号与安全',pw:'修改密码',notif:'新消息通知',chat:'聊天',gen:'通用',about:'关于',me:'个人信息',prof:'详细资料',persona:'编辑人设'};
 const PG={
+ wallet:()=>`<div class="card" style="text-align:center;padding:26px"><span class="mono">零钱余额</span><b style="font-size:40px">¥${D.wallet.bal.toFixed(2)}</b></div><div class="row" style="justify-content:center"><button class="bt" data-act="wtp:100">充值 100</button><button class="bt" data-act="wtp:500">充值 500</button></div><div class="mono sec">账单</div>`+(D.wallet.log.length?D.wallet.log.slice(0,30).map(l=>`<div class="dr"><div style="flex:1"><b style="font-size:14px;display:block">${esc(l.x)}</b><span class="mono" style="display:block;margin-top:2px">${fD(l.t)}</span></div><span style="font:300 18px var(--serif)">${l.a>0?'+':'−'}${Math.abs(l.a).toFixed(2)}</span></div>`).join(''):'<p class="empty">暂无账单</p>'),
+ fav:()=>D.fav.length?D.fav.map((f,i)=>`<div class="lb"><div><b style="white-space:normal">${esc(f.x)}</b><small>${esc(f.who)} · ${fD(f.ts)}</small></div><button data-act="fvd:${i}">${ic('trash')}</button></div>`).join(''):'<p class="empty">还没有收藏。<br>在聊天中点一条消息，选择“收藏”。</p>',
  mo:()=>{const me=D.me,list=D.mo.slice().sort((a,b)=>b.t-a.t);return `<textarea id="mox" class="ne" style="min-height:70px;border-bottom:1px solid var(--ln)" placeholder="这一刻的想法…"></textarea><div class="row" style="margin-top:8px"><button class="bt k" data-act="mpost">发表</button><button class="bt" data-act="mgen">刷新好友动态</button></div>`+(list.length?list.map(p=>{const f=p.who=='me'?{name:me.id,av:me.av}:D.friends.find(x=>x.id==p.who);if(!f)return '';const lk=p.likes.includes('我');return `<div class="mp">${avh(f)}<div class="mpb"><b>${esc(f.remark||f.name)}</b><p>${esc(p.x)}</p><div class="mpa"><span class="mono">${fD(p.t)}</span><button data-act="mlk:${p.id}" class="${lk?'on':''}">${ic('star')}${p.likes.length||''}</button><button data-act="mcm:${p.id}">${ic('chat')}</button>${p.who=='me'?`<button data-act="mdl:${p.id}">${ic('trash')}</button>`:''}</div>${p.likes.length?`<div class="mpl mono" style="text-transform:none">${ic('star')}${esc(p.likes.join('、'))}</div>`:''}${p.cm.map(c=>`<div class="mpc"><b>${esc(c.n)}</b>：${esc(c.x)}</div>`).join('')}${mcOpen==p.id?`<div class="cd" style="margin-top:8px"><input id="mci" placeholder="评论" style="flex:1;border:0;border-bottom:1px solid var(--ln);background:transparent;padding:6px 0;outline:0"><button class="bt" data-act="mcs:${p.id}">发送</button></div>`:''}</div></div>`}).join(''):'<p class="empty">还没有动态。发一条，或刷新好友动态。</p>')},
  set:()=>`<h2 class="big" style="font-size:40px;margin:8px 0 18px">设置</h2>${R('shield','账号与安全','','nav:acct')}${R('bell','新消息通知',D.set.notif?'开':'关','nav:notif')}${R('chat','聊天','','nav:chat')}${R('sliders','通用','','nav:gen')}${R('info','关于 POCKET','v0.5','nav:about')}<button class="bt w" data-act="logout">退出登录</button>`,
  acct:()=>{const m=D.me;return [['微信号',m.id],['手机号',m.ph.replace(/(\d{3})\d{4}(\d{4})/,'$1****$2')],['QQ号',m.qq]].map(r=>`<div class="dr"><span class="mono" style="width:70px">${r[0]}</span><b style="font-size:17px">${esc(r[1])}</b></div>`).join('')+R('lock','修改密码','','nav:pw')+'<button class="bt w" data-act="wdel">注销账号</button>'},
@@ -581,7 +648,7 @@ const PG={
  about:()=>`<h2 class="big" style="font-size:44px;margin-top:20px">POCKET<br><i>v0.5</i></h2><p style="margin-top:24px;line-height:1.7;color:var(--mut)">一部极简的 AI 小手机。所有数据只保存在本机浏览器中。</p>`,
  me:()=>{const m=D.me;return `<label class="av"><input type="file" accept="image/*" hidden id="mav"><span>${m.av?`<img src="${m.av}" alt="">`:ic('camera')}</span><em class="mono">点击更换头像</em></label>${fld('个性签名',`<input data-mk="sig" maxlength="30" value="${esc(m.sig||'')}">`)}${[['微信号',m.id],['手机号',m.ph],['QQ号',m.qq]].map(r=>`<div class="dr"><span class="mono" style="width:70px">${r[0]}</span><b style="font-size:17px">${esc(r[1])}</b></div>`).join('')}`},
  prof:i=>{const f=D.friends[i];return `<div style="display:flex;gap:18px;align-items:center;margin:6px 0 10px">${avh(f).replace('class="avt"','class="avt" style="width:76px;height:76px;font-size:34px"')}<div><h3 style="font:400 28px var(--serif)">${esc(f.remark||f.name)}</h3><p class="mono" style="margin-top:6px">昵称 ${esc(f.name)}</p><p class="mono" style="margin-top:4px">微信号 ${esc(f.wid||'—')}</p></div></div><p style="margin:14px 0 6px;font:italic 300 19px/1.5 var(--serif);color:var(--mut)">${esc(f.role)}</p>${R('edit','设置备注和人设','','nav:persona:'+i)}${T('星标朋友',f.star,'ft:star:'+i)}${T('置顶聊天',f.pin,'ft:pin:'+i)}${T('消息免打扰',f.mute,'ft:mute:'+i)}<button class="bt k w" data-act="msg:${i}">发消息</button><button class="bt w" style="margin-top:12px" data-act="fclr:${i}">清空聊天记录</button><button class="bt w" style="margin-top:12px" data-act="fdel:${i}">删除好友</button>`},
- persona:i=>{const f=D.friends[i],tv=f.temp!=null?f.temp:D.main.temp;return `<label class="av" style="margin-top:6px"><input type="file" accept="image/*" hidden id="pav" data-fi="${i}"><span>${f.av?`<img src="${f.av}" alt="">`:ic('camera')}</span><em class="mono">头像</em></label>${fld('昵称',`<input ${fa('name',i)} value="${esc(f.name)}">`)}${fld('备注名',`<input ${fa('remark',i)} value="${esc(f.remark||'')}">`)}${fld('微信号',`<input ${fa('wid',i)} value="${esc(f.wid||'')}" autocapitalize="off">`)}${fld('角色设定（身份 / 性格）',`<textarea ${fa('role',i)} rows="5">${esc(f.role)}</textarea>`)}${fld('说话风格',`<textarea ${fa('style',i)} rows="3" placeholder="语气、口头禅、长短句…">${esc(f.style||'')}</textarea>`)}${fld('背景与关系',`<textarea ${fa('world',i)} rows="3" placeholder="与你的关系、共同经历…">${esc(f.world||'')}</textarea>`)}${fld('开场白（清空记录后自动重发）',`<input ${fa('hello',i)} value="${esc(f.hello||'')}">`)}${fld('专属温度',`<div class="cd"><input type="range" min="0" max="2" step="0.1" value="${tv}" ${fa('temp',i)}><output class="mono" style="color:var(--fg)">${tv}</output></div>`)}<div class="row"><button class="bt" data-act="trs:${i}">跟随主 API</button></div>${fld('记忆条数',`<div class="cd"><input type="range" min="4" max="60" step="2" value="${f.mem||D.cfg.mem}" ${fa('mem',i)}><output class="mono" style="color:var(--fg)">${f.mem||D.cfg.mem}</output></div>`)}${T('分段回复',f.split!==undefined?f.split!==0:D.cfg.split!==0,'ft:split:'+i)}<button class="bt k w" data-act="pb">完成</button>`}
+ persona:i=>{const f=D.friends[i],tv=f.temp!=null?f.temp:D.main.temp;return `<label class="av" style="margin-top:6px"><input type="file" accept="image/*" hidden id="pav" data-fi="${i}"><span>${f.av?`<img src="${f.av}" alt="">`:ic('camera')}</span><em class="mono">头像</em></label>${fld('昵称',`<input ${fa('name',i)} value="${esc(f.name)}">`)}${fld('备注名',`<input ${fa('remark',i)} value="${esc(f.remark||'')}">`)}${fld('微信号',`<input ${fa('wid',i)} value="${esc(f.wid||'')}" autocapitalize="off">`)}${fld('角色设定（身份 / 性格）',`<textarea ${fa('role',i)} rows="5">${esc(f.role)}</textarea>`)}${fld('说话风格',`<textarea ${fa('style',i)} rows="3" placeholder="语气、口头禅、长短句…">${esc(f.style||'')}</textarea>`)}${fld('背景与关系',`<textarea ${fa('world',i)} rows="3" placeholder="与你的关系、共同经历…">${esc(f.world||'')}</textarea>`)}${fld('开场白（清空记录后自动重发）',`<input ${fa('hello',i)} value="${esc(f.hello||'')}">`)}${fld('专属温度',`<div class="cd"><input type="range" min="0" max="2" step="0.1" value="${tv}" ${fa('temp',i)}><output class="mono" style="color:var(--fg)">${tv}</output></div>`)}<div class="row"><button class="bt" data-act="trs:${i}">跟随主 API</button></div>${fld('记忆条数',`<div class="cd"><input type="range" min="4" max="60" step="2" value="${f.mem||D.cfg.mem}" ${fa('mem',i)}><output class="mono" style="color:var(--fg)">${f.mem||D.cfg.mem}</output></div>`)}${T('分段回复',f.split!==undefined?f.split!==0:D.cfg.split!==0,'ft:split:'+i)}<button class="bt k w" data-act="pdone">完成</button>`}
 };
 function nav(n,a){stk.push([n,a]);renderPg(1)}
 function pback(){stk.pop();renderPg(0);if(!stk.length){wt(wtab);if($('#wxo').classList.contains('on')&&D.friends[cur])openChat(cur)}}
@@ -594,7 +661,7 @@ function wt(i){wtab=+i;$('#nvb').style.transform=`translateX(${i*100}%)`;documen
   if(i==0)h=hd(1,'Chats')+`<label class="sb2">${ic('search')}<input id="cq" placeholder="搜索"></label><div id="cl"></div>`;
   if(i==1)h=hd(2,'Contacts',`<button class="pl" data-act="addf">${ic('uplus')}</button>`)+`<label class="sb2">${ic('search')}<input id="kq" placeholder="搜索"></label><button class="li" data-act="addf"><span class="avt">${ic('plus')}</span><div><b>添加好友</b><small>填写昵称与角色设定</small></div></button><div id="kl"></div>`;
   if(i==2)h=hd(3,'Discover')+[['朋友圈','Moments','users'],['扫一扫','Scan','camera'],['看一看','Browse','compass'],['搜一搜','Search','search']].map((x,k)=>`<button class="dr" data-act="${k==0?'nav:mo':'soon'}"><span class="mono">0${k+1}</span>${ic(x[2])}<b>${x[0]}</b><span class="mono">${x[1]}</span>${ic('next')}</button>`).join('');
-  if(i==3){const m=D.me;h=hd(4,'Me')+`<button class="li" data-act="nav:me" style="padding:24px 0">${avh({av:m.av,name:m.id}).replace('class="avt"','class="avt" style="width:76px;height:76px;font-size:34px"')}<div><h3 style="font:400 28px var(--serif)">${esc(m.id)}</h3><small>${esc(m.sig||'这个人很懒，什么都没写。')}</small></div>${ic('next')}</button>`+[['spark','服务','soon'],['star','收藏','soon'],['users','朋友圈','nav:mo'],['sliders','设置','nav:set']].map(x=>R(x[0],x[1],'',x[2])).join('')}
+  if(i==3){const m=D.me;h=hd(4,'Me')+`<button class="li" data-act="nav:me" style="padding:24px 0">${avh({av:m.av,name:m.id}).replace('class="avt"','class="avt" style="width:76px;height:76px;font-size:34px"')}<div><h3 style="font:400 28px var(--serif)">${esc(m.id)}</h3><small>${esc(m.sig||'这个人很懒，什么都没写。')}</small></div>${ic('next')}</button>`+[['spark','钱包','nav:wallet'],['star','收藏','nav:fav'],['users','朋友圈','nav:mo'],['sliders','设置','nav:set']].map(x=>R(x[0],x[1],'',x[2])).join('')}
   const c=$('#wxc');c.style.animation='none';c.offsetHeight;c.innerHTML=h;c.style.animation='appIn .5s cubic-bezier(.2,.8,.2,1)';if(i==0)chatList();if(i==1)contList()}
 let ctl=null,sel=-1,fresh=-1;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -604,12 +671,19 @@ const sysP=f=>{const c=D.cfg,L={short:'每条消息简短，像真人发微信',
   return `你正在扮演微信好友「${f.name}」。角色设定：${f.role}。${f.style?'说话风格：'+f.style+'。':''}${f.world?'背景与关系：'+f.world+'。':''}聊天对象是「${D.me.id}」（个性签名：${D.me.sig||'无'}）。${c.nick?'请称呼对方为「'+c.nick+'」。':''}${c.about?'关于对方：'+c.about+'。':''}${c.memOn&&c.memories.length?'你记得关于对方的这些事：'+c.memories.join('；')+'。':''}现在是 ${new Date().toLocaleString('zh-CN')}。请完全以该角色的口吻聊天，像真人发微信：${L}，可分成多条并用换行隔开，不要使用 Markdown，不要提及自己是 AI。${G}${c.sys?'\n附加指令：'+c.sys:''}`};
 const setBtn=b=>{const s=$('#snd');if(s){s.dataset.act=b?'stop':'send';s.innerHTML=ic(b?'stop':'up')}};
 const redraw=(f,ty)=>{if($('#ms')&&D.friends[cur]===f)drawMsgs(ty)};
-const AB=(m,i,c)=>`<button data-act="mc:${i}">${ic('copy')}复制</button>`+(m.r=='u'?`<button data-act="me:${i}">${ic('edit')}编辑</button>`:(i==c.length-1?`<button data-act="mr:${i}">${ic('refresh')}重答</button>`:''))+`<button data-act="md:${i}">${ic('trash')}删除</button>`;
+const AB=(m,i,c)=>{let h=`<button data-act="mc:${i}">${ic('copy')}复制</button><button data-act="mf:${i}">${ic('star')}收藏</button>`;
+  if(m.r=='u'&&!m.rp&&!m.img)h+=`<button data-act="me:${i}">${ic('edit')}编辑</button>`;
+  if(m.r=='u'&&Date.now()-(m.ts||0)<12e4)h+=`<button data-act="mw:${i}">${ic('x')}撤回</button>`;
+  if(m.r=='a'){h+=`<button data-act="mv:${i}">${ic('spark')}朗读</button>`;if(i==c.length-1)h+=`<button data-act="mr:${i}">${ic('refresh')}重答</button>`}
+  return h+`<button data-act="md:${i}">${ic('trash')}</button>`};
 function openChat(k){cur=k;sel=-1;const f=D.friends[k],o=$('#wxo');D.unread[f.id]=0;save();o.className='on';
-  o.innerHTML=`<div class="chh"><button data-act="cb">${ic('back')}</button><span class="avt" style="width:38px;height:38px;font-size:18px">${f.av?`<img src="${f.av}" alt="">`:esc(f.name[0])}</span><div style="flex:1;min-width:0"><b style="font-size:18px;font-weight:400">${esc(f.remark||f.name)}</b><span class="mono" style="letter-spacing:.2em">${esc(D.main.model||'未连接模型')}${D.cfg.showTok?' · ≈'+estTok((D.chats[f.id]||[]).map(m=>m.t).join(''))+' tok':''}</span></div><button data-act="more">${ic('more')}</button></div><div class="msgs" id="ms"></div><div id="chips"></div><div class="inp"><button class="gh" data-act="sug">${ic('spark')}</button><input id="ci" placeholder="Write something…"><button id="snd" data-act="send">${ic('up')}</button></div>`;drawMsgs();setBtn(!!ctl)}
+  o.innerHTML=`<div class="chh"><button data-act="cb">${ic('back')}</button><span class="avt" style="width:38px;height:38px;font-size:18px">${f.av?`<img src="${f.av}" alt="">`:esc(f.name[0])}</span><div style="flex:1;min-width:0"><b style="font-size:18px;font-weight:400">${esc(f.remark||f.name)}</b><span class="mono" style="letter-spacing:.2em">${esc(D.main.model||'未连接模型')}${D.cfg.showTok?' · ≈'+estTok((D.chats[f.id]||[]).map(m=>m.t).join(''))+' tok':''}</span></div><button data-act="more">${ic('more')}</button></div><div class="msgs" id="ms"></div><div id="chips"></div><div id="cpl"></div><div class="inp"><button class="gh" data-act="sug">${ic('spark')}</button><input id="ci" placeholder="Write something…"><button class="gh" style="margin:0 8px 0 0" data-act="cplus">${ic('plus')}</button><button id="snd" data-act="send">${ic('up')}</button></div>`;drawMsgs();setBtn(!!ctl)}
 function drawMsgs(typing){const f=D.friends[cur],c=D.chats[f.id]||[];let h='',pt=0;
   c.forEach((m,i)=>{const ts=m.ts||0;if(ts-pt>3e5){h+=`<div class="tsl">${fT(ts)}</div>`;pt=ts}
-   h+=`<div class="m ${m.r}${i==fresh?' in':''}" data-act="mm:${i}">${esc(m.t)}</div>`;if(sel==i)h+=`<div class="ma ${m.r}">${AB(m,i,c)}</div>`});
+   if(m.r=='s'){h+=`<div class="tsl">${esc(m.t)}</div>`;return}
+   const cls='m '+m.r+(i==fresh?' in':'');
+   h+=m.rp?`<div class="${cls} rp" data-act="mm:${i}"><span class="mono">${m.rp.kind=='tr'?'星转账':'星红包'}</span><b>¥${m.rp.amt}</b><small>${esc(m.rp.msg)}</small><em>${m.rp.st?'已被领取':'待领取'}</em></div>`:m.img?`<div class="${cls} mim" data-act="mm:${i}"><img src="${m.img}" alt=""></div>`:`<div class="${cls}" data-act="mm:${i}">${esc(m.t)}</div>`;
+   if(sel==i)h+=`<div class="ma ${m.r}">${AB(m,i,c)}</div>`});
   if(typing)h+='<div class="m ty"><i></i><i></i><i></i></div>';
   const e=$('#ms'),nb=e.scrollHeight-e.scrollTop-e.clientHeight<90;e.innerHTML=h;fresh=-1;if(nb||typing)e.scrollTop=1e9}
 async function deliver(f,txt){const ps=((f.split!==undefined?f.split===0:D.cfg.split===0)?[txt]:txt.split(/\n+/)).map(x=>x.trim()).filter(Boolean);if(!ps.length)ps.push('…');
@@ -621,10 +695,10 @@ async function askS(a,sys,ms,sig,cb){if(!a.url.trim())throw Error('未填写 API
   if(!can)return ask(a,sys,ms,sig);
   try{return await ask(a,sys,ms,sig,cb)}catch(e){if(e.name=='AbortError'||a.stream=='on'||/^HTTP 4/.test(e.message)||e.message=='请求超时')throw e;D.bl.push(h);save();return ask(a,sys,ms,sig)}}
 async function gen(f){const id=f.id,t0=Date.now();ctl=new AbortController();setBtn(true);redraw(f,true);let live=null;
-  const hist=(D.chats[id]||[]).slice(-(f.mem||D.cfg.mem)).map(m=>({role:m.r=='u'?'user':'assistant',content:m.t}));
+  const hist=(D.chats[id]||[]).filter(m=>m.r!='s').slice(-(f.mem||D.cfg.mem)).map(m=>({role:m.r=='u'?'user':'assistant',content:m.t}));
   const drop=()=>{if(live){const c=D.chats[id],k=c.indexOf(live);if(k>-1)c.splice(k,1);live=null}};
   try{const txt=await askS(f.temp==null?D.main:Object.assign({},D.main,{temp:f.temp}),sysP(f),hist,ctl.signal,o=>{const c=D.chats[id];if(!c)return;if(!live){live={r:'a',t:o,ts:Date.now()};c.push(live)}else live.t=o;redraw(f)});drop();D.stat.calls++;D.stat.ms=Date.now()-t0;await deliver(f,txt)}
-  catch(e){if(e.name=='AbortError'){live=null}else{drop();D.stat.fails++;if(D.cfg.fallback){toast('API 未连通，使用本地回复：'+e.message);await deliver(f,LOCAL[Math.random()*3|0])}else toast('请求失败：'+e.message)}}
+  catch(e){if(e.name=='AbortError'){live=null}else{drop();D.stat.fails++;if(D.cfg.fallback){toast('API 未连通，使用本地回复：'+errMsg(e));await deliver(f,LOCAL[Math.random()*3|0])}else toast('请求失败：'+errMsg(e))}}
   ctl=null;setBtn(false);save();redraw(f)}
 function send(){const i=$('#ci'),t=i.value.trim();if(!t||ctl)return;const f=D.friends[cur];i.value='';$('#chips').innerHTML='';(D.chats[f.id]=D.chats[f.id]||[]).push({r:'u',t,ts:Date.now()});sel=-1;save();gen(f)}
 function menu(){const f=D.friends[cur],s=$('#sheet');s.className='on s';
@@ -637,7 +711,7 @@ function sheet(step,tmp){const s=$('#sheet');s.className='on';
 const ACT={
  app:x=>openApp(x),home:()=>{if(busy)return;document.querySelectorAll('.app').forEach(a=>a.classList.remove('on'));$('#a-home').classList.add('on');$('#wxo')&&($('#wxo').className='')},
  stab:x=>{stab=x;renderSet()},pull:x=>pull(x),
- test:async x=>{try{toast('测试中…');await ask(D[x],'',[{role:'user',content:'ping'}]);toast('链接成功')}catch(e){toast('链接失败：'+e.message)}},
+ test:async x=>{const a=D[x],rs=bz('test:'+x,'测试中…'),t0=Date.now();try{if(!a.model)throw Error('请先拉取并选择模型，或手动输入模型名');await ask(a,'',[{role:'user',content:'ping'}]);toast('连接成功 · '+(Date.now()-t0)+' ms · '+a.model)}catch(e){toast('连接失败：'+errMsg(e))}finally{rs()}},
  bl:()=>{D.bl=[];save();toast('流式黑名单已重置')},
  tg:(x,y,t)=>{D[x].raw=!D[x].raw;t.classList.toggle('on');save()},
  seg:(x,y,t)=>{D[x].stream=y;t.parentNode.querySelectorAll('button').forEach(b=>b.classList.toggle('a',b==t));save()},
@@ -654,10 +728,10 @@ const ACT={
   toast('验证码已发送，请查看「短信」');let k=60;t.disabled=true;const iv=setInterval(()=>{t.textContent=--k+'s';if(k<=0||!t.isConnected){clearInterval(iv);t.disabled=false;t.textContent='获取'}},1000)},
  reg:()=>{const g=i=>$('#'+i).value.trim(),id=g('r-id'),p=g('r-ph'),q=g('r-qq'),pw=g('r-pw');
   if(!id||!p||!q||!pw)return toast('请完整填写微信号、手机号、QQ号与密码');
-  if(pw.length<6)return toast('密码至少 6 位');
+  if(!/^[A-Za-z][A-Za-z0-9_-]{3,19}$/.test(id))return toast('微信号需以字母开头，4–20 位字母、数字、下划线或减号');if(!/^\d{5,12}$/.test(q))return toast('QQ 号应为 5–12 位数字');if(pw.length<6)return toast('密码至少 6 位');
   if(!D.codes.wx||g('r-c1')!=D.codes.wx)return toast('微信验证码不正确');
   if(!D.codes.qq||g('r-c2')!=D.codes.qq)return toast('QQ 验证码不正确');
-  D.me={av:tav,sig:g('r-sig'),id,ph:p,qq:q,pw};D.codes={};save();wtab=0;renderWX();toast('注册成功')},
+  D.me={av:tav,sig:g('r-sig'),id,ph:p,qq:q,pw};D.acct=D.me;D.codes={};save();wtab=0;renderWX();toast('注册成功')},
  wt:x=>wt(x),chat:x=>openChat(+x),cb:()=>{$('#wxo').className='';wt(wtab)},send:()=>send(),
  addf:()=>sheet(1),sx:()=>$('#sheet').className='',
  s2:()=>{const n=$('#s-n').value.trim();if(!n)return toast('请填写昵称');sheet(2,{name:n,wid:$('#s-w').value.trim()})},
@@ -675,7 +749,7 @@ const ACT={
   if($('#chips'))$('#chips').innerHTML=L.map(x=>`<button data-act="chip">${esc(x)}</button>`).join('')},
  more:()=>menu(),
  msum:async()=>{const f=D.friends[cur],c=D.chats[f.id]||[],b=$('#mb');if(!c.length)return toast('还没有聊天内容');b.innerHTML='<p class="mono" style="margin-top:30px">总结中…</p>';
-  try{const r=await ask(D.sub.url?D.sub:D.main,'你是简洁的聊天总结助手。',[{role:'user',content:'用不超过 80 字总结下面的聊天，并点出对方的情绪与主要话题：\n'+c.map(m=>(m.r=='u'?'我':f.name)+'：'+m.t).join('\n')}]);b.innerHTML=`<p style="font:italic 300 24px/1.5 var(--serif);margin-top:26px">${esc(r)}</p>`}catch(e){b.innerHTML='<p class="mono" style="margin-top:30px">总结失败：'+esc(e.message)+'</p>'}},
+  try{const r=await ask(D.sub.url?D.sub:D.main,'你是简洁的聊天总结助手。',[{role:'user',content:'用不超过 80 字总结下面的聊天，并点出对方的情绪与主要话题：\n'+c.map(m=>(m.r=='u'?'我':f.name)+'：'+m.t).join('\n')}]);b.innerHTML=`<p style="font:italic 300 24px/1.5 var(--serif);margin-top:26px">${esc(r)}</p>`}catch(e){b.innerHTML='<p class="mono" style="margin-top:30px">总结失败：'+esc(errMsg(e))+'</p>'}},
  medit:()=>{$('#sheet').className='';nav('persona',cur)},
  msave:()=>{const f=D.friends[cur];f.name=$('#e-n').value.trim()||f.name;f.role=$('#e-r').value.trim()||f.role;save();$('#sheet').className='';openChat(cur);toast('角色已更新')},
  mclr:()=>{{const f=D.friends[cur];D.chats[f.id]=f.hello?[{r:'a',t:f.hello,ts:Date.now()}]:[]}save();$('#sheet').className='';drawMsgs();toast('聊天记录已清空')},
@@ -694,7 +768,7 @@ const ACT={
  rd:x=>{const f=D.friends[+x];D.chats[f.id]=[];save();$('#sheet').className='';chatList()},
  pwsave:()=>{const a=$('#pw1').value,b=$('#pw2').value;if(D.me.pw&&$('#pw0').value!==D.me.pw)return toast('旧密码不正确');if(a.length<6)return toast('新密码至少 6 位');if(a!==b)return toast('两次输入不一致');D.me.pw=a;save();pback();toast('密码已修改')},
  allclr:(x,y,t)=>{if(!ok2(t))return;D.friends.forEach(f=>D.chats[f.id]=[]);D.unread={};save();toast('已清空全部聊天记录')},
- wdel:(x,y,t)=>{if(!ok2(t))return;D.me=null;D.friends=[];D.chats={};D.unread={};save();wtab=0;renderWX();toast('账号已注销')},
+ wdel:(x,y,t)=>{if(!ok2(t))return;D.me=null;D.acct=null;D.friends=[];D.chats={};D.unread={};save();wtab=0;renderWX();toast('账号已注销')},
  rst:(x,y,t)=>{if(!ok2(t))return;try{localStorage.removeItem('pocket-mag')}catch(e){}location.reload()},
  sn:x=>{sst.push(x);renderSet(1)},sb:()=>{sst.pop();renderSet()},
  cf:(x,y,t)=>{D.cfg[x]=D.cfg[x]?0:1;t.classList.toggle('on');save();applySet()},
@@ -706,19 +780,23 @@ const ACT={
  memc:(x,y,t)=>{if(!ok2(t))return;D.cfg.memories=[];save();renderSet()},
  dexp:()=>{$('#dx').value=JSON.stringify({friends:D.friends,chats:D.chats,cfg:D.cfg},null,1);toast('已导出到文本框')},
  dcp:()=>{const e=$('#dx');e.select();try{navigator.clipboard.writeText(e.value).then(()=>toast('已复制'),()=>toast('请手动复制选中的文本'))}catch(x){toast('请手动复制选中的文本')}},
- dimp:()=>{try{const j=JSON.parse($('#dx').value);if(!Array.isArray(j.friends)||typeof j.chats!='object')throw Error('格式不正确');D.friends=j.friends;D.chats=j.chats;if(j.cfg)Object.assign(D.cfg,j.cfg);save();toast('导入成功：'+j.friends.length+' 位好友')}catch(e){toast('导入失败：'+e.message)}},
+ dimp:()=>{try{const j=JSON.parse($('#dx').value);if(!Array.isArray(j.friends)||typeof j.chats!='object')throw Error('格式不正确');D.friends=j.friends;D.chats=j.chats;if(j.cfg)Object.assign(D.cfg,j.cfg);save();toast('导入成功：'+j.friends.length+' 位好友')}catch(e){toast('导入失败：'+errMsg(e))}},
  kclr:(x,y,t)=>{if(!ok2(t))return;[D.main,D.sub].concat(D.presets.map(p=>p.main),D.presets.map(p=>p.sub)).forEach(a=>a.key='');save();toast('已清除全部 API 密钥')},
  logout:()=>{D.me=null;save();wtab=0;renderWX()},soon:()=>toast('即将开放')
 };
 ph.addEventListener('click',e=>{if(lpF){lpF=0;return}const t=e.target.closest('[data-act]');if(!t)return;const [a,x,y]=t.dataset.act.split(':');ACT[a]&&ACT[a](x,y,t)});
 const onIn=e=>{const t=e.target;
-  if(t.dataset&&t.dataset.o){const k=t.dataset.k;D[t.dataset.o][k]=k=='temp'?parseFloat(t.value):t.value;if(k=='temp')t.nextElementSibling.textContent=t.value;save()}
+  if(t.dataset&&t.dataset.o){const k=t.dataset.k;D[t.dataset.o][k]=k=='temp'?parseFloat(t.value):t.value;if(k=='temp')t.nextElementSibling.textContent=t.value;if(k=='model')document.querySelectorAll('[data-o="'+t.dataset.o+'"][data-k="model"]').forEach(x=>{if(x!==t&&x.tagName=='INPUT')x.value=t.value});save()}
   if(t.id=='psel'){D.cur=+t.value;D.main=clone(D.presets[D.cur].main);D.sub=clone(D.presets[D.cur].sub);save();renderSet()}
   if(t.dataset&&t.dataset.fk){const f=D.friends[+t.dataset.fi];let v=t.value;if(t.type=='range')v=parseFloat(v);f[t.dataset.fk]=v;save();if(t.type=='range'&&t.nextElementSibling)t.nextElementSibling.textContent=v}
   if(t.dataset&&t.dataset.mk){D.me[t.dataset.mk]=t.value;save()}
   if(t.dataset&&t.dataset.sk){D.set[t.dataset.sk]=parseFloat(t.value);if(t.nextElementSibling)t.nextElementSibling.textContent=t.value;applySet();save()}
   if(t.dataset&&t.dataset.cf){const k=t.dataset.cf;D.cfg[k]=(t.type=='range'||t.type=='number')?parseFloat(t.value):t.value;if(t.type=='range'&&t.nextElementSibling)t.nextElementSibling.textContent=t.value;save()}
   if(t.dataset&&t.dataset.nv!==undefined){nxVol=parseFloat(t.value);if(nxMaster)nxMaster.gain.value=nxVol}
+  if(t.id=='dxf'&&e.type=='change'&&t.files[0]){const r=new FileReader();r.onload=()=>{$('#dx').value=r.result;toast('已读取文件，点「导入」确认')};r.readAsText(t.files[0])}
+  if(t.id=='sq'){smq=t.value;smList()}
+  if(t.id=='cimg'&&e.type=='change'&&t.files[0]){const f=D.friends[cur];shrink(t.files[0],600,d=>{const c=D.chats[f.id]=D.chats[f.id]||[];c.push({r:'u',t:'[图片]',img:d,ts:Date.now()});fresh=c.length-1;save();if($('#cpl'))$('#cpl').innerHTML='';drawMsgs();if(!ctl)gen(f)})}
+  if(t.id=='phf'&&e.type=='change'){[...t.files].slice(0,12).forEach(fl=>shrink(fl,900,d=>{D.ph.unshift({id:'i'+Date.now()+Math.random(),d,t:Date.now()});D.ph=D.ph.slice(0,24);save();if($('#a-ph').classList.contains('on'))renderPh()}))}
   if(t.id=='ne'){const n=D.nt[ntc];n.x=t.value;n.t=Date.now();save();$('#nm').textContent=t.value.length+' 字'}
   if(t.id=='nq')ntList();
   if(t.id=='aii'){t.style.height='auto';t.style.height=Math.min(t.scrollHeight,110)+'px'}
@@ -742,7 +820,7 @@ const isDark=()=>document.documentElement.dataset.theme=='dark'||(D.set.theme=='
 function qtRender(){$('#ncq').innerHTML=[['bell','勿扰','dnd',D.set.dnd],['moon','深色','dark',isDark()],['more','静音','mute',D.set.mute],['spark','静态','calm',D.cfg.calm],['expand','全屏','full',!!document.fullscreenElement],['lock','锁屏','lock',false]].map(([i,l,k,on])=>`<button class="qt ${on?'on':''}" data-act="qt:${k}">${ic(i)}<span>${l}</span></button>`).join('')}
 const ncClose=()=>{$('#nc').classList.remove('on');$('#ncm').classList.remove('on')};
 function lock(){lkIn='';const l=$('#lk'),pr=mPhase();
-  l.innerHTML=`<div class="mono">${mName(pr)} · ${zodiac()}座</div><h1 class="clk" style="margin-top:10px">${fT(new Date())}</h1><div class="mono" style="margin-top:6px">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div><div style="margin:26px 0 14px;color:#fff">${moonSVG(56,pr,true)}</div>`+(D.set.pin?`<div class="dots" id="ld">${'<i></i>'.repeat(4)}</div><div class="pad">${[1,2,3,4,5,6,7,8,9,'',0,'d'].map(k=>k===''?'<span></span>':`<button data-act="lk:${k}">${k=='d'?ic('back'):k}</button>`).join('')}</div>`:`<button class="bt" style="margin-top:34px;color:#fff;border-color:rgba(255,255,255,.4)" data-act="lku">轻触解锁</button>`);l.className='on'}
+  l.innerHTML=`<div class="mono">${mName(pr)} · ${zodiac()}座</div><h1 class="clk" style="margin-top:10px">${fT(new Date())}</h1><div class="mono" style="margin-top:6px">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div><div style="margin:26px 0 14px;color:#fff">${moonSVG(56,pr,true)}</div><div class="lkw">${D.nf.slice(0,3).map(n=>`<div class="lkn">${ico(n.app)}<div><b>${esc(n.title)}</b><small>${esc(D.set.detail?n.text:'通知')}</small></div></div>`).join('')}</div>`+(D.set.pin?`<div class="dots" id="ld">${'<i></i>'.repeat(4)}</div><div class="pad">${[1,2,3,4,5,6,7,8,9,'',0,'d'].map(k=>k===''?'<span></span>':`<button data-act="lk:${k}">${k=='d'?ic('back'):k}</button>`).join('')}</div>`:`<button class="bt" style="margin-top:34px;color:#fff;border-color:rgba(255,255,255,.4)" data-act="lku">轻触解锁</button>`);l.className='on'}
 const unlock=()=>{$('#lk').className='off';setTimeout(()=>{$('#lk').className=''},900)};
 
 /* ---- sky ---- */
@@ -753,14 +831,15 @@ function renderSky(){const A=$('#a-sky'),p=mPhase();let b='';
   if(skt==1){const d0=new Date(),f=new Date(d0.getFullYear(),d0.getMonth()+skm,1),n=new Date(f.getFullYear(),f.getMonth()+1,0).getDate();
     b=`<div class="cd" style="justify-content:space-between;align-items:center;margin-top:14px"><button class="bt" data-act="skm:-1">${ic('back')}</button><b style="font:300 22px var(--serif)">${f.getFullYear()} · ${f.getMonth()+1} 月</b><button class="bt" data-act="skm:1">${ic('next')}</button></div><div class="cal">${'日一二三四五六'.split('').map(c=>`<div>${c}</div>`).join('')}${'<span></span>'.repeat(f.getDay())}${[...Array(n)].map((_,i)=>{const dt=new Date(f.getFullYear(),f.getMonth(),i+1,12);return `<div class="d${dt.toDateString()==d0.toDateString()?' t':''}">${moonSVG(22,mPhase(dt),false)}<span>${i+1}</span></div>`}).join('')}</div>`}
   if(skt==2)b=MAN.map(([n,t])=>`<div class="mono sec">${n}</div><div class="xg">${[...t].map(c=>`<button class="${lit.includes(c)?'lit':''}" data-act="xs:${c}">${c}</button>`).join('')}</div>`).join('');
-  A.innerHTML=`<div class="scroll"><div class="mono">04 / Sky</div><hr class="k"><h2 class="tt">天象</h2><div class="tabs">${['今日','月历','星宿'].map((t,i)=>`<button class="${skt==i?'a':''}" data-act="skt:${i}">${t}</button>`).join('')}</div>${b}</div>`}
+  if(skt==3){const cur=zs||zodiac(),z=ZS.find(a=>a[0]==cur);b=`<div class="xg" style="grid-template-columns:repeat(4,1fr)">${ZS.map(a=>`<button style="aspect-ratio:auto;padding:12px 0;border-radius:14px;font-size:14px" class="${a[0]==cur?'lit':''}" data-act="zsel:${a[0]}">${a[0]}</button>`).join('')}</div><div class="card" style="margin-top:16px"><span class="mono">${z[2]} · ${z[1]}</span><b>${z[0]}座</b><p id="zsx" style="font-size:14px;line-height:1.8;min-height:44px">${esc(zsx[z[0]+new Date().toDateString()]||'')}</p></div><button class="bt k w" style="margin-top:12px" data-act="zgen">生成今日运势</button>`}
+  A.innerHTML=`<div class="scroll"><div class="mono">04 / Sky</div><hr class="k"><h2 class="tt">天象</h2><div class="tabs">${['今日','月历','星宿','星座'].map((t,i)=>`<button class="${skt==i?'a':''}" data-act="skt:${i}">${t}</button>`).join('')}</div>${b}</div>`}
 
 /* ---- notes ---- */
 function renderNt(){const A=$('#a-nt');
   if(ntc<0){A.innerHTML=`<div class="scroll"><div class="mono">05 / Notes</div><hr class="k"><div class="hd"><h2 class="tt">备忘录</h2><button class="pl" data-act="ntn">${ic('plus')}</button></div><label class="sb2">${ic('search')}<input id="nq" placeholder="搜索"></label><div id="nl"></div></div>`;ntList();return}
-  const n=D.nt[ntc];A.innerHTML=`<div class="chh"><button data-act="ntb">${ic('back')}</button><b class="pt">${fD(n.t)}</b><button data-act="ntd">${ic('trash')}</button></div><div class="scroll"><textarea id="ne" class="ne" placeholder="写点什么…">${esc(n.x)}</textarea><div class="chips2"><button data-act="nai:polish">${ic('spark')}润色</button><button data-act="nai:sum">总结</button><button data-act="nai:cont">续写</button></div><p class="mono" id="nm" style="margin-top:10px">${n.x.length} 字</p></div>`}
-function ntList(){const q=($('#nq')||{}).value||'',L=D.nt.map((n,i)=>i).filter(i=>D.nt[i].x.includes(q)).sort((a,b)=>D.nt[b].t-D.nt[a].t);
-  $('#nl').innerHTML=L.length?L.map(i=>{const n=D.nt[i],ls=n.x.split('\n');return `<button class="li" data-act="nto:${i}"><div><b>${esc(ls[0]||'新备忘录')}</b><small>${fm(n.t)} · ${esc(ls.slice(1).join(' ')||'无更多内容')}</small></div>${ic('next')}</button>`}).join(''):'<p class="empty">还没有备忘录。<br>点右上角写下第一条。</p>'}
+  const n=D.nt[ntc];A.innerHTML=`<div class="chh"><button data-act="ntb">${ic('back')}</button><b class="pt">${fD(n.t)}</b><div style="display:flex;gap:6px"><button data-act="ntp">${ic('pin')}</button><button data-act="ntcp">${ic('copy')}</button><button data-act="ntd">${ic('trash')}</button></div></div><div class="scroll"><textarea id="ne" class="ne" placeholder="写点什么…">${esc(n.x)}</textarea><div class="chips2"><button data-act="nai:polish">${ic('spark')}润色</button><button data-act="nai:sum">总结</button><button data-act="nai:cont">续写</button></div><p class="mono" id="nm" style="margin-top:10px">${n.x.length} 字</p></div>`}
+function ntList(){const q=($('#nq')||{}).value||'',L=D.nt.map((n,i)=>i).filter(i=>D.nt[i].x.includes(q)).sort((a,b)=>(!!D.nt[b].pin-!!D.nt[a].pin)||D.nt[b].t-D.nt[a].t);
+  $('#nl').innerHTML=L.length?L.map(i=>{const n=D.nt[i],ls=n.x.split('\n');return `<button class="li" data-act="nto:${i}"><div><b>${esc(ls[0]||'新备忘录')}</b><small>${n.pin?'置顶 · ':''}${fm(n.t)} · ${esc(ls.slice(1).join(' ')||'无更多内容')}</small></div>${ic('next')}</button>`}).join(''):(q?'<p class="empty">没有匹配的备忘录</p>':'<p class="empty">还没有备忘录。<br>点右上角写下第一条。</p>')}
 
 /* ---- assistant ---- */
 const aiC=()=>D.ai.convs.find(c=>c.id==D.ai.cur);
@@ -768,30 +847,30 @@ const md=t=>esc(t).replace(/```(?:[\w-]*\n)?([\s\S]*?)(```|$)/g,(m,c)=>'<pre>'+c
 const QK=['帮我润色一段话','用三句话解释一个概念','陪我头脑风暴','把这段话翻译成英文'];
 function renderAi(){const A=$('#a-ai');
   if(aiv=='hist'){A.innerHTML=`<div class="chh"><button data-act="aib">${ic('back')}</button><b class="pt">历史对话</b><span style="width:24px"></span></div><div class="scroll">${D.ai.convs.length?D.ai.convs.map(v=>`<div class="lb"><div data-act="aio:${v.id}" style="cursor:pointer"><b>${esc(v.title)}</b><small>${v.msgs.length} 条 · ${fD(v.t)}</small></div><button data-act="aix:${v.id}">${ic('trash')}</button></div>`).join(''):'<p class="empty">暂无对话</p>'}</div>`;return}
-  const c=aiC();A.innerHTML=`<div class="chh"><div style="flex:1;min-width:0"><h2 class="tt">助手</h2><span class="mono">${esc(c?c.title:'新对话')} · ${esc(D.main.model||'未连接')}</span></div><button data-act="aih">${ic('copy')}</button><button data-act="ain">${ic('plus')}</button></div><div class="msgs ai" id="aim"></div><div class="aiin"><textarea id="aii" rows="1" placeholder="问点什么…"></textarea><button id="aisn" data-act="ais">${ic('up')}</button></div>`;aiDraw()}
+  const c=aiC();A.innerHTML=`<div class="chh"><div style="flex:1;min-width:0"><h2 class="tt">助手</h2><button class="mono" data-act="amod" style="display:block;text-align:left">${esc(c?c.title:'新对话')} · ${esc(D.main.model||'未连接')}</button></div><button data-act="aih">${ic('copy')}</button><button data-act="ain">${ic('plus')}</button></div><div class="msgs ai" id="aim"></div><div class="aiin"><button class="gh2" data-act="aimic">${ic('mic')}</button><textarea id="aii" rows="1" placeholder="问点什么…"></textarea><button id="aisn" data-act="ais">${ic('up')}</button></div>`;aiDraw()}
 function aiDraw(live){const c=aiC(),e=$('#aim');if(!e)return;
-  e.innerHTML=c&&c.msgs.length?c.msgs.map((m,i)=>`<div class="am ${m.r}">${m.r=='u'?esc(m.t):(md(m.t)||'…')}</div>`+(m.r=='a'&&i==c.msgs.length-1&&!aic?`<div class="ma a"><button data-act="aicp">${ic('copy')}复制</button><button data-act="aire">${ic('refresh')}重答</button></div>`:'')).join(''):`<div class="aih"><p>今夜想聊点什么？</p><div class="qk">${QK.map((q,i)=>`<button data-act="aiq:${i}">${q}</button>`).join('')}</div></div>`;
+  e.innerHTML=c&&c.msgs.length?c.msgs.map((m,i)=>`<div class="am ${m.r}">${m.r=='u'?esc(m.t):(md(m.t)||'…')}</div>`+(m.r=='a'&&i==c.msgs.length-1&&!aic?`<div class="ma a"><button data-act="aicp">${ic('copy')}复制</button><button data-act="aire">${ic('refresh')}重答</button><button data-act="aisp">${ic('spark')}朗读</button><button data-act="ains">${ic('edit')}存入备忘录</button></div>`:'')).join(''):`<div class="aih"><p>今夜想聊点什么？</p><div class="qk">${QK.map((q,i)=>`<button data-act="aiq:${i}">${q}</button>`).join('')}</div></div>`;
   const nb=e.scrollHeight-e.scrollTop-e.clientHeight<120;if(nb||!live)e.scrollTop=1e9;const b=$('#aisn');if(b){b.dataset.act=aic?'aistop':'ais';b.innerHTML=ic(aic?'stop':'up')}}
 async function aiSend(re){const i=$('#aii');let c=aiC();
   if(!re){const t=i.value.trim();if(!t||aic)return;if(!c){c={id:'c'+Date.now(),title:t.slice(0,16),msgs:[],t:Date.now()};D.ai.convs.unshift(c);D.ai.cur=c.id}c.msgs.push({r:'u',t});i.value='';i.style.height='auto'}
   c.t=Date.now();const m={r:'a',t:''};c.msgs.push(m);aic=new AbortController();aiDraw();
   const hist=c.msgs.slice(0,-1).slice(-D.cfg.mem).map(x=>({role:x.r=='u'?'user':'assistant',content:x.t}));
   const sys=(D.cfg.sys?D.cfg.sys+'\n':'')+'你是 POCKET 内置的 AI 助手，回答简洁清晰，可使用 Markdown。'+(D.cfg.nick?'称呼用户为「'+D.cfg.nick+'」。':'')+(D.cfg.memOn&&D.cfg.memories.length?'已知用户信息：'+D.cfg.memories.join('；')+'。':'');
-  try{const r=await askS(D.main,sys,hist,aic.signal,o=>{m.t=o;aiDraw(1)});m.t=r;D.stat.calls++}catch(e){if(e.name!='AbortError'){D.stat.fails++;toast('请求失败：'+e.message)}}
+  try{const r=await askS(D.main,sys,hist,aic.signal,o=>{m.t=o;aiDraw(1)});m.t=r;D.stat.calls++}catch(e){if(e.name!='AbortError'){D.stat.fails++;toast('请求失败：'+errMsg(e))}}
   if(!m.t){const k=c.msgs.indexOf(m);if(k>-1)c.msgs.splice(k,1)}
   aic=null;save();aiDraw()}
 
 /* ---- boot / home bg ---- */
 function boot(){const bx=$('#boot'),cv=$('#bc'),W=bx.clientWidth,H=bx.clientHeight,dp=Math.min(2,devicePixelRatio||1);cv.width=W*dp;cv.height=H*dp;const x=cv.getContext('2d');x.scale(dp,dp);
   const p0=mPhase(),N=130,P=[...Array(N)].map(()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,r:Math.random()*1.3+.3,t:Math.random()*6}));
-  const ks=Object.keys(CON),anc=[[.2,.2],[.8,.17],[.16,.72],[.84,.68],[.5,.08],[.5,.9],[.26,.46],[.76,.44],[.5,.64]],sc=Math.min(W,H)*.2;
-  const CS=ks.map((k,i)=>({c:CON[k],ox:anc[i%9][0]*W-sc/2,oy:anc[i%9][1]*H-sc/2,d:i*.15}));
+  const ks=Object.keys(CON),anc=[[.2,.2],[.8,.17],[.16,.72],[.84,.68],[.5,.08],[.5,.9],[.26,.46],[.76,.44],[.5,.64],[.1,.46],[.9,.44]],sc=Math.min(W,H)*.2;
+  const CS=ks.map((k,i)=>({c:CON[k],ox:anc[i%11][0]*W-sc/2,oy:anc[i%11][1]*H-sc/2,d:i*.15}));
   const cx=W/2,cy=H*.4,r=Math.min(W,H)*.1,t0=performance.now(),cl=v=>Math.max(0,Math.min(1,v)),ez=v=>1-Math.pow(1-v,3);let done=false,SH=[];
   $('.bt2 .mono').textContent='Nocturne · '+mName(p0)+' · '+ill(p0)+'%';
   const STG=[[0,'校准星历'],[1400,'载入星图'],[2800,'点亮夜空'],[4000,'就绪']];
   const fin=()=>{if(done)return;done=true;bx.classList.add('out');setTimeout(()=>{bx.style.display='none'},1200)};
   bx.addEventListener('click',fin);setTimeout(fin,5200);
-  (function f(now){if(done&&bx.style.display=='none')return;const t=now-t0;x.clearRect(0,0,W,H);
+  (function f(now){if(done&&bx.style.display=='none')return;const t=Math.max(0,now-t0);x.clearRect(0,0,W,H);
     const g=x.createRadialGradient(cx,cy,0,cx,cy,r*6);g.addColorStop(0,'rgba(255,255,255,'+.14*cl(t/900)+')');g.addColorStop(1,'rgba(255,255,255,0)');x.globalAlpha=1;x.fillStyle=g;x.fillRect(0,0,W,H);
     x.fillStyle=x.strokeStyle='#fff';
     P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;x.globalAlpha=cl(t/700)*(.4+.6*Math.abs(Math.sin(p.t+t/600)));x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill()});
@@ -805,7 +884,7 @@ function boot(){const bx=$('#boot'),cv=$('#bc'),W=bx.clientWidth,H=bx.clientHeig
     if(!done||t<6500)requestAnimationFrame(f)})(t0)}
 function hbg(){const cv=$('#hbg'),x=cv.getContext('2d');let W=0,H=0;const P=[...Array(46)].map(()=>({x:Math.random(),y:Math.random(),vx:(Math.random()-.5)*2e-4,vy:(Math.random()-.5)*2e-4,r:Math.random()+.4}));
   (function f(){requestAnimationFrame(f);if(!$('#a-home').classList.contains('on'))return;const w=cv.clientWidth,h=cv.clientHeight;if(w!=W||h!=H){W=w;H=h;cv.width=w;cv.height=h}
-    x.clearRect(0,0,W,H);x.fillStyle=x.strokeStyle=getComputedStyle(ph).getPropertyValue('--fg').trim()||'#000';
+    x.clearRect(0,0,W,H);x.fillStyle=x.strokeStyle=getComputedStyle($('#a-home')).getPropertyValue('--fg').trim()||'#000';
     P.forEach(p=>{p.x=(p.x+p.vx+1)%1;p.y=(p.y+p.vy+1)%1});
     P.forEach((p,i)=>{x.globalAlpha=.35;x.beginPath();x.arc(p.x*W,p.y*H,p.r,0,7);x.fill();for(let j=i+1;j<P.length;j++){const q=P[j],d=Math.hypot((p.x-q.x)*W,(p.y-q.y)*H);if(d<80){x.globalAlpha=(1-d/80)*.13;x.beginPath();x.moveTo(p.x*W,p.y*H);x.lineTo(q.x*W,q.y*H);x.stroke()}}})})()}
 
@@ -824,7 +903,7 @@ Object.assign(ACT,{
  ntb:()=>{if(D.nt[ntc]&&!D.nt[ntc].x.trim())D.nt.splice(ntc,1);ntc=-1;save();renderNt()},
  ntd:()=>{D.nt.splice(ntc,1);ntc=-1;save();renderNt()},nto:x=>{ntc=+x;renderNt()},
  nai:async x=>{const n=D.nt[ntc],P={polish:'请润色下面的文字，保持原意，只输出润色后的文本：',sum:'请用不超过 60 字总结下面的内容，只输出总结：',cont:'请自然地续写下面的文字（约 100 字），只输出续写部分：'}[x];if(!n.x.trim())return toast('先写点内容');toast('处理中…');
-  try{const r=await ask(D.sub.url?D.sub:D.main,'你是简洁的写作助手。',[{role:'user',content:P+'\n'+n.x}]);n.x=x=='polish'?r.trim():n.x+(x=='sum'?'\n\n—— 摘要 ——\n':'\n')+r.trim();n.t=Date.now();save();renderNt();toast('完成')}catch(e){toast('失败：'+e.message)}},
+  try{const r=await ask(D.sub.url?D.sub:D.main,'你是简洁的写作助手。',[{role:'user',content:P+'\n'+n.x}]);n.x=x=='polish'?r.trim():n.x+(x=='sum'?'\n\n—— 摘要 ——\n':'\n')+r.trim();n.t=Date.now();save();renderNt();toast('完成')}catch(e){toast('失败：'+errMsg(e))}},
  aih:()=>{aiv='hist';renderAi()},aib:()=>{aiv='chat';renderAi()},ain:()=>{if(aic)return;D.ai.cur=null;aiv='chat';renderAi()},
  aio:x=>{D.ai.cur=x;aiv='chat';renderAi()},aix:x=>{D.ai.convs=D.ai.convs.filter(v=>v.id!=x);if(D.ai.cur==x)D.ai.cur=null;save();renderAi()},
  aiq:x=>{const i=$('#aii');i.value=QK[+x];i.focus()},ais:()=>aiSend(),aistop:()=>aic&&aic.abort(),
@@ -849,7 +928,7 @@ function analog(){const d=new Date(),s=d.getSeconds(),m=d.getMinutes()+s/60,h=d.
   return `<svg viewBox="0 0 100 100" width="150" height="150" style="display:block;margin:12px auto">${t}<line id="hh" x1="50" y1="50" x2="50" y2="27" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" transform="rotate(${h*30} 50 50)"/><line id="hm" x1="50" y1="50" x2="50" y2="17" stroke="currentColor" stroke-width="1" stroke-linecap="round" transform="rotate(${m*6} 50 50)"/><line id="hs" x1="50" y1="56" x2="50" y2="12" stroke="currentColor" stroke-width=".5" transform="rotate(${s*6} 50 50)"/><circle cx="50" cy="50" r="1.8" fill="currentColor"/></svg>`}
 function renderClk(){const A=$('#a-clk');let b='';
   if(clt==0)b=analog()+CITY.map(([n,z])=>`<div class="dr"><div style="flex:1"><b style="font-size:15px">${n}</b><span class="mono" style="display:block;margin-top:2px">${tzDay(z)}</span></div><span class="wt" data-z="${z}" style="font:300 28px var(--serif)">${tz(z)}</span></div>`).join('');
-  if(clt==1)b=fld('时间','<input id="alt" type="time" value="07:30">')+fld('标签','<input id="all" placeholder="起床">')+fld('重复','<select id="alr"><option value="1">每天</option><option value="0">仅一次</option></select>')+'<button class="bt k w" data-act="aladd">添加闹钟</button>'+D.al.map(a=>`<div class="dr"><div style="flex:1"><span style="font:300 30px var(--serif)">${a.t}</span><span class="mono" style="display:block;margin-top:2px">${esc(a.l||'闹钟')} · ${a.rep?'每天':'一次'}</span></div><button class="tg ${a.on?'on':''}" data-act="alt:${a.id}"><i></i></button><button data-act="aldel:${a.id}">${ic('trash')}</button></div>`).join('');
+  if(clt==1)b=fld('时间','<input id="alt" type="time" value="07:30">')+fld('标签','<input id="all" placeholder="起床">')+fld('重复','<select id="alr"><option value="1">每天</option><option value="0">仅一次</option></select>')+'<button class="bt k w" data-act="aladd">添加闹钟</button>'+D.al.map(a=>`<div class="dr"><div style="flex:1"><span style="font:300 30px var(--serif)">${a.t}</span><span class="mono" style="display:block;margin-top:2px">${esc(a.l||'闹钟')} · ${a.rep?'每天':'一次'}</span></div><button class="tg ${a.on?'on':''}" data-act="alt:${a.id}"><i></i></button><button data-act="aldel:${a.id}">${ic('trash')}</button></div>`).join('')+(D.al.length?'':'<p class="empty" style="font-size:18px">暂无闹钟</p>');
   if(clt==2){const left=tmr.run?Math.max(0,tmr.end-Date.now()):tmr.left,idle=!tmr.run&&!tmr.left;
     b=`<div class="ringw"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="var(--ln)" stroke-width=".8"/><circle id="trg" cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="${tmr.tot?283*(1-left/(tmr.tot*1000)):0}"/></svg><div class="ringc">${idle?'<div class="tin"><input id="tm" type="number" min="0" max="99" value="5"><span style="font:300 30px var(--serif);align-self:center">:</span><input id="ts" type="number" min="0" max="59" value="00"></div>':`<div class="bigt" id="td" style="margin:0">${p2(Math.floor(left/6e4))}:${p2(Math.floor(left/1000)%60)}</div>`}</div></div><div class="row" style="justify-content:center"><button class="bt k" data-act="tgo">${tmr.run?'暂停':'开始'}</button><button class="bt" data-act="trs2">重置</button></div>`}
   if(clt==3)b=`<div class="bigt" id="sd" style="margin-top:34px">00:00.00</div><div class="row" style="justify-content:center"><button class="bt k" data-act="swg">${sw.run?'停止':'开始'}</button><button class="bt" data-act="swl">计次</button><button class="bt" data-act="swr">重置</button></div>`+sw.laps.map((l,i)=>`<div class="dr"><span class="mono" style="width:auto">#${sw.laps.length-i}</span><b style="font:300 18px var(--serif)">${l}</b></div>`).join('');
@@ -905,23 +984,98 @@ Object.assign(ACT,{
  nxt:k=>{const c=ac();if(!nxMaster){nxMaster=c.createGain();nxMaster.connect(c.destination);nxMaster.gain.value=nxVol}if(nxOn[k]){nxOn[k].stop();delete nxOn[k]}else{const r=SND[k].mk(c);r.out.connect(nxMaster);nxOn[k]=r}renderNox()},
  nxs:x=>{nxLeft=+x?Date.now()+(+x)*60000:0;toast(+x?'已设置 '+x+' 分钟睡眠定时':'已关闭定时');renderNox()},
  nxb:()=>{nxBr=nxBr?0:1;renderNox();if(nxBr)setTimeout(()=>brLoop(0),60)},
- tdraw:async()=>{const q=($('#tq')||{}).value||'',i=Math.random()*22|0,rev=Math.random()<.3;tar={i,rev,q,text:''};D.tar.unshift({t:Date.now(),i,rev,q});save();renderTar();
+ tdraw:async()=>{const q=($('#tq')||{}).value||'',i=Math.random()*22|0,rev=Math.random()<.3;tar={i,rev,q,text:'解读中…'};D.tar.unshift({t:Date.now(),i,rev,q});save();renderTar();
   let tx;try{tx=(await ask(D.main,'你是温和克制的塔罗解读者，语言简短诗意，不做绝对预言。',[{role:'user',content:'我抽到了「'+ARC[i][0]+(rev?'（逆位）':'（正位）')+'」。'+(q?'我的问题是：'+q+'。':'')+'请用 80 字以内给出解读与一句温柔的建议。'}])).trim()}catch(e){tx='牌意：'+ARC[i][rev?2:1]+'。慢下来，听听内心的声音。'}
   tar.text=tx;if($('#tx'))$('#tx').textContent=tx},
- mpost:()=>{const x=$('#mox').value.trim();if(!x)return toast('写点什么');const p={id:'p'+Date.now(),who:'me',t:Date.now(),x,likes:[],cm:[]};D.mo.push(p);save();renderPg(0);D.friends.slice(0,3).forEach((f,k)=>setTimeout(()=>cmt(f,p),2000+k*2400))},
- mgen:async()=>{if(!D.friends.length)return toast('先去通讯录添加好友');toast('正在刷新…');await Promise.all(D.friends.slice(0,4).map(async f=>{let x;try{x=(await ask(D.main,sysP(f),[{role:'user',content:'请以你的角色身份发一条朋友圈，不超过 40 字，只输出正文。'}])).trim()}catch(e){x=FP[Math.random()*FP.length|0]}D.mo.push({id:'p'+Date.now()+Math.random(),who:f.id,t:Date.now()-Math.random()*36e5,x,likes:[],cm:[]})}));save();mrefresh()},
+ mpost:()=>{const x=$('#mox').value.trim();if(!x)return toast('写点什么');const p={id:'p'+Date.now(),who:'me',t:Date.now(),x,likes:[],cm:[]};D.mo.push(p);save();renderPg(0);toast('已发表');D.friends.slice(0,3).forEach((f,k)=>setTimeout(()=>cmt(f,p),2000+k*2400))},
+ mgen:async()=>{if(!D.friends.length)return toast('先去通讯录添加好友');toast('正在刷新…');await Promise.all(D.friends.slice(0,4).map(async f=>{let x;try{x=(await ask(D.main,sysP(f),[{role:'user',content:'请以你的角色身份发一条朋友圈，不超过 40 字，只输出正文。'}])).trim()}catch(e){x=FP[Math.random()*FP.length|0]}D.mo.push({id:'p'+Date.now()+Math.random(),who:f.id,t:Date.now()-Math.random()*36e5,x,likes:[],cm:[]})}));save();mrefresh();toast('好友动态已刷新')},
  mlk:x=>{const p=D.mo.find(v=>v.id==x),i=p.likes.indexOf('我');i<0?p.likes.push('我'):p.likes.splice(i,1);save();mrefresh()},
  mcm:x=>{mcOpen=mcOpen==x?null:x;mrefresh()},
- mcs:x=>{const v=$('#mci').value.trim();if(!v)return;D.mo.find(p=>p.id==x).cm.push({n:D.me.id,x:v});mcOpen=null;save();mrefresh()},
+ mcs:x=>{const v=$('#mci').value.trim();if(!v)return;D.mo.find(p=>p.id==x).cm.push({n:D.me.id,x:v});mcOpen=null;save();mrefresh();toast('评论成功')},
  mdl:x=>{D.mo=D.mo.filter(p=>p.id!=x);save();mrefresh()}
 });
 setInterval(alarmChk,1000);setInterval(clkLoop,200);
+
+/* ---- v6: calc / photos / widgets / sms / wallet ---- */
+let ca={c:'0',a:null,o:null,f:1,e:''},phv=null,zs=null,zsx={};
+const ZS=[['白羊','3.21 – 4.19','火象'],['金牛','4.20 – 5.20','土象'],['双子','5.21 – 6.21','风象'],['巨蟹','6.22 – 7.22','水象'],['狮子','7.23 – 8.22','火象'],['处女','8.23 – 9.22','土象'],['天秤','9.23 – 10.23','风象'],['天蝎','10.24 – 11.22','水象'],['射手','11.23 – 12.21','火象'],['摩羯','12.22 – 1.19','土象'],['水瓶','1.20 – 2.18','风象'],['双鱼','2.19 – 3.20','水象']];
+const spk=t=>{try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/[`*#]/g,''));u.lang='zh-CN';speechSynthesis.speak(u)}catch(e){toast('当前浏览器不支持朗读')}};
+function shrink(file,max,cb){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.68))};im.src=r.result};r.readAsDataURL(file)}
+const cfmt=v=>{if(v==='Error')return v;const n=parseFloat(v);if(!isFinite(n))return 'Error';const s=String(v);if(s.indexOf('e')>=0||Math.abs(n)>=1e12)return n.toExponential(4);const [i,d]=s.split('.');return (i=='-0'?'-0':Number(i).toLocaleString('en-US'))+(d!==undefined?'.'+d:s.endsWith('.')?'.':'')};
+const cop=(a,b,o)=>o=='+'?a+b:o=='−'?a-b:o=='×'?a*b:(b==0?NaN:a/b);
+function cu(){const d=$('#cd');if(!d)return;const s=cfmt(ca.c);d.textContent=s;d.style.fontSize=Math.max(30,60-Math.max(0,s.length-7)*5)+'px';$('#ce').textContent=ca.e}
+function renderCalc(){const K=[['AC','pm','pct','÷'],['7','8','9','×'],['4','5','6','−'],['1','2','3','+'],['0','.','=']];
+  $('#a-calc').innerHTML=`<div class="scroll" style="display:flex;flex-direction:column"><div class="mono">10 / Calc</div><hr class="k"><h2 class="tt">计算器</h2><div class="cdp"><span class="mono" id="ce" style="display:block;min-height:12px">${ca.e}</span><b id="cd">${cfmt(ca.c)}</b></div><div class="ckp">${K.map(r=>r.map(k=>`<button class="ck${'÷×−+='.includes(k)?' op':''}${k=='0'?' z':''}" data-act="ck:${k}">${k=='pm'?'±':k=='pct'?'%':k}</button>`).join('')).join('')}</div></div>`;cu()}
+function renderPh(){const A=$('#a-ph');
+  A.innerHTML=`<div class="scroll"><div class="mono">11 / Photos</div><hr class="k"><div class="hd"><h2 class="tt">相册</h2><label class="pl">${ic('plus')}<input type="file" accept="image/*" multiple hidden id="phf"></label></div>${D.ph.length?`<div class="pg3">${D.ph.map((p,i)=>`<button data-act="pho:${i}" style="background-image:url(${p.d})"></button>`).join('')}</div>`:'<p class="empty">还没有照片。<br>点右上角添加，或在聊天里发图。</p>'}</div>${phv!=null&&D.ph[phv]?`<div class="lbx"><img src="${D.ph[phv].d}" alt=""><div class="lbb"><button class="bt" data-act="phx">关闭</button><button class="bt" data-act="phw">设为壁纸</button><button class="bt" data-act="phd">删除</button></div></div>`:''}`}
+function renderWg(){const e=$('#wg');if(!e)return;const p=mPhase(),nb=D.al.filter(a=>a.on).sort((a,b)=>a.t<b.t?-1:1)[0],nt=D.nt.slice().sort((a,b)=>b.t-a.t)[0],QT=['少，但更好。','夜色温柔，万物有序。','慢慢来，比较快。','月亮不说话，也在发光。','把今天过成一首短诗。'];
+  e.innerHTML=`<div class="mono">Widgets</div><hr class="k"><button class="wcard dk" data-act="app:sky"><div style="color:#fff">${moonSVG(96,p,true)}</div><div><b>${mName(p)}</b><span class="mono">月龄 ${mAge().toFixed(1)} 天 · 照明 ${ill(p)}%</span><span class="mono">${zodiac()}座 · 满月 ${fm(nextPh(.5))}</span></div></button><div class="wrow"><button class="wcard" data-act="app:clk"><span class="mono">下一个闹钟</span><b>${nb?nb.t:'无'}</b><span class="mono">${nb?esc(nb.l||'闹钟'):'未设置'}</span></button><button class="wcard" data-act="nc"><span class="mono">通知</span><b>${D.nf.length}</b><span class="mono">${D.nf[0]?esc(D.nf[0].title):'暂无'}</span></button></div><button class="wcard" data-act="app:nt" style="width:100%"><span class="mono">最近备忘录</span><b style="font-size:17px">${nt?esc((nt.x.split('\n')[0]||'空白备忘录').slice(0,22)):'还没有备忘录'}</b><span class="mono">${nt?fD(nt.t):'点此新建'}</span></button><p class="quote2">${QT[new Date().getDate()%QT.length]}</p>`}
+
+Object.assign(ACT,{
+ ck:x=>{const clean=r=>isFinite(r)?String(parseFloat(r.toPrecision(12))):'Error';if(ca.c=='Error'&&x!='AC')return;
+  if(/\d/.test(x)){if(ca.f){ca.c=x;ca.f=0}else if(ca.c.replace(/[-.]/g,'').length<9)ca.c=ca.c=='0'?x:ca.c+x}
+  else if(x=='.'){if(ca.f){ca.c='0.';ca.f=0}else if(ca.c.indexOf('.')<0)ca.c+='.'}
+  else if(x=='AC')ca={c:'0',a:null,o:null,f:1,e:''};
+  else if(x=='pm')ca.c=ca.c.startsWith('-')?ca.c.slice(1):(ca.c=='0'?'0':'-'+ca.c);
+  else if(x=='pct')ca.c=clean(+ca.c/100);
+  else if(x=='='){if(ca.o!==null){const r=cop(ca.a,+ca.c,ca.o);ca.e=cfmt(String(ca.a))+' '+ca.o+' '+cfmt(ca.c)+' =';ca.c=clean(r);ca.a=null;ca.o=null;ca.f=1}}
+  else{if(ca.a!==null&&ca.o&&!ca.f)ca.c=clean(cop(ca.a,+ca.c,ca.o));ca.a=+ca.c;ca.o=x;ca.f=1;ca.e=cfmt(ca.c)+' '+x}
+  cu()},
+ pho:x=>{phv=+x;renderPh()},phx:()=>{phv=null;renderPh()},
+ phw:()=>{D.set.wp='photo';D.set.wpid=D.ph[phv].id;save();applySet();toast('已设为主屏壁纸')},
+ phd:()=>{D.ph.splice(phv,1);phv=null;save();renderPh()},
+ wps:x=>{D.set.wp=x;save();applySet();renderSet()},
+ wtp:x=>{D.wallet.bal+=+x;D.wallet.log.unshift({t:Date.now(),x:'零钱充值',a:+x});save();renderPg(0)},
+ fvd:x=>{D.fav.splice(+x,1);save();renderPg(0)},
+ mf:x=>{const f=D.friends[cur],m=D.chats[f.id][+x];D.fav.unshift({who:m.r=='u'?'我':(f.remark||f.name),x:m.t,ts:Date.now()});save();toast('已收藏')},
+ mw:x=>{const f=D.friends[cur],c=D.chats[f.id];c[+x]={r:'s',t:'你撤回了一条消息',ts:Date.now()};sel=-1;save();drawMsgs()},
+ mv:x=>spk(D.chats[D.friends[cur].id][+x].t),
+ cplus:()=>{const e=$('#cpl');e.innerHTML=e.innerHTML?'':`<div class="plp"><label class="pl2">${ic('camera')}<span>图片</span><input type="file" accept="image/*" hidden id="cimg"></label><button class="pl2" data-act="rpk:rp">${ic('star')}<span>红包</span></button><button class="pl2" data-act="rpk:tr">${ic('up')}<span>转账</span></button></div>`},
+ rpk:x=>{const s=$('#sheet');s.className='on s';s.innerHTML=`<div style="width:100%"><div class="mono">${x=='tr'?'转账':'发红包'} · 余额 ¥${D.wallet.bal.toFixed(2)}</div><hr class="k">${fld('金额（元）','<input id="rpa" type="number" step="0.01" min="0.01" value="8.88">')}${fld('留言','<input id="rpm" placeholder="恭喜发财，大吉大利">')}<button class="bt k w" data-act="rps:${x}">塞进${x=='tr'?'转账':'红包'}</button><button class="bt w" style="margin-top:10px" data-act="sx">取消</button></div>`;if($('#cpl'))$('#cpl').innerHTML=''},
+ rps:x=>{const a=Math.round((+$('#rpa').value||0)*100)/100,msg=$('#rpm').value.trim()||(x=='tr'?'转账给你':'恭喜发财，大吉大利');if(a<=0)return toast('请输入金额');if(a>D.wallet.bal)return toast('零钱不足，可在「我 · 钱包」充值');
+  const f=D.friends[cur],nm=f.remark||f.name,kd=x=='tr'?'转账':'红包';D.wallet.bal-=a;D.wallet.log.unshift({t:Date.now(),x:(x=='tr'?'转账给 ':'发红包给 ')+nm,a:-a});
+  const c=D.chats[f.id]=D.chats[f.id]||[],m={r:'u',t:'['+kd+' ¥'+a.toFixed(2)+'：'+msg+']',rp:{amt:a.toFixed(2),msg,kind:x,st:0},ts:Date.now()};c.push(m);fresh=c.length-1;save();$('#sheet').className='';drawMsgs();
+  setTimeout(()=>{m.rp.st=1;c.push({r:'s',t:nm+' 领取了你的'+kd,ts:Date.now()});save();redraw(f);if(!ctl)gen(f)},1800+Math.random()*1800)},
+ smc:()=>{const s=$('#sheet');s.className='on s';s.innerHTML=`<div style="width:100%"><div class="mono">新信息 · 选择收件人</div><hr class="k">${D.friends.length?D.friends.map((f,k)=>R('user',esc(f.remark||f.name),'','smn:'+k)).join(''):'<p class="empty">通讯录为空，请先在微信中添加好友</p>'}<button class="bt w" style="margin-top:16px" data-act="sx">取消</button></div>`},
+ smn:x=>{$('#sheet').className='';sv=D.friends[+x].name;renderSMS()},
+ smsend:async()=>{const i=$('#smi'),t=i?i.value.trim():'';if(!t||!sv||smTy)return;const nm=sv,f=D.friends.find(v=>v.name==nm);if(!f)return;i.value='';
+  D.sms.push({from:nm,text:t,t:Date.now(),me:1,fid:f.id,read:true});save();smTy=nm;renderSMS();
+  const hist=D.sms.filter(m=>m.from==nm).slice(-12).map(m=>({role:m.me?'user':'assistant',content:m.text}));let r;
+  try{r=(await ask(D.main,sysP(f)+' 现在是通过短信聊天，只回复一条简短短信。',hist)).trim().split('\n')[0]}catch(e){toast('API 未连通，已使用本地回复：'+errMsg(e));r=LOCAL[Math.random()*3|0].split('\n')[0]}
+  await sleep(500+Math.random()*900);smTy=null;const open=$('#a-sms').classList.contains('on')&&sv==nm;
+  D.sms.push({from:nm,text:r,t:Date.now(),fid:f.id,read:open});save();if(open)renderSMS();else notify({app:'sms',title:nm,text:r,go:'sms:'+nm});refreshBadges()},
+ aisp:()=>{const c=aiC();if(c)spk(c.msgs[c.msgs.length-1].t)},
+ ains:()=>{const c=aiC();if(!c)return;D.nt.push({x:c.msgs[c.msgs.length-1].t,t:Date.now()});save();toast('已存入备忘录')},
+ aimic:()=>{const R0=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R0)return toast('当前浏览器不支持语音输入');const r=new R0(),i=$('#aii');r.lang='zh-CN';r.interimResults=true;r.onresult=e=>{i.value=[...e.results].map(x=>x[0].transcript).join('')};r.onend=()=>toast('已结束聆听');try{r.start();toast('请开始说话…')}catch(x){toast('无法启动麦克风')}},
+ amod:()=>{const s=$('#sheet');s.className='on s';s.innerHTML=`<div style="width:100%"><div class="mono">切换预设</div><hr class="k">${D.presets.map((p,i)=>R('spark',esc(p.name),i==D.cur?'当前':'','aps:'+i)).join('')}<button class="bt w" style="margin-top:16px" data-act="sx">取消</button></div>`},
+ aps:x=>{D.cur=+x;D.main=clone(D.presets[D.cur].main);D.sub=clone(D.presets[D.cur].sub);save();$('#sheet').className='';renderAi();toast('已切换：'+D.presets[D.cur].name)},
+ ntp:()=>{const n=D.nt[ntc];n.pin=!n.pin;save();toast(n.pin?'已置顶':'已取消置顶')},
+ ntcp:()=>{try{navigator.clipboard.writeText(D.nt[ntc].x).then(()=>toast('已复制'),()=>toast('复制失败'))}catch(e){toast('复制失败')}},
+ zsel:x=>{zs=x;renderSky()},
+ zgen:async()=>{const cur=zs||zodiac(),k=cur+new Date().toDateString(),e=$('#zsx');e.textContent='…';
+  try{zsx[k]=(await ask(D.main,'你是克制而诗意的星座运势写手，不做绝对预言。',[{role:'user',content:'用 80 字以内写「'+cur+'座」今日运势，含一句温柔建议，只输出正文。'}])).trim()}catch(x){zsx[k]=cur+'座今天适合放慢节奏，把注意力放回自己身上。夜里早点休息，明天会更清朗。'}e.textContent=zsx[k]}
+});
+{const _h2=ACT.home;ACT.home=(...a)=>{_h2(...a);renderWg()}}
+ph.addEventListener('keydown',e=>{if(e.key=='Enter'&&e.target.id=='smi')ACT.smsend()});
+{const pg=$('#pager');pg.addEventListener('scroll',()=>{const k=Math.round(pg.scrollLeft/pg.clientWidth);document.querySelectorAll('#pdots i').forEach((d,i)=>d.classList.toggle('on',i==k))})}
+setInterval(renderWg,20000);renderWg();applySet();
+
+/* ---- v7: reliability helpers ---- */
+const errMsg=e=>{const m=String(e&&e.message||e);if(/Failed to fetch|NetworkError|Load failed/i.test(m))return '网络不通，或地址被浏览器拦截（跨域/CSP）';const h=m.match(/^HTTP (\d+)/);if(h){const c=+h[1];return c==401||c==403?'密钥无效或无权限（'+c+'）':c==404?'地址或路径不对（404），请检查 API 地址':c==429?'请求过于频繁或额度用尽（429）':c>=500?'服务端出错（'+c+'）':'请求被拒绝（'+c+'）'}return m};
+const bz=(act,txt)=>{const b=document.querySelector('[data-act="'+act+'"]');if(!b)return()=>{};const o=b.textContent;b.disabled=true;b.textContent=txt;return()=>{if(b.isConnected){b.disabled=false;b.textContent=o}}};
+async function pull(o){const rs=bz('pull:'+o,'拉取中…');try{await pull0(o)}finally{rs()}}
+function loginHTML(){const a=D.acct;return `<div class="scroll"><div class="mono">Login — 欢迎回来</div><hr class="k"><h2 class="big">登录<br><i>WeChat</i></h2><div style="display:flex;align-items:center;gap:14px;margin-top:22px">${avh({av:a.av,name:a.id})}<div><b style="font-size:17px;font-weight:400">${esc(a.id)}</b><span class="mono" style="display:block;margin-top:4px">${esc((a.ph||'').replace(/(\d{3})\d{4}(\d{4})/,'$1****$2'))}</span></div></div>${fld('密码','<input id="l-pw" type="password" autocomplete="off">')}<button class="bt k w" data-act="login">登 录</button><button class="bt w" style="margin-top:10px" data-act="newreg">注册新账号</button></div>`}
+Object.assign(ACT,{
+ login:()=>{const pw=$('#l-pw').value;if(!pw)return toast('请输入密码');if(D.acct.pw&&pw!==D.acct.pw)return toast('密码不正确');D.me=D.acct;save();wtab=0;renderWX();toast('登录成功')},
+ newreg:(x,y,t)=>{if(!ok2(t))return;D.acct=null;save();renderWX()},
+ pdone:()=>{save();pback();toast('已保存')}
+});
 let lpT,lpF=0;
 ph.addEventListener('pointerdown',e=>{const t=e.target.closest('[data-lp]');if(!t)return;lpF=0;lpT=setTimeout(()=>{lpF=1;rowMenu(+t.dataset.lp)},550)});
 ['pointerup','pointermove','pointercancel','pointerleave'].forEach(n=>ph.addEventListener(n,()=>clearTimeout(lpT)));
 ph.addEventListener('contextmenu',e=>{const t=e.target.closest('[data-lp]');if(t){e.preventDefault();rowMenu(+t.dataset.lp)}});
 applySet();
-ph.addEventListener('click',e=>{if(e.target.closest('#a-set>.scroll>h2.big,#a-wx>.scroll>h2.big,#wxc .hd h2,#a-sms .stt,#a-sky .tt,#a-nt .tt,#a-ai .tt,#a-clk .tt,#a-nox .tt,#a-tar .tt'))ACT.home()});
+ph.addEventListener('click',e=>{if(e.target.closest('#a-set>.scroll>h2.big,#a-wx>.scroll>h2.big,#wxc .hd h2,#a-sms .stt,#a-sky .tt,#a-nt .tt,#a-ai .tt,#a-clk .tt,#a-nox .tt,#a-tar .tt,#a-calc .tt,#a-ph .tt'))ACT.home()});
 </script>
 </body>
 </html>
