@@ -485,7 +485,7 @@ D.unread=D.unread||{};if(D.me&&!D.acct)D.acct=D.me;D.cfg=Object.assign({sys:'',n
 const fT=t=>new Date(t).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});
 let tt;const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2600)};
 const ic=(n,s)=>`<svg class="i"${s?` style="${s}"`:''}><use href="#${n}"/></svg>`;
-const fld=(l,i)=>`<label class="f"><span class="mono">${l}</span>${i}</label>`;
+const fld=(l,i)=>`<label class="f"><span class="mono">${l}</span>${i}</label>`,fldF=(l,i)=>`<label class="f fd"><span class="mono">${l}</span>${i}</label>`;
 
 /* cosmos */
 const SYN=29.530588853,mAge=(d=Date.now())=>(((d-Date.UTC(2000,0,6,18,14))/864e5)%SYN+SYN)%SYN,mPhase=d=>mAge(d)/SYN;
@@ -551,7 +551,7 @@ const SP={
  par:()=>fld('最大输出 tokens',RG('maxTok',128,4096,64))+fld('Top P',RG('topP',0.1,1,0.05))+fld('请求超时（秒）',RG('timeout',10,180,5))+T('失败时使用本地回复',D.cfg.fallback,'cf:fallback')+NOTE('温度、推理深度、流式模式请在「模型与 API」中设置。Top P 为 1 时不会发送。'),
  mem:()=>T('启用记忆',D.cfg.memOn,'cf:memOn')+NOTE('记忆会注入每位角色的提示词，让 TA 记得关于你的事。')+fld('添加一条记忆','<input id="mnew" placeholder="例如：我对花生过敏">')+'<div class="row"><button class="bt k" data-act="mema">添加</button><button class="bt" data-act="memc">清空</button></div>'+D.cfg.memories.map((m,i)=>`<div class="dr"><b style="font-size:16px">${esc(m)}</b><button data-act="memd:${i}">${ic('trash')}</button></div>`).join('')+(D.cfg.memories.length?'':'<p class="empty" style="font-size:16px">暂无记忆</p>'),
  lib:()=>[...TPLS,...D.cfg.lib].map((t,i)=>`<div class="lb"><div><b>${esc(t.n)}</b><small>${esc(t.t)}</small></div><button class="bt" data-act="tpl:${i}">应用</button>${i>=TPLS.length?`<button data-act="ldel:${i-TPLS.length}">${ic('trash')}</button>`:''}</div>`).join('')+fld('新建模板名称','<input id="lnn">')+fld('模板内容（留空则使用当前全局提示词）','<textarea id="lnt" rows="3"></textarea>')+'<button class="bt k w" data-act="ladd">保存到提示词库</button>'+NOTE('点「应用」会把模板设为全局系统提示词。'),
- look:()=>`<div class="f"><span class="mono">深色模式</span><div class="tabs">${[['auto','跟随系统'],['light','浅色'],['dark','深色']].map(([v,t])=>`<button class="${D.set.theme==v?'a':''}" data-act="th:${v}">${t}</button>`).join('')}</div></div>`+fld('聊天字体大小',`<div class="cd"><input type="range" min="11" max="18" step="1" value="${D.set.font}" data-sk="font"><output class="mono" style="color:var(--fg)">${D.set.font}</output></div>`)+T('回车键发送',D.set.enter,'st:enter')+T('减少动态效果',D.cfg.calm,'cf:calm')+T('聊天页显示 token 估算',D.cfg.showTok,'cf:showTok'),
+ look:()=>`<div class="f"><span class="mono">深色模式</span><div class="tabs">${[['auto','跟随系统'],['light','浅色'],['dark','深色']].map(([v,t])=>`<button class="${D.set.theme==v?'a':''}" data-act="th:${v}">${t}</button>`).join('')}</div></div>`+fld('聊天字体大小',`<div class="cd"><input type="range" min="11" max="18" step="1" value="${D.set.font}" data-sk="font"><output class="mono" style="color:var(--fg)">${D.set.font}</output></div>`)+T('回车键发送',D.set.enter,'st:enter')+T('收纳并模糊人设',D.set.fold,'fold')+T('减少动态效果',D.cfg.calm,'cf:calm')+T('聊天页显示 token 估算',D.cfg.showTok,'cf:showTok'),
  data:()=>fld('导出 / 导入内容',`<textarea id="dx" rows="7" placeholder="点「导出」生成 JSON；导入时把 JSON 粘贴到这里"></textarea>`)+'<div class="row"><button class="bt k" data-act="dexp">导出</button><button class="bt" data-act="dcp">复制</button><button class="bt" data-act="dimp">导入</button><label class="bt" style="cursor:pointer">从文件读取<input type="file" accept=".json,application/json" hidden id="dxf"></label></div>'+NOTE('导出内容包含好友、角色与聊天记录，不含 API 密钥。')+`<div class="dr" style="margin-top:14px"><span class="mono" style="width:70px">存储</span><b style="font-size:17px">${Math.round(JSON.stringify(D).length/1024)} KB</b></div><button class="bt w" data-act="allclr">清空全部聊天记录</button><button class="bt w" style="margin-top:12px" data-act="rst">重置所有数据</button>`,
  use:()=>{let n=0,u=0,ch=0,tok=0;D.friends.forEach(f=>(D.chats[f.id]||[]).forEach(m=>{n++;if(m.r=='u')u++;ch+=m.t.length;tok+=estTok(m.t)}));const st=D.stat,c=(v,l)=>`<div><b>${v}</b><span class="mono">${l}</span></div>`;
   return `<div class="sg">${c(D.friends.length,'好友')}${c(n,'消息')}${c(u,'我发出')}${c(n-u,'AI 回复')}${c(ch,'字数')}${c('≈'+tok,'Tokens')}${c(st.calls,'成功请求')}${c(st.fails,'失败请求')}</div>${NOTE('最近一次响应：'+(st.ms?st.ms+' ms':'—'))}`},
@@ -592,14 +592,6 @@ let smq='',smTy=null;
 const smD=t=>{const d=new Date(t),n=new Date(),y=new Date(n-864e5);return d.toDateString()==n.toDateString()?fT(d):d.toDateString()==y.toDateString()?'昨天':(d.getMonth()+1)+'/'+d.getDate()};
 const smH=t=>{const d=new Date(t);return (d.toDateString()==new Date().toDateString()?'今天':(d.getMonth()+1)+'月'+d.getDate()+'日')+' '+fT(d)};
 const smCan=n=>D.friends.some(f=>f.name==n);
-function smList(){const th={};D.sms.forEach(m=>(th[m.from]=th[m.from]||[]).push(m));
-  const names=Object.keys(th).filter(n=>!smq||n.includes(smq)||th[n].some(m=>m.text.includes(smq))).sort((a,b)=>th[b][th[b].length-1].t-th[a][th[a].length-1].t);
-  $('#sl').innerHTML=names.map(n=>{const l=th[n][th[n].length-1],un=th[n].some(m=>!m.read);return `<button class="sr" data-act="thr:${esc(n)}">${un?'<span style="position:relative;left:-6px;margin:0 -4px 0 0;width:10px;height:10px;border-radius:50%;background:var(--fg);flex:none"></span>':''}<span class="ci">${ic('user')}</span><span class="bd"><b>${esc(n)}</b><small>${l.me?'你：':''}${esc(l.text)}</small><span class="tm">${smD(l.t)} ›</span></span></button>`}).join('')||'<p class="empty" style="text-align:center">无信息</p>'}
-function renderSMS(){const A=$('#a-sms');
-  if(!sv){A.innerHTML=`<div class="sh"><span>编辑</span><button data-act="smc">${ic('edit','width:20px;height:20px;stroke-width:1.6')}</button></div><div class="stt">信息</div><label class="srch">${ic('search')}<input id="sq" placeholder="搜索" value="${esc(smq)}" style="flex:1;border:0;background:transparent;outline:0;font:inherit;color:var(--fg)"></label><div class="scroll" id="sl"></div>`;smList();return}
-  const ms=D.sms.filter(m=>m.from==sv);ms.forEach(m=>m.read=true);save();refreshBadges();const can=smCan(sv);
-  A.innerHTML=`<div class="sd"><button data-act="sback" style="display:flex;align-items:center;gap:0">${ic('back','width:26px;height:26px;stroke-width:1.6')}<span>信息</span></button><span class="c"><i>${ic('user')}</i>${esc(sv)} ›</span><span style="width:60px"></span></div><div class="sm" id="smm">${ms.length?`<div class="ts">短信/彩信<br>${smH(ms[0].t)}</div>`:''}${ms.map((m,i)=>{const nx=ms[i+1],last=!nx||!!nx.me!=!!m.me;return `<div class="b${m.me?' me':''}${last?' last':''}">${esc(m.text)}</div>`}).join('')}${ms.length&&ms[ms.length-1].me&&smTy!=sv?'<div class="dv">已送达</div>':''}${smTy==sv?'<div class="b ty"><i></i><i></i><i></i></div>':''}</div><div class="sf"><span class="pc">${ic('plus')}</span><input id="smi" class="pill" ${can?'':'disabled'} placeholder="${can?'短信/彩信':'无法回复此发件人'}"><button class="pc ${can?'ok':''}" data-act="smsend">${ic('up')}</button></div>`;
-  const e=$('#smm');e.scrollTop=e.scrollHeight}
 
 /* wechat */
 let wtab=0,tav='',cur=0;
@@ -620,7 +612,7 @@ const R=(i,t,r,act)=>`<button class="dr" data-act="${act}">${ic(i)}<b>${t}</b>${
 const T=(t,on,act)=>`<div class="tr"><span>${t}</span><button class="tg ${on?'on':''}" data-act="${act}"><i></i></button></div>`;
 const fa=(k,i)=>`data-fk="${k}" data-fi="${i}"`;
 const ok2=t=>{if(t.dataset.c)return true;t.dataset.c=1;t._o=t.textContent;t.textContent='再点一次确认';setTimeout(()=>{if(t.isConnected){delete t.dataset.c;t.textContent=t._o}},3000);return false};
-function applySet(){const r=document.documentElement;if(D.set.theme=='auto')r.removeAttribute('data-theme');else r.dataset.theme=D.set.theme;ph.style.setProperty('--fs',D.set.font+'px');ph.classList.toggle('calm',!!D.cfg.calm);{const h=$('#a-home');if(h){[...h.classList].filter(c=>c.indexOf('wp-')==0).forEach(c=>h.classList.remove(c));let w=D.set.wp||'stars';const pi=w=='photo'?D.ph.find(p=>p.id==D.set.wpid):null;if(w=='photo'&&!pi)w='stars';h.classList.add('wp-'+w);h.style.backgroundImage=pi?'url('+pi.d+')':''}}}
+function applySet(){const r=document.documentElement;if(D.set.theme=='auto')r.removeAttribute('data-theme');else r.dataset.theme=D.set.theme;ph.style.setProperty('--fs',D.set.font+'px');ph.classList.toggle('calm',!!D.cfg.calm);ph.classList.toggle('nofold',!D.set.fold);{const h=$('#a-home');if(h){[...h.classList].filter(c=>c.indexOf('wp-')==0).forEach(c=>h.classList.remove(c));let w=D.set.wp||'stars';const pi=w=='photo'?D.ph.find(p=>p.id==D.set.wpid):null;if(w=='photo'&&!pi)w='stars';h.classList.add('wp-'+w);h.style.backgroundImage=pi?'url('+pi.d+')':''}}}
 function autoFill(from,text){if(!D.set.autofill)return;const m=text.match(/\d{6}/);if(!m||!['微信','腾讯QQ'].includes(from))return;const e=$(from=='微信'?'#r-c1':'#r-c2');if(e&&!e.value){e.value=m[0];e.classList.add('flash');e.closest('.f').dataset.af=1}}
 function chatList(){const q=($('#cq')||{}).value||'';
   const ix=D.friends.map((f,k)=>k).filter(k=>(D.friends[k].name+(D.friends[k].remark||'')).includes(q)).sort((a,b)=>{const A=D.friends[a],B=D.friends[b];if(!!A.pin!=!!B.pin)return A.pin?-1:1;return lt(B)-lt(A)});
@@ -628,7 +620,7 @@ function chatList(){const q=($('#cq')||{}).value||'';
    return `<button class="li${f.pin?' pin':''}" data-act="chat:${k}" data-lp="${k}">${avh(f)}<div><b>${esc(f.remark||f.name)}</b><small>${esc(l?l.t:'暂无消息')}</small></div>${u>0?(f.mute?'<span class="dotm"></span>':`<span class="bdg">${u}</span>`):''}${l&&l.ts?`<span class="mono">${fT(l.ts)}</span>`:''}</button>`}).join(''):(q?'<p class="empty">没有匹配的会话</p>':'<p class="empty">还没有故事。<br>去「通讯录」添加一位好友，并为 TA 写下角色。</p>')}
 function contList(){const q=($('#kq')||{}).value||'',nm=k=>D.friends[k].remark||D.friends[k].name;
   const L=D.friends.map((f,k)=>k).filter(k=>(D.friends[k].name+(D.friends[k].remark||'')).includes(q)),sg=L.filter(k=>D.friends[k].star),rs=L.filter(k=>!D.friends[k].star).sort((a,b)=>nm(a).localeCompare(nm(b),'zh'));
-  const row=k=>`<button class="li" data-act="nav:prof:${k}">${avh(D.friends[k])}<div><b>${esc(nm(k))}</b><small>${esc(D.friends[k].role)}</small></div></button>`;
+  const row=k=>`<button class="li" data-act="nav:prof:${k}">${avh(D.friends[k])}<div><b>${esc(nm(k))}</b><small class="pbl">${esc(D.friends[k].role)}</small></div></button>`;
   let h='',last='';if(sg.length)h+='<div class="mono sec">星标朋友</div>'+sg.map(row).join('');
   rs.forEach(k=>{let c=nm(k)[0].toUpperCase();if(!/[A-Z]/.test(c))c='#';if(c!=last){h+=`<div class="mono sec">${c}</div>`;last=c}h+=row(k)});
   $('#kl').innerHTML=h||(D.friends.length?'<p class="empty">没有找到匹配的好友</p>':'<p class="empty">通讯录还是空的。<br>点右上角添加第一位好友。</p>')}
@@ -647,8 +639,8 @@ const PG={
  gen:()=>`<div class="f"><span class="mono">深色模式</span><div class="tabs">${[['auto','跟随系统'],['light','浅色'],['dark','深色']].map(([v,t])=>`<button class="${D.set.theme==v?'a':''}" data-act="th:${v}">${t}</button>`).join('')}</div></div><div class="dr" style="margin-top:20px"><span class="mono" style="width:70px">存储</span><b style="font-size:17px">${Math.round(JSON.stringify(D).length/1024)} KB</b></div><button class="bt w" data-act="rst">重置所有数据</button>`,
  about:()=>`<h2 class="big" style="font-size:44px;margin-top:20px">POCKET<br><i>v0.5</i></h2><p style="margin-top:24px;line-height:1.7;color:var(--mut)">一部极简的 AI 小手机。所有数据只保存在本机浏览器中。</p>`,
  me:()=>{const m=D.me;return `<label class="av"><input type="file" accept="image/*" hidden id="mav"><span>${m.av?`<img src="${m.av}" alt="">`:ic('camera')}</span><em class="mono">点击更换头像</em></label>${fld('个性签名',`<input data-mk="sig" maxlength="30" value="${esc(m.sig||'')}">`)}${[['微信号',m.id],['手机号',m.ph],['QQ号',m.qq]].map(r=>`<div class="dr"><span class="mono" style="width:70px">${r[0]}</span><b style="font-size:17px">${esc(r[1])}</b></div>`).join('')}`},
- prof:i=>{const f=D.friends[i];return `<div style="display:flex;gap:18px;align-items:center;margin:6px 0 10px">${avh(f).replace('class="avt"','class="avt" style="width:76px;height:76px;font-size:34px"')}<div><h3 style="font:400 28px var(--serif)">${esc(f.remark||f.name)}</h3><p class="mono" style="margin-top:6px">昵称 ${esc(f.name)}</p><p class="mono" style="margin-top:4px">微信号 ${esc(f.wid||'—')}</p></div></div><p style="margin:14px 0 6px;font:italic 300 19px/1.5 var(--serif);color:var(--mut)">${esc(f.role)}</p>${R('edit','设置备注和人设','','nav:persona:'+i)}${T('星标朋友',f.star,'ft:star:'+i)}${T('置顶聊天',f.pin,'ft:pin:'+i)}${T('消息免打扰',f.mute,'ft:mute:'+i)}<button class="bt k w" data-act="msg:${i}">发消息</button><button class="bt w" style="margin-top:12px" data-act="fclr:${i}">清空聊天记录</button><button class="bt w" style="margin-top:12px" data-act="fdel:${i}">删除好友</button>`},
- persona:i=>{const f=D.friends[i],tv=f.temp!=null?f.temp:D.main.temp;return `<label class="av" style="margin-top:6px"><input type="file" accept="image/*" hidden id="pav" data-fi="${i}"><span>${f.av?`<img src="${f.av}" alt="">`:ic('camera')}</span><em class="mono">头像</em></label>${fld('昵称',`<input ${fa('name',i)} value="${esc(f.name)}">`)}${fld('备注名',`<input ${fa('remark',i)} value="${esc(f.remark||'')}">`)}${fld('微信号',`<input ${fa('wid',i)} value="${esc(f.wid||'')}" autocapitalize="off">`)}${fld('角色设定（身份 / 性格）',`<textarea ${fa('role',i)} rows="5">${esc(f.role)}</textarea>`)}${fld('说话风格',`<textarea ${fa('style',i)} rows="3" placeholder="语气、口头禅、长短句…">${esc(f.style||'')}</textarea>`)}${fld('背景与关系',`<textarea ${fa('world',i)} rows="3" placeholder="与你的关系、共同经历…">${esc(f.world||'')}</textarea>`)}${fld('开场白（清空记录后自动重发）',`<input ${fa('hello',i)} value="${esc(f.hello||'')}">`)}${fld('专属温度',`<div class="cd"><input type="range" min="0" max="2" step="0.1" value="${tv}" ${fa('temp',i)}><output class="mono" style="color:var(--fg)">${tv}</output></div>`)}<div class="row"><button class="bt" data-act="trs:${i}">跟随主 API</button></div>${fld('记忆条数',`<div class="cd"><input type="range" min="4" max="60" step="2" value="${f.mem||D.cfg.mem}" ${fa('mem',i)}><output class="mono" style="color:var(--fg)">${f.mem||D.cfg.mem}</output></div>`)}${T('分段回复',f.split!==undefined?f.split!==0:D.cfg.split!==0,'ft:split:'+i)}<button class="bt k w" data-act="pdone">完成</button>`}
+ prof:i=>{const f=D.friends[i];return `<div style="display:flex;gap:18px;align-items:center;margin:6px 0 10px">${avh(f).replace('class="avt"','class="avt" style="width:76px;height:76px;font-size:34px"')}<div><h3 style="font:400 28px var(--serif)">${esc(f.remark||f.name)}</h3><p class="mono" style="margin-top:6px">昵称 ${esc(f.name)}</p><p class="mono" style="margin-top:4px">微信号 ${esc(f.wid||'—')}</p></div></div><div class="fo" data-fo style="margin:14px 0 6px"><div class="fob"><p style="font:italic 300 19px/1.5 var(--serif);color:var(--mut)">${esc(f.role)}</p></div><i class="fot"></i></div>${R('edit','设置备注和人设','','nav:persona:'+i)}${T('星标朋友',f.star,'ft:star:'+i)}${T('置顶聊天',f.pin,'ft:pin:'+i)}${T('消息免打扰',f.mute,'ft:mute:'+i)}<button class="bt k w" data-act="msg:${i}">发消息</button><button class="bt w" style="margin-top:12px" data-act="fclr:${i}">清空聊天记录</button><button class="bt w" style="margin-top:12px" data-act="fdel:${i}">删除好友</button>`},
+ persona:i=>{const f=D.friends[i],tv=f.temp!=null?f.temp:D.main.temp;return `<label class="av" style="margin-top:6px"><input type="file" accept="image/*" hidden id="pav" data-fi="${i}"><span>${f.av?`<img src="${f.av}" alt="">`:ic('camera')}</span><em class="mono">头像</em></label>${fld('昵称',`<input ${fa('name',i)} value="${esc(f.name)}">`)}${fld('备注名',`<input ${fa('remark',i)} value="${esc(f.remark||'')}">`)}${fld('微信号',`<input ${fa('wid',i)} value="${esc(f.wid||'')}" autocapitalize="off">`)}${fldF('角色设定（身份 / 性格）',`<textarea ${fa('role',i)} rows="5">${esc(f.role)}</textarea>`)}${fldF('说话风格',`<textarea ${fa('style',i)} rows="3" placeholder="语气、口头禅、长短句…">${esc(f.style||'')}</textarea>`)}${fldF('背景与关系',`<textarea ${fa('world',i)} rows="3" placeholder="与你的关系、共同经历…">${esc(f.world||'')}</textarea>`)}${fld('开场白（清空记录后自动重发）',`<input ${fa('hello',i)} value="${esc(f.hello||'')}">`)}${fld('专属温度',`<div class="cd"><input type="range" min="0" max="2" step="0.1" value="${tv}" ${fa('temp',i)}><output class="mono" style="color:var(--fg)">${tv}</output></div>`)}<div class="row"><button class="bt" data-act="trs:${i}">跟随主 API</button></div>${fld('记忆条数',`<div class="cd"><input type="range" min="4" max="60" step="2" value="${f.mem||D.cfg.mem}" ${fa('mem',i)}><output class="mono" style="color:var(--fg)">${f.mem||D.cfg.mem}</output></div>`)}${T('分段回复',f.split!==undefined?f.split!==0:D.cfg.split!==0,'ft:split:'+i)}<button class="bt k w" data-act="pdone">完成</button>`}
 };
 function nav(n,a){stk.push([n,a]);renderPg(1)}
 function pback(){stk.pop();renderPg(0);if(!stk.length){wt(wtab);if($('#wxo').classList.contains('on')&&D.friends[cur])openChat(cur)}}
@@ -705,7 +697,7 @@ function menu(){const f=D.friends[cur],s=$('#sheet');s.className='on s';
   s.innerHTML=`<div style="width:100%"><div class="mono">Chat / ${esc(f.remark||f.name)}</div><hr class="k"><div id="mb"><button class="dr" data-act="vprof"><b>好友资料</b>${ic('user')}</button><button class="dr" data-act="msum"><b>聊天总结</b>${ic('spark')}</button><button class="dr" data-act="medit"><b>编辑角色</b>${ic('edit')}</button><button class="dr" data-act="mclr"><b>清空聊天记录</b>${ic('refresh')}</button><button class="dr" data-act="mdel"><b>删除好友</b>${ic('trash')}</button></div><button class="bt w" data-act="sx">关闭</button></div>`}
 function sheet(step,tmp){const s=$('#sheet');s.className='on';
   s.innerHTML=`<div style="width:100%"><div class="mono">${step==1?'Step 1 / 添加好友':'Step 2 / 填写角色'}</div><hr class="k"><h2 class="big" style="font-size:36px">${step==1?'添加<i>好友</i>':'填写<i>角色</i>'}</h2>`+
-  (step==1?`${fld('昵称','<input id="s-n">')}${fld('微信号（可选）','<input id="s-w" autocapitalize="off">')}<button class="bt k w" data-act="s2">下一步</button>`:`${fld('角色设定（人设 / 背景 / 说话风格）','<textarea id="s-r" rows="5"></textarea>')}${fld('开场白（可选）','<input id="s-h">')}<button class="bt k w" data-act="s3">完成添加</button>`)+`<button class="bt w" style="margin-top:10px" data-act="sx">取消</button></div>`;s._t=tmp}
+  (step==1?`${fld('昵称','<input id="s-n">')}${fld('微信号（可选）','<input id="s-w" autocapitalize="off">')}<button class="bt k w" data-act="s2">下一步</button>`:`${fldF('角色设定（人设 / 背景 / 说话风格）','<textarea id="s-r" rows="5"></textarea>')}${fld('开场白（可选）','<input id="s-h">')}<button class="bt k w" data-act="s3">完成添加</button>`)+`<button class="bt w" style="margin-top:10px" data-act="sx">取消</button></div>`;s._t=tmp}
 
 /* actions */
 const ACT={
@@ -1075,7 +1067,7 @@ ph.addEventListener('pointerdown',e=>{const t=e.target.closest('[data-lp]');if(!
 ['pointerup','pointermove','pointercancel','pointerleave'].forEach(n=>ph.addEventListener(n,()=>clearTimeout(lpT)));
 ph.addEventListener('contextmenu',e=>{const t=e.target.closest('[data-lp]');if(t){e.preventDefault();rowMenu(+t.dataset.lp)}});
 applySet();
-ph.addEventListener('click',e=>{if(e.target.closest('#a-set>.scroll>h2.big,#a-wx>.scroll>h2.big,#wxc .hd h2,#a-sms .stt,#a-sky .tt,#a-nt .tt,#a-ai .tt,#a-clk .tt,#a-nox .tt,#a-tar .tt,#a-calc .tt,#a-ph .tt'))ACT.home()});
+ph.addEventListener('click',e=>{if(e.target.closest('#a-set>.scroll>h2.big,#a-wx>.scroll>h2.big,#wxc .hd h2,#a-sms .stt,#a-sky .tt,#a-nt .tt,#a-ai .tt,#a-clk .tt,#a-nox .tt,#a-tar .tt,#a-calc .tt,#a-ph .tt,#a-chk .tt'))ACT.home()});
 
 /* ================= v8：完整钱包（移植自 wallet.html）+ 20 项新功能 ================= */
 (()=>{
@@ -1467,14 +1459,15 @@ document.head.appendChild(st);
 save();
 })();
 
-/* ===== v13：查手机（强制读取人设） ===== */
+/* ===== v14：查手机（上下文可自定义） ===== */
 (()=>{
 if(!$('#a-chk')){const s=document.createElement('section');s.className='app';s.id='a-chk';$('#sheet').before(s)}
 APPS.push(['chk','查手机','Inspect']);META.chk={n:'12',t:'Inspect',ic:'search'};
 CON.chk={p:[[22,30],[44,22],[70,34],[58,60],[30,70],[78,78]],e:[[0,1],[1,2],[2,3],[3,4],[3,5]]};
 $('#hg').innerHTML=APPS.map(a=>`<button class="ap" data-act="app:${a[0]}">${appIcon(a[0],52)}<b>${a[1]}</b><em>${a[2]}</em><i class="bd2" id="b-${a[0]}"></i></button>`).join('');
-let ck=-1,ct='chats',CQ=[],fails=0;const busy={},unl={};
-const TABS=[['chats','微信'],['album','相册'],['hid','动态'],['notes','备忘'],['drafts','草稿'],['search','搜索'],['pay','账单'],['call','通话'],['track','足迹']];
+let ck=-1,ct='chats',CQ=[],fails=0;const bz={},unl={};
+const TABS=[['chats','微信'],['sms','短信'],['contacts','通讯录'],['album','相册'],['hid','动态'],['social','社交'],['notes','备忘'],['drafts','草稿'],['search','搜索'],['browse','浏览器'],['pay','账单'],['order','订单'],['call','通话'],['music','音乐'],['cal','日程'],['mail','邮件'],['health','健康'],['screen','时长'],['track','足迹'],['mark','标记'],['report','报告']];
+const GEN=TABS.map(x=>x[0]).filter(k=>k!='mark'&&k!='report');
 const MP={
  chats:'生成 4 段 TA 微信里与「使用者以外的人」的聊天（家人/同事/朋友/暧昧对象等，必须符合人设的社交圈），每段 3 条消息，至少 1 段在谈论或影射使用者。JSON 数组：[{"n":"对方备注名","rel":"关系","time":"今天 21:40","msgs":[{"me":true,"t":"内容"}]}]',
  album:'生成 6 条相册记录，其中 1-2 条 hid 为 true（隐藏相册/最近删除，要耐人寻味且贴合人设与使用者的关系）。JSON 数组：[{"d":"画面描述一句话","loc":"地点","time":"日期时间","hid":false}]',
@@ -1487,49 +1480,156 @@ const MP={
  track:'生成 TA 今天的行动足迹 6 条，时间递增，符合人设的作息与职业。JSON 数组：[{"time":"08:10","place":"地点","note":"在做什么"}]',
  lock:'生成锁屏信息。pin 是 4 位数字，必须是对 TA 有意义且贴合人设的数字（纪念日、生日等），hint 是一句不直接说出答案的提示，notif 是 2 条锁屏通知。JSON 对象：{"pin":"0520","hint":"提示","notif":[{"app":"微信","text":"内容"}]}'
 };
-const PS=f=>{const c=(D.chats[f.id]||[]).filter(m=>m.r!='s'&&!m.hid).slice(-12).map(m=>(m.r=='u'?'使用者':f.name)+'：'+(m.d||m.t)).join('\n'),mo=D.mo.filter(p=>p.who==f.id).slice(-4).map(p=>p.x).join('；');
- return `你是「手机内容生成器」，为角色「${f.name}」（备注：${f.remark||'无'}）生成其手机里的内容。【强制读取人设，不得偏离】角色设定：${f.role||'未填写'}。${f.style?'说话风格：'+f.style+'。':''}${f.world?'背景与关系：'+f.world+'。':''}使用者是「${D.me.nick||D.me.id}」。${D.cfg.about?'关于使用者：'+D.cfg.about+'。':''}${D.cfg.memOn&&D.cfg.memories.length?'角色记得：'+D.cfg.memories.join('；')+'。':''}\n最近真实聊天记录：\n${c||'（暂无）'}\nTA 发过的朋友圈：${mo||'（暂无）'}\n规则：1.一切内容必须符合该角色的身份、职业、年龄、性格、作息与说话口吻，不得与人设或上面的真实聊天矛盾；2.与使用者的关系要自然体现；3.现在是 ${new Date().toLocaleString('zh-CN')}；4.只输出 JSON，不要代码块、不要解释；5.每条内容简短。`};
-const pj=s=>{s=String(s).replace(/```json|```/g,'');const a=s.search(/[\[{]/),b=Math.max(s.lastIndexOf(']'),s.lastIndexOf('}'));return JSON.parse(s.slice(a,b+1))};
-async function gen(k,key){const f=D.friends[k],id=k+key;if(!f||busy[id])return;f.pv=f.pv||{};busy[id]=1;delete f.pv[key+'_e'];if(ck==k)renderChk();
- try{const d=pj(await ask(D.main,PS(f),[{role:'user',content:MP[key]}]));if(key=='lock'?!(d&&d.pin):!Array.isArray(d))throw new Error('格式不正确');f.pv[key]=d;save()}catch(e){delete f.pv[key];f.pv[key+'_e']=String(e&&e.message||e).slice(0,80)}
- delete busy[id];if(ck==k)renderChk()}
-const q=t=>{CQ.push(t);return `<button class="mic cq" data-act="chkq:${CQ.length-1}">${ic('spark')}<span>拿去质问</span></button>`};
-const qi=t=>(CQ.push(t),CQ.length-1);
-const B={
- chats:d=>d.map(c=>{const m=c.msgs||[],l=m.length?m[m.length-1].t:'';return `<div class="kx"><div class="ckh"><b>${esc(c.n)}</b><i class="tag">${esc(c.rel||'')}</i><time>${esc(c.time||'')}</time></div>${m.map(x=>`<div class="cb${x.me?' me':''}">${esc(x.t)}</div>`).join('')}${q('你跟「'+c.n+'」说的“'+l+'”，是什么意思？')}</div>`}).join(''),
- album:d=>`<div class="cag">${d.map((p,i)=>{const h=(i*67+210)%360;return `<div class="ca" style="background:linear-gradient(160deg,hsl(${h},16%,26%),hsl(${(h+40)%360},20%,9%))">${p.hid?`<i class="tag">${ic('lock')}隐藏</i>`:''}<p>${esc(p.d)}</p><small>${esc(p.loc||'')} · ${esc(p.time||'')}</small>${q('手机里这张“'+p.d+'”，你解释一下。')}</div>`}).join('')}</div>`,
- hid:d=>{const f=D.friends[ck],r=D.mo.filter(p=>p.who==f.id).sort((a,b)=>b.t-a.t).map(p=>`<div class="kx"><div class="ckh"><i class="tag">公开</i><time>${fD(p.t)}</time></div><p class="ckx">${esc(p.x)}</p></div>`).join('');return r+d.map(p=>`<div class="kx"><div class="ckh"><i class="tag">${ic('lock')}${esc(p.tag||'仅自己可见')}</i><time>${esc(p.time||'')}</time></div><p class="ckx">${esc(p.x)}</p>${q('你那条没公开的动态“'+p.x+'”，是写给谁的？')}</div>`).join('')},
- notes:d=>d.map(n=>`<div class="kx"><b style="font:400 16px var(--serif)">${esc(n.t)}</b><p class="ckx">${esc(n.x)}</p>${q('你备忘录里写的“'+n.t+'”是什么意思？')}</div>`).join(''),
- drafts:d=>d.map(n=>`<div class="kx"><div class="ckh"><span class="mono">To · ${esc(n.to)}</span><time>${esc(n.time||'')}</time></div><p class="ckx">${esc(n.x)}</p>${q('你没发出去的那句“'+n.x+'”，现在可以说了。')}</div>`).join(''),
- search:d=>d.map((s,i)=>`<button class="dr" data-act="chkq:${qi('你为什么会搜“'+s+'”？')}"><span class="mono" style="width:26px">${String(i+1).padStart(2,'0')}</span><b style="font-size:15px;white-space:normal">${esc(s)}</b>${ic('spark')}</button>`).join(''),
- pay:d=>d.map(p=>{const a=Number(p.a)||0;return `<div class="dr"><div style="flex:1;min-width:0"><b style="font-size:15px;display:block;white-space:normal">${esc(p.x)}</b><span class="mono">${esc(p.time||'')}</span></div><span style="font:300 18px var(--serif)">${a>0?'+':'−'}${Math.abs(a).toFixed(2)}</span></div>`}).join(''),
- call:d=>d.map(c=>`<div class="dr"><div style="flex:1;min-width:0"><b style="font-size:15px;display:block">${esc(c.n)}</b><span class="mono">${esc(c.time||'')} · ${esc(c.dur||'')}</span></div><i class="tag">${esc(c.dir||'')}</i></div>`).join(''),
- track:d=>`<div class="tl">${d.map(t=>`<div><span class="mono">${esc(t.time||'')} · ${esc(t.place||'')}</span><p class="ckx">${esc(t.note||'')}</p></div>`).join('')}</div>`
-};
-function renderChk(){const A=$('#a-chk');CQ=[];
- if(ck<0){const L=D.friends.map((f,k)=>[f,k]).filter(([f])=>!f.local);
-  A.innerHTML=`<div class="scroll"><div class="mono">12 / Inspect</div><hr class="k"><h2 class="tt">查手机</h2><p class="mono" style="text-transform:none;letter-spacing:.05em;line-height:1.8;margin:6px 0 10px">选择一个角色，强制读取其完整人设，生成 TA 手机里的聊天、相册、搜索、账单与足迹。</p>`+(L.map(([f,k])=>`<button class="li" data-act="chko:${k}">${avh(f)}<div><b>${esc(f.remark||f.name)}</b><small>${esc(f.role||'未填写人设')}</small></div>${ic('next')}</button>`).join('')||'<p class="empty">还没有好友。<br>先去通讯录添加角色。</p>')+'</div>';return}
- const f=D.friends[ck];if(!f){ck=-1;return renderChk()}const pv=f.pv||{},lk=pv.lock,go=(key)=>setTimeout(()=>gen(ck,key),0);
- const top=`<div class="chh"><button data-act="chkb">${ic('back')}</button><b class="pt">${esc(f.remark||f.name)} 的手机</b><button data-act="chkr">${ic('refresh')}</button></div>`,
- pc=`<div class="pcard"><span class="mono">人设已载入</span><p>${esc(f.role||'未填写人设（建议在好友资料里补全，生成会更贴合）')}${f.style?'<br>风格：'+esc(f.style):''}</p></div>`,
- ld='<p class="empty" style="font-size:18px;margin-top:40px;text-align:center">正在读取人设并生成…</p>',
- er=(key,m)=>`<p class="empty" style="font-size:16px;margin-top:40px;text-align:center">生成失败：${esc(m)}<br>请检查主 API 设置后重试。</p><button class="bt k w" data-act="chkr">重试</button>`;
- let h;
- if(!unl[f.id]){
-  if(pv.lock_e)h=er('lock',pv.lock_e);else if(!lk){if(!busy[ck+'lock'])go('lock');h=ld}
-  else h=`<div class="lkx"><span class="mono">${fT(Date.now())} · Locked</span><h1>${fT(Date.now())}</h1>${(lk.notif||[]).map(n=>`<div class="lnt"><span class="mono">${esc(n.app||'')}</span><p>${esc(n.text||'')}</p></div>`).join('')}<input class="cpn" id="cpin" inputmode="numeric" maxlength="4" placeholder="····" autocomplete="off"><div class="row" style="justify-content:center"><button class="bt k" data-act="chku">解锁</button><button class="bt" data-act="chkh">提示</button><button class="bt" data-act="chkf">强制读取</button></div></div>`}
- else{const d=pv[ct];let b;if(pv[ct+'_e'])b=er(ct,pv[ct+'_e']);else if(!d){if(!busy[ck+ct])go(ct);b=ld}else{const a=Array.isArray(d)?d:[];b=a.length?B[ct](a):'<p class="empty" style="font-size:18px">空空如也。</p>'}
-  h=`<div class="ctb">${TABS.map(([k,t])=>`<button class="${k==ct?'a':''}" data-act="chkt:${k}">${t}</button>`).join('')}</div>${b}`}
- const sc=A.querySelector('.scroll'),y=sc?sc.scrollTop:0;
- A.innerHTML=top+`<div class="scroll">${pc}${h}</div>`;const n=A.querySelector('.scroll');if(n&&y&&ck>=0)n.scrollTop=y}
-Object.assign(ACT,{
- chko:x=>{ck=+x;ct='chats';fails=0;renderChk()},chkb:()=>{ck=-1;renderChk()},chkt:x=>{ct=x;renderChk();const s=$('#a-chk .scroll');if(s)s.scrollTop=0},
- chkr:()=>{const f=D.friends[ck];if(!f)return;f.pv=f.pv||{};const key=unl[f.id]?ct:'lock';delete f.pv[key];delete f.pv[key+'_e'];save();gen(ck,key)},
- chku:()=>{const f=D.friends[ck],v=($('#cpin')||{}).value;if(v==f.pv.lock.pin){unl[f.id]=1;toast('已解锁');renderChk()}else{fails++;toast(fails>=3?'密码错误 · 提示：'+(f.pv.lock.hint||'无'):'密码错误');const e=$('#cpin');if(e)e.value=''}},
- chkh:()=>toast('提示：'+(D.friends[ck].pv.lock.hint||'无')),
- chkf:()=>{unl[D.friends[ck].id]=1;toast('已强制读取');renderChk()},
- chkq:x=>{const f=D.friends[ck];f.draft=CQ[+x];save();goChat=ck;show('wx');toast('已填入聊天输入框')}
+Object.assign(MP,{
+ sms:'生成 6 个手机短信会话（验证码/快递/银行/运营商等通知 2-3 个，另有 3 个是亲友或熟人的真实短信，至少 1 个与使用者有关），每个 1-3 条。JSON 数组：[{"n":"发件人","rel":"类型","time":"时间","msgs":[{"me":false,"t":"内容"}]}]',
+ contacts:'生成 9 位通讯录联系人，备注名要体现 TA 对每个人的真实态度与称呼习惯，其中必须有 1 条是 TA 给使用者的备注。JSON 数组：[{"n":"备注名","rel":"关系","note":"一句话标签或备注"}]',
+ browse:'生成 9 条浏览器历史，1-2 条为无痕。JSON 数组：[{"t":"页面标题","site":"网站","time":"时间","inc":false}]',
+ order:'生成 6 笔外卖/购物/打车订单，至少 1 笔是买给或为使用者准备的。JSON 数组：[{"x":"商品或店铺","kind":"外卖","a":-32,"time":"时间","note":"备注"}]',
+ music:'生成 8 首最近常听的歌，note 写循环原因或心情。JSON 数组：[{"t":"歌名","a":"歌手","cnt":23,"note":"一句话"}]',
+ health:'生成 TA 今天的健康数据 6 项（步数、睡眠、入睡时间、心率、饮水、运动等）。JSON 数组：[{"k":"步数","v":"8432","note":"一句话"}]',
+ cal:'生成 6 条日程（含过去与未来，至少 1 条与使用者有关）。JSON 数组：[{"t":"事项","time":"时间","loc":"地点","note":"备注"}]',
+ mail:'生成 6 封邮件（工作/账单/订阅/私人）。JSON 数组：[{"from":"发件人","sub":"主题","pre":"摘要","time":"时间"}]',
+ screen:'生成 TA 昨天各 App 使用时长 8 项（分钟），符合人设作息。JSON 数组：[{"app":"微信","m":134,"note":"一句话"}]',
+ social:'生成 8 条 TA 在社交平台（小红书/微博/B站等）的收藏、关注、点赞、评论动态，至少 2 条与使用者有关。JSON 数组：[{"p":"小红书","kind":"收藏","x":"内容","time":"时间"}]'
 });
+MP.report='根据下面这部手机里已生成的全部内容，以侦探口吻写一份「查手机报告」：1.心理侧写 2.最可疑的 3 个细节 3.TA 对使用者的真实态度 4.建议你接下来问 TA 的 3 个问题。400 字以内，纯文本。';
+const TONES={default:'',daily:'语气日常克制，贴近真实生活。',drama:'适度制造戏剧张力与悬念，但不得崩人设。',sweet:'偏甜蜜暧昧，细节里藏着对使用者的在意。',creepy:'细节耐人寻味、略带细思极恐的暗示，不出现暴力血腥。',heal:'偏温情治愈，体现 TA 笨拙却真诚的一面。'};
+D.chk=Object.assign({persona:1,style:1,world:1,hello:0,about:1,mem:1,sys:0,frs:0,cons:1,time:1,chat:12,mo:4,other:'',scene:'',instr:'',tone:'default',toneT:'',n:0,tok:3000,temp:'',sub:0,nolock:0,retry:0,rev:0,pre:[],mp:{}},D.chk||{});
+const PS=f=>{const c=D.chk,g=D.cfg,pv=f.pv||{},ch=(D.chats[f.id]||[]).filter(m=>m.r!='s'&&!m.hid).slice(-(+c.chat||0)).map(m=>(m.r=='u'?'使用者':f.name)+'：'+(m.d||m.t)).join('\n'),mo=D.mo.filter(p=>p.who==f.id).slice(-(+c.mo||0)).map(p=>p.x).join('；'),P=[`你是「手机内容生成器」，为角色「${f.name}」（备注：${f.remark||'无'}）生成其手机里的内容。`];
+ if(c.persona)P.push(`【强制读取人设，不得偏离】角色设定：${f.role||'未填写'}。`);
+ if(c.style&&f.style)P.push('说话风格：'+f.style+'。');if(c.world&&f.world)P.push('背景与关系：'+f.world+'。');if(c.hello&&f.hello)P.push('开场白：'+f.hello+'。');
+ P.push(`使用者是「${D.me.nick||D.me.id}」。`);
+ if(c.about&&g.nick)P.push('TA 对使用者的称呼：'+g.nick+'。');if(c.about&&g.about)P.push('关于使用者：'+g.about+'。');
+ if(c.mem&&g.memOn&&g.memories.length)P.push('角色记得：'+g.memories.join('；')+'。');
+ if(c.sys&&g.sys)P.push('全局附加指令：'+g.sys);
+ if(c.frs&&D.friends.length>1)P.push('通讯录中的其他角色：'+D.friends.filter(x=>x!==f).map(x=>x.remark||x.name).join('、')+'。');
+ if(c.cons){const nm=[...(pv.chats||[]),...(pv.contacts||[])].map(x=>x&&x.n).filter(Boolean);if(nm.length)P.push('该手机里已出现的人物（保持一致，可复用）：'+[...new Set(nm)].slice(0,16).join('、')+'。')}
+ if(c.other)P.push('【自定义上下文】'+c.other);if(f.chkx)P.push('【本角色专属上下文】'+f.chkx);if(c.scene)P.push('【场景设定】'+c.scene);
+ if(+c.chat)P.push('\n最近真实聊天记录：\n'+(ch||'（暂无）'));if(+c.mo)P.push('\nTA 发过的朋友圈：'+(mo||'（暂无）'));
+ const tn=c.tone=='custom'?c.toneT:TONES[c.tone]||'';
+ P.push(`\n规则：1.一切内容必须符合该角色的身份、职业、年龄、性格、作息与口吻，不得与人设或上面的真实聊天矛盾；2.与使用者的关系要自然体现；${c.time?'3.现在是 '+new Date().toLocaleString('zh-CN')+'；':''}4.只输出 JSON，不要代码块、不要解释；5.每条内容简短。${tn?'6.基调：'+tn:''}${c.instr?'\n【额外指令】'+c.instr:''}`);return P.join('')};
+const UP=(f,key,more)=>{const c=D.chk,a=(f.pv||{})[key];let u=c.mp[key]||MP[key];if(+c.n&&key!='lock')u+=`\n（条数：本次生成 ${c.n} 条，以此为准。）`;if(more&&Array.isArray(a))u+='\n（这是追加生成，不得与以下已有内容重复）'+JSON.stringify(a.map(x=>{const y=Object.assign({},x);delete y._dig;return y})).slice(0,1500);return u};
+const pj=s=>{s=String(s).replace(/```json|```/g,'');const a=s.search(/[\[{]/);if(a<0)throw Error('没有返回 JSON');const t=s.slice(a);try{return JSON.parse(t.slice(0,Math.max(t.lastIndexOf(']'),t.lastIndexOf('}'))+1))}catch(e){}if(t[0]=='['){const i=t.lastIndexOf('},');if(i>0)try{return JSON.parse(t.slice(0,i+1)+']')}catch(e){}}throw Error('JSON 解析失败（可能被截断，可在上下文设置里调高最大输出）')};
+const API=()=>{const a=D.chk.sub&&D.sub.url?D.sub:D.main;return D.chk.temp===''||isNaN(+D.chk.temp)?a:Object.assign({},a,{temp:+D.chk.temp})};
+function AK(sys,u){const o=D.cfg.maxTok;D.cfg.maxTok=Math.max(o,+D.chk.tok||o);const p=ask(API(),sys,[{role:'user',content:u}]);D.cfg.maxTok=o;return p}
+const norm=(k,d)=>{if(!Array.isArray(d))return d;if(k=='search')return d.map(x=>typeof x=='string'?{x}:x);if(k=='pay'||k=='order')d.forEach(p=>{p.a=Number(p.a)||0});return d};
+async function gen(k,key,more,tr){const f=D.friends[k],id=k+key;if(!f||bz[id])return;f.pv=f.pv||{};bz[id]=1;if(!more)delete f.pv[key+'_e'];if(ck==k)renderChk();
+ try{const d=norm(key,pj(await AK(PS(f),UP(f,key,more))));
+  if(key=='lock'){const p=String((d&&d.pin)||'').replace(/\D/g,'').slice(0,4);if(p.length<4)throw Error('格式不正确');d.pin=p}else if(!Array.isArray(d))throw Error('格式不正确');
+  f.pv[key]=more&&Array.isArray(f.pv[key])?f.pv[key].concat(d):d;f.pv[key+'_t']=Date.now();save()}
+ catch(e){const m=String(e&&e.message||e).slice(0,80);if(D.chk.retry&&!tr){delete bz[id];return gen(k,key,more,1)}if(more)toast('追加失败：'+m);else{delete f.pv[key];f.pv[key+'_e']=m}}
+ delete bz[id];if(ck==k)renderChk()}
+async function dig(key,i){const f=D.friends[ck],it=((f.pv||{})[key]||[])[i],id=ck+key+i;if(!it||bz[id])return;bz[id]=1;renderChk();
+ try{const y=Object.assign({},it);delete y._dig;it._dig=(await AK(PS(f).replace('只输出 JSON，不要代码块、不要解释','只输出正文'),'针对下面这条手机内容，用 120 字以内写出它背后的前因后果与 TA 当时真实的想法，须符合人设，只输出正文：\n'+JSON.stringify(y))).trim();save()}catch(e){toast('深挖失败：'+errMsg(e))}
+ delete bz[id];renderChk()}
+let ex='',cs='chats';
+const qi=t=>(CQ.push(t),CQ.length-1);
+const ia=(k,i,qt)=>{const s=((D.friends[ck].pv||{})[k]||[])[i]||{};return `<div class="ia">${qt?`<button class="mic cq" data-act="chkq:${qi(qt)}">${ic('spark')}<span>质问</span></button>`:''}<button class="mic" data-act="chkd:${k}:${i}">${ic('search')}<span>深挖</span></button><button class="mic${s._s?' on':''}" data-act="chks:${k}:${i}">${ic('star')}<span>${s._s?'已标':'标记'}</span></button><button class="mic" data-act="chke:${k}:${i}">${ic('edit')}<span>编辑</span></button><button class="mic" data-act="chkrw:${k}:${i}">${ic('refresh')}<span>重写</span></button><button class="mic" data-act="chkx:${k}:${i}">${ic('trash')}<span>删除</span></button></div>`};
+const dg=(k,i,it)=>it._dig?`<p class="dg">${esc(it._dig)}</p>`:bz[ck+k+i]?'<p class="mono dgl">深挖中…</p>':'';
+const KX=(k,i,it,h,qt)=>`<div class="kx">${h}${dg(k,i,it)}${ia(k,i,qt)}</div>`;
+const RW=(k,i,it,h,qt)=>{const o=ex==k+i;return `<div class="rw${o?' x':''}"><button class="rwb" data-act="chkw:${k}:${i}">${h}</button>${dg(k,i,it)}${o?ia(k,i,qt):''}</div>`};
+const rwl=(t,s,r)=>`<div style="flex:1;min-width:0"><b>${esc(t)}</b><span class="mono">${esc(s||'')}</span></div>${r||''}`;
+const tg=t=>t?`<i class="tag">${esc(t)}</i>`:'',mny=a=>`<span class="amt">${a>0?'+':'−'}${Math.abs(a).toFixed(2)}</span>`,lastT=c=>{const m=c.msgs||[];return m.length?m[m.length-1].t:''};
+const cht=(k,i,c,qt)=>KX(k,i,c,`<div class="ckh"><b>${esc(c.n)}</b>${tg(c.rel)}<time>${esc(c.time||'')}</time></div>${(c.msgs||[]).map(x=>`<div class="cb${x.me?' me':''}">${esc(x.t)}</div>`).join('')}`,qt);
+const B={
+ chats:(c,i)=>cht('chats',i,c,'你跟「'+c.n+'」说的“'+lastT(c)+'”，是什么意思？'),
+ sms:(c,i)=>cht('sms',i,c,'你手机里「'+c.n+'」那条短信“'+lastT(c)+'”是怎么回事？'),
+ contacts:(c,i)=>KX('contacts',i,c,`<div class="ckh"><b>${esc(c.n)}</b>${tg(c.rel)}</div><p class="ckx">${esc(c.note||'')}</p>`,'你通讯录里把「'+c.n+'」存成这样，是什么意思？'),
+ album:(p,i)=>{const h=(i*67+210)%360;return `<div class="ca" style="background:linear-gradient(160deg,hsl(${h},16%,26%),hsl(${(h+40)%360},20%,9%))">${p.hid?`<i class="tag">${ic('lock')}隐藏</i>`:''}<p>${esc(p.d)}</p><small>${esc(p.loc||'')} · ${esc(p.time||'')}</small>${dg('album',i,p)}${ia('album',i,'手机里这张“'+p.d+'”，你解释一下。')}</div>`},
+ hid:(p,i)=>KX('hid',i,p,`<div class="ckh">${tg(p.tag||'仅自己可见')}<time>${esc(p.time||'')}</time></div><p class="ckx">${esc(p.x)}</p>`,'你那条没公开的动态“'+p.x+'”，是写给谁的？'),
+ social:(p,i)=>RW('social',i,p,rwl(p.x,(p.p||'')+' · '+(p.kind||'')+' · '+(p.time||'')),'你在'+p.p+'上'+p.kind+'的“'+p.x+'”，是为什么？'),
+ notes:(n,i)=>KX('notes',i,n,`<b style="font:400 16px var(--serif)">${esc(n.t)}</b><p class="ckx">${esc(n.x)}</p>`,'你备忘录里写的“'+n.t+'”是什么意思？'),
+ drafts:(n,i)=>KX('drafts',i,n,`<div class="ckh"><span class="mono">To · ${esc(n.to)}</span><time>${esc(n.time||'')}</time></div><p class="ckx">${esc(n.x)}</p>`,'你没发出去的那句“'+n.x+'”，现在可以说了。'),
+ search:(s,i)=>RW('search',i,s,`<span class="mono n">${String(i+1).padStart(2,'0')}</span><b>${esc(s.x)}</b>`,'你为什么会搜“'+s.x+'”？'),
+ browse:(b,i)=>RW('browse',i,b,rwl(b.t,(b.site||'')+' · '+(b.time||''),tg(b.inc?'无痕':'')),'你浏览的“'+b.t+'”是怎么回事？'),
+ pay:(p,i)=>RW('pay',i,p,rwl(p.x,p.time,mny(p.a)),'这笔“'+p.x+'”是花在什么上？'),
+ order:(p,i)=>RW('order',i,p,rwl(p.x,(p.kind||'')+' · '+(p.time||'')+(p.note?' · '+p.note:''),mny(p.a)),'你下的这单“'+p.x+'”是给谁的？'),
+ call:(c,i)=>RW('call',i,c,rwl(c.n,(c.time||'')+' · '+(c.dur||''),tg(c.dir)),'你和「'+c.n+'」的这通电话聊了什么？'),
+ music:(m,i)=>RW('music',i,m,rwl(m.t+' — '+(m.a||''),(m.cnt||'')+' 次 · '+(m.note||'')),'你为什么一直在听《'+m.t+'》？'),
+ cal:(m,i)=>RW('cal',i,m,rwl(m.t,(m.time||'')+(m.loc?' · '+m.loc:'')+(m.note?' · '+m.note:'')),'你日程里的“'+m.t+'”是什么安排？'),
+ mail:(m,i)=>RW('mail',i,m,rwl(m.sub,(m.from||'')+' · '+(m.time||'')+' — '+(m.pre||'')),'你收到的邮件“'+m.sub+'”是怎么回事？'),
+ health:(h,i)=>`<div class="hk"><span class="mono">${esc(h.k)}</span><b>${esc(h.v)}</b><small>${esc(h.note||'')}</small>${dg('health',i,h)}${ia('health',i,h.k+'「'+h.v+'」这个数据是怎么回事？')}</div>`,
+ screen:(s,i,a)=>{const mx=Math.max(...a.map(x=>+x.m||0),1),m=+s.m||0;return RW('screen',i,s,`<div style="flex:1;min-width:0"><b>${esc(s.app)}</b><div class="bar"><i style="width:${Math.round(m/mx*100)}%"></i></div><span class="mono">${esc(s.note||'')}</span></div><span class="amt">${m>=60?Math.floor(m/60)+'h ':''}${m%60}m</span>`,'你昨天在「'+s.app+'」上花了这么久，在做什么？')},
+ track:(t,i)=>`<div><span class="mono">${esc(t.time||'')} · ${esc(t.place||'')}</span><p class="ckx">${esc(t.note||'')}</p>${dg('track',i,t)}${ia('track',i,'你在“'+t.place+'”做什么？')}</div>`
+};
+const WR={album:h=>`<div class="cag">${h}</div>`,track:h=>`<div class="tl">${h}</div>`,health:h=>`<div class="hkg">${h}</div>`};
+const ER=m=>`<p class="empty" style="font-size:16px;margin-top:40px;text-align:center">生成失败：${esc(m)}<br>请检查 API 设置后重试。</p><button class="bt k w" data-act="chkr">重试</button>`;
+let ckS='',ckQ='',allP=0;
+const SK='<div class="sk"><i></i><i></i><i></i><i></i></div>';
+const flat=x=>typeof x=='string'?x:Object.entries(x||{}).filter(([k,v])=>k[0]!='_'&&(typeof v=='string'||typeof v=='number')).map(([k,v])=>v).join(' · ')+(x&&x.msgs?' ｜ '+x.msgs.map(m=>m.t).join(' / '):'');
+const cpT=t=>{const n=navigator.clipboard;t?(n?n.writeText(t).then(()=>toast('已复制'),()=>toast('复制失败')):toast('当前环境不支持复制')):toast('没有可复制的内容')};
+const fq=()=>{const q=(ckQ||'').trim();document.querySelectorAll('#a-chk .kx,#a-chk .rw,#a-chk .hk,#a-chk .ca,#a-chk .tl>div').forEach(e=>e.style.display=!q||e.textContent.includes(q)?'':'none')};
+function ckL(){const e=$('#ckl');if(!e)return;const L=D.friends.map((f,k)=>[f,k]).filter(([f])=>!f.local&&((f.remark||'')+f.name).includes(ckS));e.innerHTML=L.map(([f,k])=>{const n=GEN.filter(x=>Array.isArray((f.pv||{})[x])).length;return `<button class="li" data-act="chko:${k}">${avh(f)}<div><b>${esc(f.remark||f.name)}</b><small class="pbl">${esc(f.role||'未填写人设')}</small><span class="mono pg">已生成 ${n}/${GEN.length}</span></div>${ic('next')}</button>`}).join('')||'<p class="empty">没有匹配的角色。<br>先去通讯录添加角色。</p>'}
+function renderChk(){const A=$('#a-chk');CQ=[];
+ if(ck<0){
+  A.innerHTML=`<div class="scroll"><div class="mono">12 / Inspect</div><hr class="k"><h2 class="tt">查手机</h2><p class="mono" style="text-transform:none;letter-spacing:.05em;line-height:1.8;margin:6px 0 10px">选择一个角色，读取 TA 的人设并生成手机里的 19 类内容，并可标记、编辑、重写与汇总成报告。带入的上下文可完全自定义。</p><div class="row" style="margin:0 0 6px"><button class="bt" data-act="chkc">${ic('sliders')} 上下文与生成设置</button></div>`+`<label class="sb2">${ic('search')}<input id="ckq" placeholder="搜索角色" value="${esc(ckS)}"></label><div id="ckl"></div></div>`;ckL();return}
+ const f=D.friends[ck];if(!f){ck=-1;return renderChk()}const pv=f.pv||{},lk=pv.lock,c=D.chk,go=key=>setTimeout(()=>gen(ck,key),0);
+ const inc=[c.persona&&'人设',c.style&&f.style&&'风格',c.world&&f.world&&'背景',+c.chat&&'聊天'+c.chat+'条',c.mem&&D.cfg.memOn&&D.cfg.memories.length&&'记忆',(c.other||f.chkx||c.scene)&&'自定义'].filter(Boolean).join(' · ');
+ const top=`<div class="chh"><button data-act="chkb">${ic('back')}</button><b class="pt">${esc(f.remark||f.name)} 的手机</b><span style="display:flex;gap:2px"><button data-act="chkc">${ic('sliders')}</button><button data-act="chkmn">${ic('more')}</button><button data-act="chkr">${ic('refresh')}</button></span></div>`,
+ pc=`<div class="fo pcard" data-fo><span class="mono">人设已载入 · ${esc(inc||'未带入')}</span><div class="fob"><p>${esc(f.role||'未填写人设（建议在好友资料里补全，生成会更贴合）')}${f.style?'<br>风格：'+esc(f.style):''}${f.world?'<br>背景：'+esc(f.world):''}${f.chkx?'<br>专属上下文：'+esc(f.chkx):''}</p></div><i class="fot"></i></div>`,
+ ld=SK;let h;
+ if(!unl[f.id]&&!c.nolock){
+  if(pv.lock_e)h=ER(pv.lock_e);else if(!lk){if(!bz[ck+'lock'])go('lock');h=ld}
+  else h=`<div class="lkx"><span class="mono">${fT(Date.now())} · Locked</span><h1>${fT(Date.now())}</h1>${(lk.notif||[]).map(n=>`<div class="lnt"><span class="mono">${esc(n.app||'')}</span><p>${esc(n.text||'')}</p></div>`).join('')}<input class="cpn" id="cpin" inputmode="numeric" maxlength="4" placeholder="····" autocomplete="off"><div class="row" style="justify-content:center"><button class="bt k" data-act="chku">解锁</button><button class="bt" data-act="chkh">提示</button><button class="bt" data-act="chkf">强制读取</button></div></div>`}
+ else{let b;
+  if(ct=='mark'){const it=[];GEN.forEach(k=>(Array.isArray(pv[k])?pv[k]:[]).forEach((x,i)=>{if(x&&x._s)it.push([k,i,x])}));b=it.length?it.map(([k,i,x])=>`<div class="kx"><div class="ckh"><i class="tag">${esc((TABS.find(t=>t[0]==k)||[])[1]||k)}</i></div><p class="ckx">${esc(flat(x))}</p>${dg(k,i,x)}<div class="ia"><button class="mic on" data-act="chks:${k}:${i}">${ic('star')}<span>取消标记</span></button></div></div>`).join(''):'<p class="empty" style="font-size:18px">还没有标记。<br>在条目上点「标记」，这里会汇总。</p>'}
+  else if(ct=='report'){if(pv.report_e)b=ER(pv.report_e);else if(bz[ck+'report'])b=SK;else b=(pv.report?`<div class="kx"><p class="ckx">${esc(pv.report)}</p></div>`:'<p class="empty" style="font-size:18px">汇总这部手机的全部内容，写一份侦探报告。</p>')+`<button class="bt k w" data-act="chkrep">${pv.report?'重新生成报告':'生成报告'}</button>`}
+  else{const d0=pv[ct];if(pv[ct+'_e'])b=ER(pv[ct+'_e']);else if(!d0){if(!bz[ck+ct])go(ct);b=ld}else{const a=Array.isArray(d0)?norm(ct,d0):[];if(Array.isArray(d0))pv[ct]=a;
+   const pr=a.map((x,i)=>[x,i]);if(c.rev)pr.reverse();let body=pr.map(([x,i])=>B[ct](x,i,a)).join('');if(WR[ct])body=WR[ct](body);
+   if(ct=='hid')body=D.mo.filter(p=>p.who==f.id).sort((x,y)=>y.t-x.t).map(p=>`<div class="kx"><div class="ckh"><i class="tag">公开</i><time>${fD(p.t)}</time></div><p class="ckx">${esc(p.x)}</p></div>`).join('')+body;
+   b=`<div class="tbar"><span class="mono">${a.length} 条${pv[ct+'_t']?' · '+fD(pv[ct+'_t']):''}${c.rev?' · 倒序':''}</span><span><button class="mic" data-act="chkm">${ic('plus')}<span>追加</span></button><button class="mic" data-act="chkr">${ic('refresh')}<span>重生成</span></button></span></div><label class="sb2 sb3">${ic('search')}<input id="cks" placeholder="在本页搜索" value="${esc(ckQ)}"></label>`+(body||'<p class="empty" style="font-size:18px">空空如也。</p>')+(bz[ck+ct]?'<p class="mono dgl">生成中…</p>':'')}}
+  const stc=GEN.reduce((s,k)=>s+(Array.isArray(pv[k])?pv[k].filter(x=>x&&x._s).length:0),0);
+  h=`<div class="ctb">${TABS.map(([k,t])=>{const n=k=='mark'?stc:Array.isArray(pv[k])?pv[k].length:0;return `<button class="${k==ct?'a':''}" data-act="chkt:${k}">${t}${n?`<sup>${n}</sup>`:''}</button>`}).join('')}</div>${b}`}
+ const sc=A.querySelector('.scroll'),y=sc?sc.scrollTop:0;
+ A.innerHTML=top+`<div class="scroll">${pc}${h}</div><button class="btt" data-act="chktop">${ic('up')}</button>`;fq();const n=A.querySelector('.scroll');if(n&&y&&ck>=0)n.scrollTop=y;const a=A.querySelector('.ctb .a');if(a)a.scrollIntoView({inline:'center',block:'nearest'})}
+const TG=(t,k)=>T(t,D.chk[k],'cxt:'+k),RGx=(k,min,max,st)=>`<div class="cd"><input type="range" min="${min}" max="${max}" step="${st}" value="${D.chk[k]}" data-cx="${k}"><output class="mono" style="color:var(--fg)">${D.chk[k]}</output></div>`,FDx=(l,k,ph,r)=>`<label class="f fd"><span class="mono">${l}</span><textarea data-cx="${k}" rows="${r||3}" placeholder="${ph||''}">${esc(D.chk[k])}</textarea></label>`;
+function ctxSheet(){const s=$('#sheet'),y=s.scrollTop,f=ck>=0?D.friends[ck]:null,c=D.chk;s.className='on';
+ s.innerHTML=`<div style="width:100%"><div class="mono">查手机 · 上下文与生成设置</div><hr class="k"><div class="mono sec">带入的上下文</div>${TG('人设（角色设定）','persona')}${TG('说话风格','style')}${TG('背景与关系','world')}${TG('开场白','hello')}${TG('称呼与关于使用者','about')}${TG('长期记忆','mem')}${TG('全局系统提示词','sys')}${TG('通讯录其他角色名','frs')}${TG('已生成内容保持一致','cons')}${TG('当前时间','time')}${fld('带入聊天记录条数（0=不带）',RGx('chat',0,60,2))}${fld('带入朋友圈条数',RGx('mo',0,20,1))}<div class="mono sec">自定义上下文</div>${FDx('全局自定义上下文','other','对所有角色生效，例如：故事发生在 2030 年的上海…',4)}${f?`<label class="f fd"><span class="mono">「${esc(f.remark||f.name)}」专属上下文</span><textarea data-cxf="chkx" rows="3" placeholder="只对 TA 生效…">${esc(f.chkx||'')}</textarea></label>`:''}${FDx('场景设定','scene','例如：今晚 TA 刚加完班，心情很差',2)}${FDx('额外生成指令','instr','例如：多用方言；不要出现真实品牌',2)}<div class="mono sec">风格与规模</div>${fld('内容基调',`<select data-cx="tone">${OPT(c.tone,[['default','默认'],['daily','日常克制'],['drama','戏剧悬念'],['sweet','甜蜜暧昧'],['creepy','细思极恐'],['heal','温情治愈'],['custom','自定义…']])}</select>`)}${c.tone=='custom'?FDx('自定义基调','toneT','',2):''}${fld('每页条数（0=按默认）',RGx('n',0,14,1))}${fld('最大输出 tokens',RGx('tok',1024,8000,256))}${fld('温度（留空=跟随 API）',`<input data-cx="temp" inputmode="decimal" value="${esc(c.temp)}" placeholder="例如 0.9">`)}${TG('使用副 API（需已配置）','sub')}${TG('跳过锁屏直接查看','nolock')}${TG('生成失败自动重试一次','retry')}<div class="mono sec">单页提示词</div>${fld('选择页面',`<select id="cxs">${TABS.concat([['lock','锁屏']]).map(([k,t])=>`<option value="${k}" ${k==cs?'selected':''}>${t}</option>`).join('')}</select>`)}<label class="f"><span class="mono">该页生成指令（请保留 JSON 格式说明）</span><textarea id="cxm" rows="5">${esc(c.mp[cs]||MP[cs])}</textarea></label><div class="row"><button class="bt" data-act="cxrs">恢复默认</button><button class="bt" data-act="chkpv">预览最终提示词</button></div><div class="mono sec">预设与备份</div>${fld('已保存的预设',`<select id="cxps"><option value="">— 选择 —</option>${(c.pre||[]).map((p,i)=>`<option value="${i}">${esc(p.n)}</option>`).join('')}</select>`)}<div class="row"><button class="bt" data-act="cxpl">载入</button><button class="bt" data-act="cxpd">删除</button></div>${fld('另存为预设（名称）','<input id="cxpn" placeholder="例如：狗血剧场">')}<div class="row"><button class="bt k" data-act="cxpsv">保存当前设置</button><button class="bt" data-act="cxex">导出设置</button><button class="bt" data-act="cxim">导入设置</button></div><label class="f"><span class="mono">设置 JSON（导入时粘贴到这里）</span><textarea id="cxio" rows="3"></textarea></label><button class="bt k w" data-act="sx">完成</button></div>`;s.scrollTop=y}
+const Hx=e=>{const t=e.target,d=t.dataset||{};
+ if(d.cx){const k=d.cx;D.chk[k]=t.type=='range'?parseFloat(t.value):t.value;if(t.type=='range'&&t.nextElementSibling)t.nextElementSibling.textContent=t.value;save();if(k=='tone'&&e.type=='change')ctxSheet()}
+ if(d.cxf&&ck>=0){D.friends[ck][d.cxf]=t.value;save()}
+ if(t.id=='cxm'){const v=t.value;if(v.trim()&&v!==MP[cs])D.chk.mp[cs]=v;else delete D.chk.mp[cs];save()}
+ if(t.id=='cxs'&&e.type=='change'){cs=t.value;ctxSheet()}
+ if(t.id=='ckq'){ckS=t.value;ckL()}if(t.id=='cks'){ckQ=t.value;fq()}};
+ph.addEventListener('input',Hx);ph.addEventListener('change',Hx);
+Object.assign(ACT,{
+ chko:x=>{ck=+x;ct=(D.friends[ck]&&D.friends[ck].lt)||'chats';ckQ='';fails=0;ex='';renderChk()},chkb:()=>{ck=-1;renderChk()},chkt:x=>{ct=x;ex='';ckQ='';if(D.friends[ck])D.friends[ck].lt=x;renderChk();const s=$('#a-chk .scroll');if(s)s.scrollTop=0},
+ chkr:()=>{const f=D.friends[ck];if(!f)return;if(unl[f.id]||D.chk.nolock){if(ct=='report')return ACT.chkrep();if(ct=='mark')return}f.pv=f.pv||{};const key=unl[f.id]||D.chk.nolock?ct:'lock';delete f.pv[key];delete f.pv[key+'_e'];ex='';save();gen(ck,key)},
+ chkm:()=>gen(ck,ct,1),
+ chku:()=>{const f=D.friends[ck],v=($('#cpin')||{}).value;if(v==f.pv.lock.pin){unl[f.id]=1;toast('已解锁');renderChk()}else{fails++;toast(fails>=3?'密码错误 · 提示：'+(f.pv.lock.hint||'无'):'密码错误（'+fails+'/3）');const e=$('#cpin');if(e){e.value='';e.classList.remove('shake');void e.offsetWidth;e.classList.add('shake')}}},
+ chkh:()=>toast('提示：'+(D.friends[ck].pv.lock.hint||'无')),chkf:()=>{unl[D.friends[ck].id]=1;toast('已强制读取');renderChk()},
+ chkq:x=>{const f=D.friends[ck];f.draft=CQ[+x];save();goChat=ck;show('wx');toast('已填入聊天输入框')},
+ chkw:(k,i)=>{ex=ex==k+i?'':k+i;renderChk()},chkd:(k,i)=>dig(k,+i),
+ chkx:(k,i)=>{D.friends[ck].pv[k].splice(+i,1);ex='';save();renderChk()},
+ chkc:()=>ctxSheet(),cxt:k=>{D.chk[k]=D.chk[k]?0:1;save();ctxSheet()},
+ cxrs:()=>{delete D.chk.mp[cs];save();ctxSheet();toast('已恢复默认')},
+ chkpv:()=>{const f=D.friends[ck>=0?ck:0];if(!f)return toast('还没有角色');const s=$('#sheet');s._pv='【System】\n'+PS(f)+'\n\n【User】\n'+UP(f,cs,0);s.className='on';s.innerHTML=`<div style="width:100%"><div class="mono">最终提示词预览 · ${esc(f.remark||f.name)} · ${cs}</div><hr class="k"><pre class="pvx">${esc(s._pv)}</pre><div class="row"><button class="bt" data-act="cxcp">复制</button><button class="bt" data-act="chkc">返回设置</button></div></div>`},
+ cxcp:()=>{const n=navigator.clipboard;n?n.writeText($('#sheet')._pv).then(()=>toast('已复制'),()=>toast('复制失败')):toast('当前环境不支持复制')}
+});
+const jx=x=>{const y=Object.assign({},x);delete y._dig;delete y._s;return y},gp=(k,i)=>((D.friends[ck].pv||{})[k]||[])[i];let ed=null;
+Object.assign(ACT,{
+ chks:(k,i)=>{const it=gp(k,+i);if(it){it._s=it._s?0:1;save();renderChk()}},
+ chke:(k,i)=>{if(!GEN.includes(k))return toast('本页不支持');const it=+i<0?null:gp(k,+i),a=(D.friends[ck].pv||{})[k]||[],base=it?jx(it):a[0]?Object.fromEntries(Object.keys(jx(a[0])).map(z=>[z,typeof a[0][z]=='number'?0:typeof a[0][z]=='boolean'?false:Array.isArray(a[0][z])?[]:''])):{x:''};ed={k,i:+i};const s=$('#sheet');s.className='on';s.innerHTML=`<div style="width:100%"><div class="mono">${+i<0?'新增条目':'编辑条目'}</div><hr class="k"><textarea id="edt" class="ne" style="min-height:240px;font:12px/1.6 ui-monospace,Menlo,monospace;border:1px solid var(--ln);border-radius:12px;padding:12px">${esc(JSON.stringify(base,null,1))}</textarea><button class="bt k w" data-act="chkes">保存</button><button class="bt w" style="margin-top:10px" data-act="sx">取消</button></div>`},
+ chkes:()=>{try{const o=JSON.parse($('#edt').value),f=D.friends[ck];f.pv=f.pv||{};const a=f.pv[ed.k]=f.pv[ed.k]||[];if(ed.i<0)a.push(o);else{const old=a[ed.i]||{};if(old._s)o._s=1;if(old._dig)o._dig=old._dig;a[ed.i]=o}save();$('#sheet').className='';renderChk();toast('已保存')}catch(e){toast('JSON 格式有误')}},
+ chkrw:async(k,i)=>{const f=D.friends[ck],it=gp(k,+i),id=ck+k+i;if(!it||bz[id])return;bz[id]=1;toast('重写中…');try{const o=pj(await AK(PS(f),'请重写下面这条手机内容：保持完全相同的 JSON 结构与字段，但换成不同的内容，仍须符合人设。只输出这一个 JSON 对象。\n'+JSON.stringify(jx(it))));if(!o||Array.isArray(o))throw Error('格式不正确');if(it._s)o._s=1;f.pv[k][+i]=o;save()}catch(e){toast('重写失败：'+errMsg(e))}delete bz[id];renderChk()},
+ chkmn:()=>{const s=$('#sheet');s.className='on s';s.innerHTML=`<div style="width:100%"><div class="mono">更多操作</div><hr class="k">${R('plus','新增条目（当前页）','','chke:'+ct+':-1')}${R('copy','复制本页','','chkcp')}${R('up','导出整部手机','','chkex')}${R('spark','一键生成全部页面','','chkall')}${R('refresh',D.chk.rev?'切换为正序':'切换为倒序','','chkrv')}${R('trash','清空这部手机','','chkclr')}<button class="bt w" style="margin-top:16px" data-act="sx">关闭</button></div>`},
+ chkcp:()=>{const f=D.friends[ck],a=(f.pv||{})[ct];$('#sheet').className='';cpT(Array.isArray(a)?a.map(flat).join('\n'):ct=='report'?f.pv.report:'')},
+ chkex:()=>{const f=D.friends[ck];$('#sheet').className='';cpT(GEN.filter(k=>Array.isArray((f.pv||{})[k])).map(k=>'【'+TABS.find(t=>t[0]==k)[1]+'】\n'+f.pv[k].map(flat).join('\n')).join('\n\n'))},
+ chkall:async()=>{$('#sheet').className='';const k0=ck,f=D.friends[k0],todo=GEN.filter(x=>!Array.isArray((f.pv||{})[x]));if(!todo.length)return toast('已全部生成');allP=1;for(let n=0;n<todo.length;n++){if(ck!=k0)break;toast('生成中 '+(n+1)+'/'+todo.length+' · '+TABS.find(t=>t[0]==todo[n])[1]);await gen(k0,todo[n])}allP=0;toast('生成完成')},
+ chkrv:()=>{D.chk.rev=D.chk.rev?0:1;save();$('#sheet').className='';renderChk()},
+ chkclr:()=>{if(!confirm('清空这部手机的全部已生成内容？'))return;const f=D.friends[ck];f.pv={};delete unl[f.id];save();$('#sheet').className='';renderChk()},
+ chkrep:async()=>{const f=D.friends[ck],k0=ck;if(bz[k0+'report'])return;f.pv=f.pv||{};bz[k0+'report']=1;delete f.pv.report_e;renderChk();try{const dump=GEN.filter(x=>Array.isArray(f.pv[x])).map(x=>'【'+TABS.find(t=>t[0]==x)[1]+'】'+f.pv[x].map(flat).join('；')).join('\n').slice(0,6000);if(!dump)throw Error('请先生成一些页面内容');f.pv.report=(await AK(PS(f).replace('只输出 JSON，不要代码块、不要解释','只输出纯文本'),(D.chk.mp.report||MP.report)+'\n\n手机内容：\n'+dump)).trim();save()}catch(e){f.pv.report_e=String(e.message||e).slice(0,80)}delete bz[k0+'report'];if(ck==k0)renderChk()},
+ chktop:()=>{const s=$('#a-chk .scroll');s&&s.scrollTo({top:0,behavior:'smooth'})},
+ cxpsv:()=>{const n=($('#cxpn').value||'').trim()||'预设'+(D.chk.pre.length+1),v=clone(D.chk);delete v.pre;D.chk.pre.push({n,v});save();ctxSheet();toast('已保存预设')},
+ cxpl:()=>{const i=$('#cxps').value;if(i==='')return toast('请选择预设');const pre=D.chk.pre;D.chk=Object.assign({},D.chk,clone(pre[+i].v),{pre});save();ctxSheet();toast('已载入')},
+ cxpd:()=>{const i=$('#cxps').value;if(i==='')return;D.chk.pre.splice(+i,1);save();ctxSheet()},
+ cxex:()=>{const v=clone(D.chk);delete v.pre;const t=JSON.stringify(v);$('#cxio').value=t;cpT(t)},
+ cxim:()=>{try{const o=JSON.parse($('#cxio').value),pre=D.chk.pre;D.chk=Object.assign({},D.chk,o,{pre});save();ctxSheet();toast('已导入')}catch(e){toast('JSON 无效')}}
+});
+let tx=0,ty=0;
+ph.addEventListener('touchstart',e=>{if(e.target.closest('#a-chk')){tx=e.touches[0].clientX;ty=e.touches[0].clientY}},{passive:true});
+ph.addEventListener('touchend',e=>{if(ck<0||!e.target.closest('#a-chk')||e.target.closest('.ctb,input,textarea'))return;const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;if(Math.abs(dx)<70||Math.abs(dy)>45)return;const f=D.friends[ck];if(!f||(!unl[f.id]&&!D.chk.nolock))return;const i=TABS.findIndex(t=>t[0]==ct),n=TABS[i+(dx<0?1:-1)];if(n)ACT.chkt(n[0])},{passive:true});
+ph.addEventListener('scroll',e=>{const s=e.target;if(s.closest&&s.classList.contains('scroll')&&s.closest('#a-chk')){const b=$('#a-chk .btt');if(b)b.classList.toggle('on',s.scrollTop>420)}},true);
 const _sh=show;show=function(id){_sh(id);if(id=='chk'){ck=-1;renderChk()}};
 const st=document.createElement('style');st.textContent=`
 #a-chk>.chh{padding-top:4px}#a-chk>.scroll{padding-top:0}
@@ -1546,6 +1646,107 @@ const st=document.createElement('style');st.textContent=`
 .cpn{width:100%;margin-top:30px;text-align:center;letter-spacing:.8em;font:300 30px var(--serif);border:0;border-bottom:1px solid var(--ln);background:transparent;outline:0;padding:10px 0 10px .8em}.cpn:focus{border-color:var(--fg)}`;
 document.head.appendChild(st);
 })();
+
+/* ===== v14：短信完善 / 人设收纳 ===== */
+let smEd=0,smSel=new Set(),smFl='all',smNm=[],smSb=-1;D.smd=D.smd||{};D.smp=D.smp||{};
+const smCode=t=>/验证码|校验码|动态码|code/i.test(t||'')&&((t||'').match(/\d{4,8}/)||[])[0];
+const smCp=t=>{const n=navigator.clipboard;n?n.writeText(t).then(()=>toast('已复制'),()=>toast('复制失败')):toast('当前环境不支持复制')};
+function smList(){const th={};D.sms.forEach(m=>(th[m.from]=th[m.from]||[]).push(m));
+  const ok=n=>{const a=th[n],un=a.some(m=>!m.read);return(!smq||n.includes(smq)||a.some(m=>(m.text||'').includes(smq)))&&(smFl=='all'||(smFl=='un'&&un)||(smFl=='kn'&&smCan(n))||(smFl=='cd'&&a.some(m=>smCode(m.text))))};
+  smNm=Object.keys(th).filter(ok).sort((a,b)=>(D.smp[b]?1:0)-(D.smp[a]?1:0)||th[b][th[b].length-1].t-th[a][th[a].length-1].t);
+  $('#sl').innerHTML=smNm.map((n,k)=>{const a=th[n],l=a[a.length-1],un=a.some(m=>!m.read);return `<button class="sr" data-act="${smEd?'smsel':'thr'}:${k}">${smEd?`<span class="sck${smSel.has(n)?' on':''}"></span>`:un?'<span class="sdot"></span>':''}<span class="ci">${ic('user')}</span><span class="bd"><b>${D.smp[n]?ic('pin','width:12px;height:12px;vertical-align:-1px;margin-right:4px'):''}${esc(n)}</b><small>${l.me?'你：':''}${esc(l.img?'[图片]':l.text)}</small><span class="tm">${smD(l.t)} ›</span></span></button>`}).join('')||'<p class="empty" style="text-align:center">无信息</p>';
+  const fb=$('#sfb');if(fb)fb.innerHTML=smEd?`<button data-act="smpn">置顶</button><button data-act="smrd">已读</button><button data-act="smcl">清理验证码</button><button data-act="smdel" style="color:#e5484d">删除${smSel.size?'（'+smSel.size+'）':''}</button>`:''}
+function renderSMS(){const A=$('#a-sms');
+  if(!sv){const un=D.sms.filter(m=>!m.read).length;
+    A.innerHTML=`<div class="sh"><button data-act="sme">${smEd?'完成':'编辑'}</button><button data-act="smc">${ic('edit','width:20px;height:20px;stroke-width:1.6')}</button></div><div class="stt">信息${un?`<small class="sun">${un} 条未读</small>`:''}</div><label class="srch">${ic('search')}<input id="sq" placeholder="搜索" value="${esc(smq)}" style="flex:1;border:0;background:transparent;outline:0;font:inherit;color:var(--fg)"></label><div class="sfl">${[['all','全部'],['un','未读'],['kn','联系人'],['cd','验证码']].map(([k,t])=>`<button class="${smFl==k?'a':''}" data-act="smfl:${k}">${t}</button>`).join('')}</div><div class="scroll" id="sl"></div><div class="sfb" id="sfb"></div>`;smList();return}
+  const ms=D.sms.filter(m=>m.from==sv);ms.forEach(m=>m.read=true);save();refreshBadges();const can=smCan(sv);let body='';
+  ms.forEach((m,i)=>{const p=ms[i-1],nx=ms[i+1],last=!nx||!!nx.me!=!!m.me||nx.t-m.t>18e5,gi=D.sms.indexOf(m),cd=!m.me&&smCode(m.text);
+    if(!p||m.t-p.t>18e5)body+=`<div class="ts">${i?'':'短信/彩信<br>'}${smH(m.t)}</div>`;
+    body+=`<div class="b${m.me?' me':''}${last?' last':''}${smSb==gi?' sel':''}" data-act="smb:${gi}">${m.img?`<img src="${m.img}" alt="" class="bimg">`:esc(m.text)}</div>`;
+    if(cd)body+=`<button class="cc" data-act="smcp:${gi}">复制验证码 ${cd}</button>`;
+    if(smSb==gi)body+=`<div class="bm${m.me?' me':''}"><span class="btm">${new Date(m.t).toLocaleString('zh-CN',{hour12:false})}</span><button data-act="smcpm:${gi}">复制</button><button data-act="smdm:${gi}" style="color:#e5484d">删除</button></div>`});
+  A.innerHTML=`<div class="sd"><button data-act="sback" style="display:flex;align-items:center;gap:0">${ic('back','width:26px;height:26px;stroke-width:1.6')}<span>信息</span></button><button class="c" data-act="smInfo"><i>${ic('user')}</i>${esc(sv)} ›</button><span style="width:60px"></span></div><div class="sm" id="smm">${body}${ms.length&&ms[ms.length-1].me&&smTy!=sv?'<div class="dv">已送达</div>':''}${smTy==sv?'<div class="b ty"><i></i><i></i><i></i></div>':''}</div><div class="sf"><label class="pc">${ic('plus')}<input type="file" id="smf" accept="image/*" hidden ${can?'':'disabled'}></label><input id="smi" class="pill" ${can?'':'disabled'} value="${esc(D.smd[sv]||'')}" placeholder="${can?'短信/彩信':'无法回复此发件人'}"><button class="pc ${can?'ok':''}" data-act="smsend">${ic('up')}</button></div>`;
+  const e=$('#smm');e.scrollTop=e.scrollHeight}
+async function smPost(nm,m){const f=D.friends.find(v=>v.name==nm);if(!f||smTy)return;D.smd[nm]='';D.sms.push(Object.assign({from:nm,t:Date.now(),me:1,fid:f.id,read:true},m));save();smTy=nm;renderSMS();
+  const hist=D.sms.filter(x=>x.from==nm).slice(-14).map(x=>({role:x.me?'user':'assistant',content:x.img?'[对方发来一张图片]':x.text}));while(hist.length&&hist[0].role!='user')hist.shift();let r;
+  try{r=(await ask(D.main,sysP(f)+' 现在是通过短信聊天，只回复一条简短短信。',hist)).trim().split('\n')[0]}catch(e){toast('API 未连通，已使用本地回复：'+errMsg(e));r=LOCAL[Math.random()*3|0].split('\n')[0]}
+  await sleep(500+Math.random()*900);smTy=null;const open=$('#a-sms').classList.contains('on')&&sv==nm;
+  D.sms.push({from:nm,text:r,t:Date.now(),fid:f.id,read:open});save();if(!open)notify({app:'sms',title:nm,text:r,go:'sms:'+nm});if($('#a-sms').classList.contains('on'))renderSMS();refreshBadges()}
+const smKeep=fn=>{const e=$('#smm'),y=e?e.scrollTop:0;fn();const n=$('#smm');if(n)n.scrollTop=y};
+Object.assign(ACT,{
+ thr:k=>{sv=smNm[+k];smSb=-1;renderSMS()},sback:()=>{sv=null;smSb=-1;renderSMS()},
+ sme:()=>{smEd=smEd?0:1;smSel.clear();renderSMS()},
+ smsel:k=>{const n=smNm[+k];smSel.has(n)?smSel.delete(n):smSel.add(n);smList()},
+ smfl:k=>{smFl=k;renderSMS()},
+ smrd:()=>{const S=smSel.size?smSel:new Set(smNm);D.sms.forEach(m=>{if(S.has(m.from))m.read=true});save();refreshBadges();renderSMS();toast('已标为已读')},
+ smdel:(x,y,t)=>{if(!smSel.size)return toast('请先选择对话');if(!ok2(t))return;D.sms=D.sms.filter(m=>!smSel.has(m.from));smSel.clear();smEd=0;save();refreshBadges();renderSMS()},
+ smsend:()=>{const i=$('#smi'),t=i?i.value.trim():'';if(t&&sv)smPost(sv,{text:t})},
+ smb:i=>smKeep(()=>{smSb=smSb==+i?-1:+i;renderSMS()}),
+ smcpm:i=>{const m=D.sms[+i];smCp(m.text||'')},smcp:i=>smCp(smCode(D.sms[+i].text)),
+ smdm:i=>smKeep(()=>{D.sms.splice(+i,1);smSb=-1;save();refreshBadges();if(!D.sms.some(m=>m.from==sv))sv=null;renderSMS()}),
+ smInfo:()=>{const n=sv,a=D.sms.filter(m=>m.from==n),s=$('#sheet');s.className='on s';s.innerHTML=`<div style="width:100%"><div class="mono">${esc(n)}</div><hr class="k"><div class="dr"><span class="mono" style="width:70px">类型</span><b style="font-size:16px">${smCan(n)?'联系人 · 可回复':'服务号码 · 不可回复'}</b></div><div class="dr"><span class="mono" style="width:70px">信息</span><b style="font-size:16px">${a.length} 条</b></div>${R('chat','标为未读','','smun')}${R('trash','删除对话','','smdt')}<button class="bt w" style="margin-top:16px" data-act="sx">关闭</button></div>`},
+ smun:()=>{const a=D.sms.filter(m=>m.from==sv&&!m.me);if(a.length)a[a.length-1].read=false;save();$('#sheet').className='';sv=null;renderSMS();refreshBadges()},
+ smdt:()=>{D.sms=D.sms.filter(m=>m.from!=sv);D.smd[sv]='';save();$('#sheet').className='';sv=null;renderSMS();refreshBadges()},
+ fold:()=>{D.set.fold=D.set.fold?0:1;save();applySet();renderSet()}
+});
+Object.assign(ACT,{
+ smpn:()=>{if(!smSel.size)return toast('请先选择对话');smSel.forEach(n=>{D.smp[n]?delete D.smp[n]:D.smp[n]=1});save();smSel.clear();smList()},
+ smcl:(x,y,t)=>{const n=D.sms.filter(m=>!m.me&&smCode(m.text)).length;if(!n)return toast('没有验证码短信');if(!ok2(t))return;D.sms=D.sms.filter(m=>m.me||!smCode(m.text));save();refreshBadges();renderSMS();toast('已清理 '+n+' 条')}
+});
+ph.addEventListener('input',e=>{if(e.target.id=='smi'&&sv){D.smd[sv]=e.target.value;save()}});
+ph.addEventListener('change',e=>{const t=e.target;if(t.id=='smf'&&t.files[0]&&sv){const n=sv;shrink(t.files[0],520,d=>smPost(n,{text:'[图片]',img:d}));t.value=''}});
+/* 人设收纳：编辑时显示，离开后高斯模糊 */
+D.set.fold=D.set.fold===undefined?1:D.set.fold;applySet();
+ph.addEventListener('click',e=>{const t=e.target.closest('.fo');document.querySelectorAll('.fo.open').forEach(x=>{if(x!==t){x.classList.remove('open');x.querySelector('.fob').style.maxHeight=''}});if(t){const b=t.querySelector('.fob');b.style.maxHeight=t.classList.toggle('open')?b.scrollHeight+'px':''}});
+ph.addEventListener('focusin',e=>{const l=e.target.closest&&e.target.closest('.f.fd'),t=e.target;if(l&&t.tagName=='TEXTAREA'){l.classList.add('open');t.style.height=Math.max(t.scrollHeight,90)+'px'}});
+ph.addEventListener('focusout',e=>{const l=e.target.closest&&e.target.closest('.f.fd');if(l){l.classList.remove('open');e.target.style.height=''}});
+ph.addEventListener('input',e=>{const t=e.target;if(t.tagName=='TEXTAREA'&&t.closest&&t.closest('.f.fd.open')){t.style.height='auto';t.style.height=Math.max(t.scrollHeight,90)+'px'}});
+
+{const st2=document.createElement('style');st2.textContent=`.f.fd{position:relative}.f.fd textarea{transition:height .55s var(--ez),filter .55s var(--ez),opacity .4s}
+.f.fd:not(.open) textarea{height:46px!important;min-height:0;overflow:hidden;filter:blur(7px);opacity:.8}
+.f.fd:not(.open)::after{content:"已收纳 · 点按编辑";position:absolute;left:0;right:0;bottom:12px;text-align:center;font:400 8.5px var(--mono);letter-spacing:.26em;color:var(--mut);pointer-events:none}
+.nofold .f.fd:not(.open) textarea{height:auto!important;filter:none;opacity:1}.nofold .f.fd:not(.open)::after{display:none}
+.fo{cursor:pointer}.fo .fob{max-height:3.3em;overflow:hidden;filter:blur(6px);transition:max-height .6s var(--ez),filter .6s var(--ez)}.fo.open .fob{filter:none}
+.fo .fot{display:block;margin-top:6px;font:400 8.5px var(--mono);letter-spacing:.24em;color:var(--mut);font-style:normal}.fo .fot::before{content:"点按展开 · 已模糊"}.fo.open .fot::before{content:"点按收起"}
+.nofold .fo .fob{max-height:none!important;filter:none}.nofold .fo .fot{display:none}
+.pbl{filter:blur(4px);transition:filter .4s}.pbl:active{filter:none}.nofold .pbl{filter:none}
+.tbar{display:flex;justify-content:space-between;align-items:center;margin:10px 0 0}.tbar>span:last-child{display:flex;gap:14px}
+.ctb sup{font:400 8px var(--mono);margin-left:3px;color:var(--ac)}
+.ia{display:flex;gap:16px;margin-top:10px}.ia .mic svg{width:13px;height:13px}
+.dg{margin-top:10px;padding:10px 12px;border-left:2px solid var(--ac);background:var(--soft);font:italic 300 14px/1.6 var(--serif);white-space:pre-wrap}.dgl{margin:8px 0;color:var(--mut)}
+.rw{border-bottom:1px solid var(--ln);padding:12px 0}.rw.x{background:var(--soft);margin:0 -8px;padding:12px 8px;border-radius:8px}
+.rwb{display:flex;align-items:center;gap:12px;width:100%;text-align:left}.rwb b{display:block;font:400 15px var(--serif);white-space:normal}.rwb .mono{display:block;margin-top:3px;text-transform:none;letter-spacing:.04em;white-space:normal}.rwb .n{width:26px;flex:none;margin:0}
+.amt{font:300 18px var(--serif);flex:none}.bar{height:3px;background:var(--ln);border-radius:2px;margin:7px 0 4px}.bar i{display:block;height:100%;background:var(--ac);border-radius:2px}
+.hkg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.hk{border:1px solid var(--ln);border-radius:3px;padding:12px}.hk b{display:block;font:300 28px/1.2 var(--serif);margin:6px 0 4px}.hk small{display:block;font-size:12px;color:var(--mut);line-height:1.5}
+.ca .ia{gap:10px}.ca .ia span{display:none}.ca .ia .mic{color:#fff}.ca .dg{background:rgba(0,0,0,.35);font-size:12px}
+.pvx{white-space:pre-wrap;word-break:break-word;font:11.5px/1.6 ui-monospace,Menlo,monospace;background:var(--soft);padding:12px;border-radius:10px;max-height:52vh;overflow:auto;-webkit-user-select:text;user-select:text}
+.sfl{display:flex;gap:8px;padding:0 16px 8px;overflow-x:auto}.sfl button{border-radius:999px;padding:5px 13px;background:var(--sms);font-size:13px;color:var(--mut);white-space:nowrap}.sfl .a{background:var(--pill);color:#fff}
+.sdot{position:relative;left:-6px;margin:0 -4px 0 0;width:10px;height:10px;border-radius:50%;background:var(--fg);flex:none}
+.sck{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--mut);margin-right:2px;flex:none}.sck.on{background:var(--fg);border-color:var(--fg);box-shadow:inset 0 0 0 3px var(--bg)}
+.sfb{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-around;padding:12px 16px 26px;background:var(--bg);border-top:.5px solid var(--ln);font-size:16px;z-index:5}.sfb:empty{display:none}
+.sun{font:400 12px var(--sys);color:var(--mut);margin-left:10px;vertical-align:middle}.sh button{font-size:17px}
+.b{cursor:pointer}.b.sel{outline:1.5px solid var(--mut)}.bimg{max-width:190px;border-radius:12px;display:block}.b:has(.bimg){padding:3px;background:transparent}.b:has(.bimg)::before,.b:has(.bimg)::after{display:none}
+.cc{align-self:flex-start;margin:0 0 6px;padding:5px 12px;border-radius:999px;border:.5px solid var(--mut);font-size:12.5px}
+.bm{align-self:flex-start;display:flex;gap:6px;margin:-1px 0 6px}.bm.me{align-self:flex-end}.bm button{padding:4px 12px;border-radius:999px;background:var(--sms);font-size:12.5px}
+.sf label.pc{cursor:pointer}
+`;document.head.appendChild(st2)}
+
+{const s3=document.createElement('style');s3.textContent=`
+#a-chk .tt{display:inline-block;padding:6px 0;margin-bottom:4px}
+.ctb{position:sticky;top:0;z-index:4;background:var(--bg);margin:0 calc(var(--px)*-1);padding:14px var(--px) 8px}.ctb button{min-height:30px}
+.pcard{border-radius:14px;background:var(--soft);border-color:transparent;margin-top:10px}
+.kx{border:1px solid var(--ln);border-radius:14px;padding:14px 16px;margin-top:12px}.kx .ckh{margin-bottom:8px}
+.ca,.hk,.lnt{border-radius:14px}.ca .ia{margin-top:6px}
+.ia{flex-wrap:wrap;gap:6px 16px}.ia .mic{padding:6px 0}.mic.on{color:var(--ac)}
+#a-chk .chh .pt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 6px}#a-chk .chh button{padding:6px}
+.sk{margin-top:18px}.sk i{display:block;height:64px;border-radius:14px;margin-bottom:12px;background:linear-gradient(90deg,var(--soft),var(--ln),var(--soft));background-size:200% 100%;animation:skm 1.4s linear infinite}.sk i:nth-child(2){height:44px;width:80%}.sk i:nth-child(3){height:84px}.sk i:nth-child(4){height:44px;width:60%}
+@keyframes skm{to{background-position:-200% 0}}
+.sb3{margin:10px 0 4px}
+.btt{position:absolute;right:16px;bottom:26px;width:38px;height:38px;border-radius:50%;background:var(--pill);color:#fff;display:grid;place-items:center;opacity:0;transform:translateY(10px);pointer-events:none;transition:.5s var(--ez);z-index:6}.btt.on{opacity:1;transform:none;pointer-events:auto}
+.li .pg{display:block;margin-top:4px;letter-spacing:.14em}.rwb:active{opacity:.6}
+#sheet{padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))}
+.sfb{font-size:14px}.btm{font:400 11px var(--sys);color:var(--mut);align-self:center}.sr:active{background:var(--sms)}.sh{padding-top:10px}
+`;document.head.appendChild(s3)}
 </script>
 </body>
 </html>
