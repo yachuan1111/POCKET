@@ -479,7 +479,8 @@ input.pill{flex:1;border:.5px solid var(--mut);border-radius:18px;padding:6px 12
 const IDBK=(()=>{let db;const o=()=>db?Promise.resolve(db):new Promise((res,rej)=>{try{const q=indexedDB.open('pocket-store',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{db=q.result;res(db)};q.onerror=()=>rej(q.error)}catch(e){rej(e)}});
  const tx=(m,f)=>o().then(d=>new Promise((res,rej)=>{const t=d.transaction('kv',m),r=f(t.objectStore('kv'));t.oncomplete=()=>res(r&&r.result);t.onerror=t.onabort=()=>rej(t.error)}));
  return {get:k=>tx('readonly',s=>s.get(k)),set:(k,v)=>tx('readwrite',s=>s.put(v,k)),del:k=>tx('readwrite',s=>s.delete(k)),clear:()=>tx('readwrite',s=>s.clear())}})();
-let __boot=null;try{__boot=await Promise.race([IDBK.get('main'),new Promise(r=>setTimeout(()=>r(null),2500))])}catch(e){}
+let __boot=null;try{__boot=await Promise.race([IDBK.get('main'),new Promise(r=>setTimeout(()=>r(null),6000))])}catch(e){}
+let __bapi=null;try{__bapi=await Promise.race([IDBK.get('api'),new Promise(r=>setTimeout(()=>r(null),3000))])}catch(e){}
 const $=s=>document.querySelector(s),ph=$('#ph');
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -488,14 +489,17 @@ let D={presets:[{name:'默认预设',main:defAPI(),sub:defAPI()}],cur:0,main:def
 try{let s=JSON.parse(localStorage.getItem('pocket-mag')||'null');if(__boot){const b=typeof __boot=='string'?JSON.parse(__boot):__boot;if(!s||(b._ts||0)>=(s._ts||0))s=b}if(s)D=Object.assign(D,s)}catch(e){}
 D.unread=D.unread||{};if(D.me&&!D.acct)D.acct=D.me;D.cfg=Object.assign({sys:'',nick:'',about:'',len:'short',lang:'auto',split:1,mem:30,maxTok:1024,topP:1,timeout:60,fallback:1,memOn:1,memories:[],lib:[],showKey:0,calm:0,showTok:0},D.cfg||{});D.stat=Object.assign({calls:0,fails:0,ms:0},D.stat||{});D.set=Object.assign({notif:1,detail:1,dnd:0,font:13,enter:1,theme:'auto',autofill:1,mute:0,wp:'stars'},D.set||{});if(!D.set.v5){D.set.v5=1;if(D.set.font>=15)D.set.font=13}D.nf=D.nf||[];D.al=D.al||[];D.wallet=D.wallet||{bal:1000,log:[]};D.fav=D.fav||[];D.ph=D.ph||[];D.tar=D.tar||[];D.mo=D.mo||[];D.nt=D.nt||[];D.ai=D.ai||{convs:[],cur:null};const fixApi=a=>{if(!a||typeof a!='object')return a;const d=defAPI();for(const k in d)if(a[k]===undefined||a[k]===null)a[k]=d[k];if(!['openai','anthropic','gemini'].includes(a.type))a.type='openai';if(!Array.isArray(a.models))a.models=[];if(typeof a.temp!='number'||isNaN(a.temp))a.temp=d.temp;return a};
 const cj=x=>JSON.parse(JSON.stringify(x));
+var __enc=null,PRM=null,STO={ls:1,idb:0};
 const save=()=>{try{if(D.me)D.acct=D.me;if(D.presets&&D.presets[D.cur]&&D.main){D.presets[D.cur].main=cj(D.main);if(D.sub)D.presets[D.cur].sub=cj(D.sub)}}catch(e){}
- try{localStorage.setItem('pocket-api',JSON.stringify({main:D.main,sub:D.sub,presets:D.presets,cur:D.cur,cfg:D.cfg,fx:D.fx,fonts:D.fonts}))}catch(e){}
- clearTimeout(__st);__st=setTimeout(flushSave,350)};
+ try{const _t=Date.now(),ap=JSON.stringify({main:D.main,sub:D.sub,presets:D.presets,cur:D.cur,cfg:D.cfg,fx:D.fx,fonts:D.fonts,_ts:_t});try{localStorage.setItem('pocket-api',ap)}catch(e){}try{IDBK.set('api',ap).then(()=>{STO.idb=1}).catch(()=>{STO.idb=0})}catch(e){}try{window.name='pocket:'+JSON.stringify({main:D.main,sub:D.sub,presets:D.presets,cur:D.cur,_ts:_t})}catch(e){}}catch(e){}
+ clearTimeout(__st);__st=setTimeout(flushSave,350);if(__enc)encDirty()};
 let __st=0;
-const flushSave=()=>{__st=0;let str;try{D._ts=Date.now();str=JSON.stringify(D)}catch(e){return}let ls=false;if(str.length<=4.2e6){try{localStorage.setItem('pocket-mag',str);ls=true}catch(e){}}
- IDBK.set('main',str).then(()=>{if(!ls)try{localStorage.removeItem('pocket-mag')}catch(e){}}).catch(()=>{if(!ls&&!save.w){save.w=1;try{toast('存储失败：浏览器拒绝写入，请导出备份')}catch(e){}}})};
+const flushSave=()=>{__st=0;let str;try{D._ts=Date.now();str=JSON.stringify(D,encRep)}catch(e){return}let ls=false;if(str.length<=4.2e6){try{localStorage.setItem('pocket-mag',str);ls=true}catch(e){}}
+ IDBK.set('main',str).then(()=>{STO.idb=1;if(!ls)try{localStorage.removeItem('pocket-mag')}catch(e){}}).catch(()=>{STO.idb=0;if(!ls&&!save.w){save.w=1;try{toast('存储失败：浏览器拒绝写入，请导出备份')}catch(e){}}})};
 addEventListener('pagehide',()=>{if(__st){clearTimeout(__st);flushSave()}});document.addEventListener('visibilitychange',()=>{if(document.hidden&&__st){clearTimeout(__st);flushSave()}});
-try{const q=JSON.parse(localStorage.getItem('pocket-api')||'null');if(q){if(q.main)D.main=q.main;if(q.sub)D.sub=q.sub;if(Array.isArray(q.presets)&&q.presets.length)D.presets=q.presets;if(typeof q.cur=='number'&&D.presets[q.cur])D.cur=q.cur;if(q.cfg)D.cfg=Object.assign(D.cfg,q.cfg);if(q.fx&&!D.fx)D.fx=q.fx;if(q.fonts&&!D.fonts)D.fonts=q.fonts}}catch(e){}
+try{const jl=x=>{try{return typeof x=='string'?JSON.parse(x):x}catch(e){return null}},cand=[jl(localStorage.getItem('pocket-api')),jl(__bapi)];try{if(/^pocket:/.test(window.name))cand.push(jl(window.name.slice(7)))}catch(e){}
+ const q=cand.filter(x=>x&&x.main).sort((a,b)=>(b._ts||0)-(a._ts||0))[0];
+ if(q&&((q._ts||0)>=(D._ts||0)-2000||!D.main||!D.main.url)){if(q.main)D.main=q.main;if(q.sub)D.sub=q.sub;if(Array.isArray(q.presets)&&q.presets.length)D.presets=q.presets;if(typeof q.cur=='number'&&D.presets[q.cur])D.cur=q.cur;if(q.cfg)D.cfg=Object.assign(D.cfg,q.cfg);if(q.fx&&!D.fx)D.fx=q.fx;if(q.fonts&&!D.fonts)D.fonts=q.fonts}}catch(e){}
 if(!D.presets[D.cur])D.cur=0;[D.main,D.sub,...D.presets.flatMap(p=>[p.main,p.sub])].forEach(fixApi);
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 const fT=t=>new Date(t).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});
@@ -596,7 +600,7 @@ function mkReq(a,b,sys,ms,st,ex){let u,hd={'Content-Type':'application/json'},bo
  else if(a.type=='gemini'){u=`${b}/v1beta/models/${encodeURIComponent(a.model)}:generateContent?key=${encodeURIComponent(a.key)}`;body={contents:ms.map(m=>({role:m.role=='user'?'user':'model',parts:Array.isArray(m.content)?m.content:[{text:m.content}]})),generationConfig:{maxOutputTokens:tk}};if(sys)body.systemInstruction={parts:[{text:sys}]};if(!ex.noTemp)body.generationConfig.temperature=+a.temp||0;if(D.cfg.topP<1&&!ex.noTopP)body.generationConfig.topP=D.cfg.topP}
  else{u=b+'/chat/completions';hd.Authorization='Bearer '+a.key;body={model:a.model,messages:[...(sys?[{role:'system',content:sys}]:[]),...ms],stream:st};body[ex.mct?'max_completion_tokens':'max_tokens']=tk;if(!ex.noTemp)body.temperature=+a.temp||0;if(a.effort&&a.effort!='off'&&!ex.noEffort)body.reasoning_effort=a.effort;if(D.cfg.topP<1&&!ex.noTopP)body.top_p=D.cfg.topP}
  return {u,hd,body}}
-async function ask(a0,sys,ms,sig,onTok){const a=cleanApi(a0);let b=URLS(a0);if(WBD&&Date.now()-WBD.t<400)ms=wbDepth(ms,WBD.l);WBD=null;const st=!!onTok&&a.type!='gemini',ex={};let r,rt=0;
+async function ask(a0,sys,ms,sig,onTok){const a=cleanApi(a0);let b=URLS(a0);if(WBD&&Date.now()-WBD.t<400)ms=wbDepth(ms,WBD.l);WBD=null;if(PRM&&Date.now()-PRM.t<400)ms=pRemind(ms,PRM.f);PRM=null;const st=!!onTok&&a.type!='gemini',ex={};let r,rt=0;
  for(let n=0;n<7;n++){const q=mkReq(a,b,sys,ms,st,ex),ac=new AbortController(),to=setTimeout(()=>ac.abort(),(D.cfg.timeout||60)*1000),ab=()=>ac.abort();if(sig)sig.addEventListener('abort',ab);
   try{r=await fetch(q.u,{method:'POST',headers:q.hd,body:JSON.stringify(q.body),signal:ac.signal})}
   catch(e){if(sig&&sig.aborted)throw e;if(ac.signal.aborted)throw Error('请求超时');if(rt++<1){await sleep(1200);continue}throw e}
@@ -642,10 +646,10 @@ ${fld('个性签名','<input id="r-sig" maxlength="30">')}${fld('微信号','<in
 <div class="f"><span class="mono">QQ验证码</span><div class="cd"><input id="r-c2" inputmode="numeric" maxlength="6"><button class="bt" data-act="code:qq">获取</button></div></div>
 <p class="mono" style="margin-top:14px;text-transform:none;letter-spacing:.05em">验证码将发送至「短信」App，并自动填充到上方输入框。</p>
 <button class="bt k w" data-act="reg">注 册</button></div>`;return}
-  w.innerHTML=`<div class="scroll" id="wxc"></div><nav id="nv"><i id="nvb"></i>${[['chat','信息'],['users','通讯录'],['compass','发现'],['user','我的']].map((x,i)=>`<button data-act="wt:${i}"><span class="mono">0${i+1}</span>${ic(x[0])}<b>${x[1]}</b></button>`).join('')}</nav><div id="wxo"></div><div id="wxp"></div>`;wt(wtab)}
+  w.innerHTML=`<div class="scroll" id="wxc"></div>${navHTML()}<div id="wxo"></div><div id="wxp"></div>`;wt(wtab)}
 let stk=[];
 const avh=f=>f.av?`<span class="avt"><img src="${f.av}" alt=""></span>`:`<span class="avt">${esc((f.remark||f.name||'?')[0].toUpperCase())}</span>`;
-const lt=f=>{const c=D.chats[f.id]||[];return c.length?(c[c.length-1].ts||0):0};
+const lt=f=>{const c=D.chats[f.id]||[];return c.length?(c[c.length-1].ts||0):((f.enc&&f.enc.lt)||0)};
 const R=(i,t,r,act)=>`<button class="dr" data-act="${act}">${ic(i)}<b>${t}</b>${r?`<span class="mono">${esc(r)}</span>`:''}${ic('next')}</button>`;
 const T=(t,on,act)=>`<div class="tr"><span>${t}</span><button class="tg ${on?'on':''}" data-act="${act}"><i></i></button></div>`;
 const fa=(k,i)=>`data-fk="${k}" data-fi="${i}"`;
@@ -720,7 +724,7 @@ function drawMsgs(typing){const f=D.friends[cur],c=D.chats[f.id]||[];let h='',pt
 async function deliver(f,txt){const ps=((f.split!==undefined?f.split===0:D.cfg.split===0)?[txt]:txt.split(/\n+/)).map(x=>x.trim()).filter(Boolean);if(!ps.length)ps.push('…');
   for(let i=0;i<ps.length;i++){if(i){redraw(f,true);await sleep(450+Math.min(ps[i].length*35,1400));if(ctl&&ctl.signal.aborted)return}
    const c=D.chats[f.id];if(!c)return;c.push({r:'a',t:ps[i],ts:Date.now()});fresh=c.length-1;
-   const vis=$('#a-wx').classList.contains('on')&&$('#wxo').classList.contains('on')&&D.friends[cur]===f;if(!vis){D.unread[f.id]=(D.unread[f.id]||0)+1;if(!f.mute)notify({app:'wx',title:f.remark||f.name,text:ps[i],go:'wx:'+D.friends.indexOf(f)})}redraw(f);refreshBadges()}}
+   const vis=$('#a-wx').classList.contains('on')&&$('#wxo').classList.contains('on')&&D.friends[cur]===f;if(!vis){D.unread[f.id]=(D.unread[f.id]||0)+1;if(!f.mute)notify({app:'wx',title:f.remark||f.name,text:f.enc?'加密消息':ps[i],go:'wx:'+D.friends.indexOf(f)})}redraw(f);refreshBadges()}}
 async function askS(a,sys,ms,sig,cb){if(!a.url.trim())throw Error('未填写 API 地址');let h;try{h=new URL(a.url).host}catch(e){h=a.url}
   const can=a.type!='gemini'&&(a.stream=='on'||(a.stream=='auto'&&!D.bl.includes(h)));
   if(!can)return ask(a,sys,ms,sig);
@@ -728,7 +732,7 @@ async function askS(a,sys,ms,sig,cb){if(!a.url.trim())throw Error('未填写 API
 async function gen(f){const id=f.id,t0=Date.now();ctl=new AbortController();setBtn(true);redraw(f,true);let live=null;
   const hist=(D.chats[id]||[]).filter(m=>m.r!='s').slice(-(f.mem||D.cfg.mem)).map(m=>({role:m.r=='u'?'user':'assistant',content:m.t}));
   const drop=()=>{if(live){const c=D.chats[id],k=c.indexOf(live);if(k>-1)c.splice(k,1);live=null}};
-  try{const txt=await askS(f.temp==null?D.main:Object.assign({},D.main,{temp:f.temp}),sysP(f),hist,ctl.signal,o=>{const c=D.chats[id];if(!c)return;if(!live){live={r:'a',t:o,ts:Date.now()};c.push(live)}else live.t=o;redraw(f)});drop();D.stat.calls++;D.stat.ms=Date.now()-t0;await deliver(f,txt)}
+  try{const txt=await askS(f.temp==null?D.main:Object.assign({},D.main,{temp:f.temp}),sysP(f),hist,ctl.signal,o=>{const c=D.chats[id];if(!c)return;if(refuseOn()&&isRefusal(o,f)){drop();redraw(f,true);return}if(!live){live={r:'a',t:o,ts:Date.now()};c.push(live)}else live.t=o;redraw(f)});drop();D.stat.calls++;D.stat.ms=Date.now()-t0;await deliver(f,txt)}
   catch(e){if(e.name=='AbortError'){live=null}else{drop();D.stat.fails++;if(D.cfg.fallback){toast('API 未连通，使用本地回复：'+errMsg(e));await deliver(f,LOCAL[Math.random()*3|0])}else toast('请求失败：'+errMsg(e))}}
   ctl=null;setBtn(false);save();redraw(f)}
 function send(){const i=$('#ci'),t=i.value.trim();if(!t||ctl)return;const f=D.friends[cur];i.value='';$('#chips').innerHTML='';(D.chats[f.id]=D.chats[f.id]||[]).push({r:'u',t,ts:Date.now()});sel=-1;save();gen(f)}
@@ -809,7 +813,7 @@ const ACT={
  mema:()=>{const v=$('#mnew').value.trim();if(!v)return;D.cfg.memories.push(v);save();renderSet()},
  memd:x=>{D.cfg.memories.splice(+x,1);save();renderSet()},
  memc:(x,y,t)=>{if(!ok2(t))return;D.cfg.memories=[];save();renderSet()},
- dexp:()=>{$('#dx').value=JSON.stringify({friends:D.friends,chats:D.chats,cfg:D.cfg},null,1);toast('已导出到文本框')},
+ dexp:()=>{$('#dx').value=JSON.stringify({friends:D.friends,chats:encChats(),cfg:D.cfg},null,1);toast('已导出到文本框')},
  dcp:()=>{const e=$('#dx');e.select();try{navigator.clipboard.writeText(e.value).then(()=>toast('已复制'),()=>toast('请手动复制选中的文本'))}catch(x){toast('请手动复制选中的文本')}},
  dimp:()=>{try{const j=JSON.parse($('#dx').value);if(!Array.isArray(j.friends)||typeof j.chats!='object')throw Error('格式不正确');D.friends=j.friends;D.chats=j.chats;if(j.cfg)Object.assign(D.cfg,j.cfg);save();toast('导入成功：'+j.friends.length+' 位好友')}catch(e){toast('导入失败：'+errMsg(e))}},
  kclr:(x,y,t)=>{if(!ok2(t))return;[D.main,D.sub].concat(D.presets.map(p=>p.main),D.presets.map(p=>p.sub)).forEach(a=>a.key='');save();toast('已清除全部 API 密钥')},
@@ -1429,7 +1433,7 @@ Object.assign(ACT,{
  dmo:x=>{dmo=+x;document.querySelectorAll('.dmt button').forEach((b,k)=>b.classList.toggle('a',k==dmo))},
  dsv:()=>{D.diary.unshift({t:Date.now(),s:dmo,x:($('#dyx').value||'').trim()});save();renderPg(0);toast('已记录')},
  dyd:x=>{D.diary.splice(+x,1);save();renderPg(0)},
- bkx:()=>{const c=clone(D);[c.main,c.sub].forEach(a=>a&&(a.key=''));(c.presets||[]).forEach(p=>{p.main&&(p.main.key='');p.sub&&(p.sub.key='')});const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(c)],{type:'application/json'}));a.download='pocket-backup-'+tk()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500);toast('备份已导出')},
+ bkx:()=>{const c=JSON.parse(JSON.stringify(D,encRep));[c.main,c.sub].forEach(a=>a&&(a.key=''));(c.presets||[]).forEach(p=>{p.main&&(p.main.key='');p.sub&&(p.sub.key='')});const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(c)],{type:'application/json'}));a.download='pocket-backup-'+tk()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500);toast('备份已导出')},
  bkc:(x,y,t)=>{if(!ok2(t))return;D.mo.forEach(p=>{p.imgs=[];delete p.img});save();renderPg(0);toast('已清理')}
 });
 
@@ -1718,7 +1722,7 @@ async function smPost(nm,m){const f=D.friends.find(v=>v.name==nm);if(!f||smTy)re
   await smReply(nm)}
 async function smReply(nm){const f=D.friends.find(v=>v.name==nm);if(!f)return;
   const hist=D.sms.filter(x=>x.from==nm).slice(-14).map(x=>({role:x.me?'user':'assistant',content:x.img?(x.cap?'[对方发来一张图片：'+x.cap+']':'[对方发来一张图片]'):x.text}));while(hist.length&&hist[0].role!='user')hist.shift();let r;
-  try{r=(await ask(D.main,sysP(f)+' 现在是通过短信聊天，只回复一条简短短信。',hist)).trim().split('\n')[0]}catch(e){toast('API 未连通，已使用本地回复：'+errMsg(e));r=LOCAL[Math.random()*3|0].split('\n')[0]}
+  try{const r0=(await ask(D.main,sysP(f)+' 现在是通过短信聊天，只回复一条简短短信。',hist)).trim();if(refuseOn()&&isRefusal(r0,f)){toast('模型拒绝了这次回复（接口方的内容策略），可再发一条重试');smTy=null;if($('#a-sms').classList.contains('on'))renderSMS();return}r=r0.split('\n')[0]}catch(e){toast('API 未连通，已使用本地回复：'+errMsg(e));r=LOCAL[Math.random()*3|0].split('\n')[0]}
   await sleep(500+Math.random()*900);smTy=null;const open=$('#a-sms').classList.contains('on')&&sv==nm;
   D.sms.push({from:nm,text:r,t:Date.now(),fid:f.id,read:open});save();if(!open)notify({app:'sms',title:nm,text:r,go:'sms:'+nm});if($('#a-sms').classList.contains('on'))renderSMS();refreshBadges()}
 const smKeep=fn=>{const e=$('#smm'),y=e?e.scrollTop:0;fn();const n=$('#smm');if(n)n.scrollTop=y};
@@ -1950,7 +1954,7 @@ ph.addEventListener('input',Hf);ph.addEventListener('change',Hf);
 const _send=send;send=function(){const e=$('#ci'),v=e?e.value.trim():'',sl=/^\/搜\s*/.test(v);
  if(v&&!srching&&(sl||(D.set.asrch&&fxCur('search')&&/最新|新闻|搜一下|查一下|搜索一下/.test(v)))){if(!fxCur('search')){toast('请先在 设置 → 功能接口 添加联网搜索接口');return}const q=v.replace(/^\/搜\s*/,'')||v;if(sl)e.value=q;srching=1;toast('联网搜索中…');searchRun(q).then(r=>{PEND={t:Date.now(),q,r}}).catch(x=>toast('搜索失败：'+errMsg(x))).then(()=>{srching=0;_send()});return}
  return _send()};
-const sysP=f=>{const w=wbRun(f),m=memRun(f);return w.before+sysP0(f)+(m?'\n\n'+m:'')+(PEND&&Date.now()-PEND.t<120000?'\n\n【联网搜索结果：用户刚请求搜索「'+PEND.q+'」，请结合以下信息自然地回答，不要提及“搜索结果”】\n'+PEND.r:'')+w.after};
+const sysP=f=>{const w=wbRun(f),m=memRun(f);PRM=(pOn()||gPost(f))?{f,t:Date.now()}:null;return gPre(f)+pTop(f)+w.before+sysP0(f)+(m?'\n\n'+m:'')+(PEND&&Date.now()-PEND.t<120000?'\n\n【联网搜索结果：用户刚请求搜索「'+PEND.q+'」，请结合以下信息自然地回答，不要提及“搜索结果”】\n'+PEND.r:'')+w.after+pTail(f)};
 const _dm=drawMsgs;drawMsgs=function(){const r=_dm.apply(this,arguments);try{if(D.set.atts){const f=D.friends[cur],c=D.chats[f.id]||[],l=c[c.length-1];if(l&&l.r=='a'&&!l._rd&&!l.img){l._rd=1;if(Date.now()-(l.ts||0)<9000)ttsPlay(l.t)}}}catch(e){}return r};
 ph.addEventListener('change',e=>{const t=e.target;if(t.id=='fup'&&t.files.length){const fs=[...t.files];t.value='';(async()=>{for(const [i,f] of fs.entries()){if(!/\.(ttf|otf|woff2?)$/i.test(f.name)){toast('跳过不支持的文件：'+f.name);continue}toast(`保存字体 ${i+1}/${fs.length}：${f.name}`);try{const id='f'+Date.now().toString(36)+i;await IDBK.set('blob:'+id,f);D.fonts.push({id,name:f.name.replace(/\.[^.]+$/,''),fam:'PF_'+id,kind:'file',size:f.size});save()}catch(x){toast('保存失败：'+(x.name=='QuotaExceededError'?'存储空间不足':x.message))}}if(curSet('font'))renderSet();toast('字体已保存，可在列表中应用')})()}});
 applyFonts();
@@ -2175,6 +2179,405 @@ const _dl=deliver;deliver=async function(f){const r=await _dl.apply(this,argumen
 .mcl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px}.mcl button{border:1px solid;border-radius:999px;padding:3px 10px;font-size:12px;color:#e8ecff}
 #ph:has(#a-mem.on) #sb{color:#e8ecff}#ph:has(#a-mem.on) #hi{background:#e8ecff}#a-mem .ia .mic{color:#e8ecff}#a-mem .ia .mic.on{color:#ffd479}
 `;document.head.appendChild(s7)}
+
+/* ---------- v20：iOS 风格微信（首页 / 导航 / 聊天室）+ 聊天加密 ---------- */
+__enc={K:{},P:new Map(),q:0,pend:{}};
+const ioSh=h=>{const s=$('#sheet');s.className='on s';s.innerHTML='<div style="width:100%">'+h+'</div>'};const ioHd=t=>`<div class="mono">${t}</div><hr class="k">`;const ioX='<button class="bt w" style="margin-top:10px" data-act="sx">取消</button>';
+
+const eB64=a=>{let s='';const u=new Uint8Array(a);for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
+const eU8=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const eKey=async(pw,salt)=>{const m=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:210000,hash:'SHA-256'},m,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])};
+const eSeal=async(key,obj)=>{const iv=crypto.getRandomValues(new Uint8Array(12)),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify(obj)));return eB64(iv)+'.'+eB64(ct)};
+const eOpen=async(key,str)=>{const [i,c]=str.split('.'),p=await crypto.subtle.decrypt({name:'AES-GCM',iv:eU8(i)},key,eU8(c));return JSON.parse(new TextDecoder().decode(p))};
+const encOK=()=>!!(window.crypto&&crypto.subtle);
+const eLocked=f=>!!(f&&f.enc&&!__enc.K[f.id]);
+function encRep(k,v){if(k==='chats'&&this===D&&v&&typeof v=='object'){const o=Object.assign({},v);(D.friends||[]).forEach(f=>{if(f.enc)o[f.id]=[]});return o}return v}
+function encChats(){const o=Object.assign({},D.chats);(D.friends||[]).forEach(f=>{if(f.enc)o[f.id]=[]});return o}
+async function encSync(f){
+  if(!f||!f.enc||!__enc.K[f.id])return;
+  const c=D.chats[f.id]||[],snap=JSON.stringify(c);
+  if(__enc.P.get(f.id)===snap&&f.enc.c)return;
+  const out=await eSeal(__enc.K[f.id],{m:c});
+  if(!__enc.K[f.id])return;
+  __enc.P.set(f.id,snap);f.enc.c=out;f.enc.lt=c.length?(c[c.length-1].ts||0):0;
+  clearTimeout(__st);__st=setTimeout(flushSave,350)}
+function encDirty(){clearTimeout(__enc.q);__enc.q=setTimeout(async()=>{for(const f of (D.friends||[]))if(f.enc&&__enc.K[f.id]){try{await encSync(f)}catch(e){}}},40)}
+async function encEnable(f,pw){
+  const salt=crypto.getRandomValues(new Uint8Array(16)),key=await eKey(pw,salt),c=D.chats[f.id]||[];
+  f.enc={v:1,s:eB64(salt),c:await eSeal(key,{m:c}),lt:c.length?(c[c.length-1].ts||0):0};
+  __enc.K[f.id]=key;__enc.P.set(f.id,JSON.stringify(c));
+  if(D.cdr)delete D.cdr[f.id];f.draft='';save()}
+async function encUnlock(f,pw){
+  const key=await eKey(pw,eU8(f.enc.s));let d;
+  try{d=await eOpen(key,f.enc.c)}catch(e){return false}
+  const pend=D.chats[f.id]||[];D.chats[f.id]=(d.m||[]).concat(pend);
+  __enc.K[f.id]=key;__enc.P.set(f.id,JSON.stringify(d.m||[]));if(pend.length)encDirty();return true}
+async function encLock(f){
+  if(!f||!f.enc||!__enc.K[f.id])return;
+  if(ctl&&D.friends[cur]===f){setTimeout(()=>encLock(f),1200);return}
+  try{await encSync(f)}catch(e){}
+  delete __enc.K[f.id];__enc.P.delete(f.id);D.chats[f.id]=[];
+  if(D.cdr)delete D.cdr[f.id];f.draft='';save();
+  const k=D.friends.indexOf(f);
+  if($('#wxo')&&$('#wxo').classList.contains('on')&&cur===k)openChat(k);
+  else if(wtab==0&&$('#cl'))chatList()}
+const encLockAll=()=>(D.friends||[]).forEach(f=>{if(f.enc&&__enc.K[f.id])encLock(f)});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)encLockAll()});
+
+/* ---- 图标 ---- */
+const SV=(b,v)=>`<svg class="i ioi" viewBox="0 0 24 24" ${v||'fill="currentColor"'}>${b}</svg>`;
+const IOI={
+ star:SV('<path d="M12 2.4l2.9 6.2 6.7.8-5 4.6 1.4 6.7L12 17.4l-6 3.3 1.4-6.7-5-4.6 6.7-.8z"/>'),
+ user:SV('<circle cx="12" cy="7.6" r="4.4"/><path d="M3.6 21.2c.5-4.6 3.9-7.1 8.4-7.1s7.9 2.5 8.4 7.1z"/>'),
+ clock:SV('<circle cx="12" cy="12" r="10"/><path d="M12 6.4V12l3.8 2.3" fill="none" stroke="var(--bg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'),
+ card:SV('<rect x="2" y="4" width="20" height="16" rx="3.4"/><circle cx="8.6" cy="10.6" r="2" fill="var(--bg)"/><path d="M5.4 16.4c.4-1.7 1.6-2.4 3.2-2.4s2.8.7 3.2 2.4zM14 9.6h5M14 12.6h5M14 15.4h3" fill="none" stroke="var(--bg)" stroke-width="1.5" stroke-linecap="round"/>'),
+ plus:SV('<path d="M12 4.5v15M4.5 12h15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'),
+ chev:SV('<path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>'),
+ lock:SV('<rect x="5" y="10.5" width="14" height="10" rx="2.4"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>'),
+ moon:SV('<path d="M20.5 14.2A8.6 8.6 0 0 1 9.8 3.5a8.6 8.6 0 1 0 10.7 10.7z"/>'),
+ wave:SV('<path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 10.5v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>')};
+function navHTML(){return `<div id="nvw"><nav id="nv"><i id="nvb"></i>${[['star','信息'],['user','通讯录'],['clock','发现'],['card','我的']].map((x,i)=>`<button data-act="wt:${i}" aria-label="${x[1]}">${IOI[x[0]]}</button>`).join('')}</nav><button id="nvadd" data-act="addf" aria-label="添加好友">${IOI.plus}</button></div>`}
+
+/* ---- 首页 ---- */
+const ioAv=(f,cls)=>`<span class="${cls||'io-av'}">${f.av?`<img src="${f.av}" alt="">`:esc(((f.remark||f.name||f.id||'?')+'')[0].toUpperCase())}</span>`;
+const ioDate=ts=>{if(!ts)return '';const d=new Date(ts),n=new Date(),a=new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime(),df=Math.floor((a-new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime())/864e5);return df<=0?fT(ts):df<7?'星期'+'日一二三四五六'[d.getDay()]:(d.getMonth()+1)+'月'+d.getDate()+'日'};
+chatList=function(){
+  const q=($('#cq')||{}).value||'',cl=$('#cl');if(!cl)return;
+  const ix=D.friends.map((f,k)=>k).filter(k=>(D.friends[k].name+(D.friends[k].remark||'')).includes(q)).sort((a,b)=>{const A=D.friends[a],B=D.friends[b];if(!!A.pin!=!!B.pin)return A.pin?-1:1;return lt(B)-lt(A)});
+  cl.innerHTML=ix.length?ix.map(k=>{
+    const f=D.friends[k],c=D.chats[f.id]||[],l=c[c.length-1],u=D.unread[f.id]||0,ts=lt(f);
+    const st=f.enc?(eLocked(f)?'已锁定 · Encrypted':'已解锁 · Encrypted'):f.mute?'Notifications silenced':(D.main.url?'Online':'Offline');
+    const pv=f.enc?'加密消息':(f.draft?'[草稿] '+f.draft:(l?(l.img?'[图片]':l.t):'暂无消息'));
+    return `<button class="io-row${f.pin?' pin':''}" data-act="chat:${k}" data-lp="${k}">${ioAv(f)}<div class="io-main"><div class="io-top"><b>${esc(f.remark||f.name)}${f.enc?' <em class="io-lk">'+IOI.lock+'</em>':''}</b><span class="io-time">${ioDate(ts)}</span></div><div class="io-st">${st}</div><p class="io-msg">${esc(pv)}</p></div>${u>0?(f.mute?'<span class="dotm"></span>':`<span class="bdg">${u}</span>`):''}</button>`}).join('')
+   :(q?'<p class="empty">没有匹配的会话</p>':'<p class="empty">还没有故事。<br>点右下角 ＋ 添加一位好友，并为 TA 写下角色。</p>')};
+function ioNextAlarm(){const n=new Date(),nm=n.getHours()*60+n.getMinutes();let b=null;(D.al||[]).filter(a=>a.on&&/^\d\d:\d\d$/.test(a.t)).forEach(a=>{const m=+a.t.slice(0,2)*60+ +a.t.slice(3),d=(m-nm+1440)%1440;if(!b||d<b.d)b={d,a}});return b&&b.a}
+function ioWidget(){
+  const w=$('#a-wx');if(!w)return;let e=$('#iow');if(wtab!=0){e&&e.remove();return}
+  const al=ioNextAlarm();
+  const cand=D.friends.map((f,k)=>[f,k]).filter(([f])=>(D.unread[f.id]||0)>0||lt(f)).sort((a,b)=>((D.unread[b[0].id]||0)>0)-((D.unread[a[0].id]||0)>0)||lt(b[0])-lt(a[0]))[0];
+  const L=al?`<b>${esc(al.l||'闹钟')}</b><span>${al.rep?'每天':'一次'}</span>`:'<b>没有闹钟</b><span>点按设置</span>';
+  const R=cand?`${ioAv(cand[0],'io-av sm')}<div><b>${esc(cand[0].remark||cand[0].name)}</b><span>${(D.unread[cand[0].id]||0)>0?D.unread[cand[0].id]+' 条未读':'最近联系 '+ioDate(lt(cand[0]))}</span></div>`:'<div><b>没有会话</b><span>添加好友开始聊天</span></div>';
+  const h=`<div id="iow"><button class="iow-l" data-act="app:clk"><div>${L}</div><time>${al?al.t:'--:--'}</time></button><button class="iow-r" ${cand?`data-act="chat:${cand[1]}"`:'data-act="addf"'}>${R}</button></div>`;
+  if(e)e.outerHTML=h;else w.insertAdjacentHTML('beforeend',h)}
+function ioTab(i){
+  const c=$('#wxc');if(!c)return;c.classList.toggle('io0',i==0);
+  if(i==0){
+    const me=D.me||{},likes=(D.mo||[]).filter(p=>p.who=='me').reduce((a,p)=>a+((p.likes||[]).length),0);
+    const stk3=D.friends.slice(0,3).map(f=>ioAv(f,'io-av xs')).join('')||'<span class="io-av xs">+</span>';
+    c.innerHTML=`<div class="io-hd"><h1 class="io-title">Message</h1><button class="io-stack" data-act="wt:1" aria-label="通讯录">${stk3}<i>${IOI.chev}</i></button></div>
+    <div class="io-pf"><div class="io-pfl"><button class="io-nm" data-act="nav:me">${esc(me.nick||me.id||'')}<i>▾</i></button><div class="io-id">@${esc(me.id||'')}</div>
+    <div class="io-sts"><div><b>${D.friends.length}</b><small>好友</small></div><div><b>${D.friends.filter(f=>(D.chats[f.id]||[]).length||f.enc).length}</b><small>会话</small></div><div><b>${likes}</b><small>获赞</small></div></div>
+    <p class="io-bio">${esc(me.sig||'这个人很懒，什么都没写。')}</p></div><button class="io-ring" data-act="nav:me" aria-label="我的资料">${ioAv({av:me.av,name:me.id},'io-av ring')}<i>＋</i></button></div>
+    <label class="io-sb">${ic('search')}<input id="cq" placeholder="搜索"></label><div id="cl"></div>`;
+    chatList()}
+  ioWidget()}
+const _wt20=wt;wt=function(i){_wt20(i);try{ioTab(+i)}catch(e){console.error(e)}};
+const _rb20=refreshBadges;refreshBadges=function(){_rb20();try{if(wtab==0&&$('#cl')&&!$('#cq').value)chatList();if($('#iow'))ioWidget()}catch(e){}};
+
+/* ---- 聊天室 ---- */
+function ioHas(){const i=$('#ci'),p=$('#wxo .inp');if(i&&p)p.classList.toggle('has',!!i.value.trim())}
+setInterval(ioHas,250);
+function ioChat(k){
+  const f=D.friends[k],o=$('#wxo'),h=o.querySelector('.chh');if(!h)return;
+  const nd=document.createElement('div');nd.className='ioch';
+  nd.innerHTML=`<button class="ioc-b" data-act="cb" aria-label="返回">${IOI.chev}</button>${ioAv(f,'ioc-av')}<button class="ioc-name" data-act="vprof">${esc(f.remark||f.name)}<i>›</i></button><div class="ioc-sub">POCKET · ${esc(D.main.model||'未连接模型')}${D.cfg.showTok?' · ≈'+estTok((D.chats[f.id]||[]).map(m=>m.t).join(''))+' tok':''}</div>${f.enc?`<button class="ioc-enc" data-act="enclock">${IOI.lock}Encrypted · 点按锁定</button>`:''}${f.mute?`<div class="ioc-mu">${IOI.moon}has notifications silenced</div>`:''}<button class="ioc-r" data-act="more" aria-label="更多">${ic('more')}</button>`;
+  h.replaceWith(nd);
+  const inp=o.querySelector('.inp');if(!inp||inp.querySelector('.io-pill'))return;
+  const g=a=>inp.querySelector(a),plus=g('[data-act="cplus"]'),ci=g('#ci'),sug=g('[data-act="sug"]'),mic=g('[data-act="mic:ci"]'),snd=g('#snd');
+  if(!(plus&&ci&&snd))return;
+  const pill=document.createElement('div');pill.className='io-pill';
+  [ci,sug,mic,snd].forEach(x=>x&&pill.appendChild(x));
+  plus.className='io-plus';plus.innerHTML=IOI.plus;if(sug)sug.className='io-ic';if(mic){mic.className='io-ic';mic.innerHTML=IOI.wave}
+  ci.placeholder='信息 · 短信';inp.innerHTML='';inp.append(plus,pill);ioHas()}
+function encLockUI(k){
+  const f=D.friends[k],o=$('#wxo');cur=k;sel=-1;o.className='on';
+  o.innerHTML=`<div class="ioch"><button class="ioc-b" data-act="cb" aria-label="返回">${IOI.chev}</button></div><div class="enc-lock">${ioAv(f,'ioc-av big')}<h3>${esc(f.remark||f.name)}</h3><p class="enc-t">${IOI.lock}此聊天已加密</p><p class="enc-d">消息只以密文保存在本机。输入密码后才能查看。</p><input id="encpw" type="password" placeholder="密码" autocomplete="off"><button class="enc-go" data-act="encgo">解锁</button><button class="enc-fg" data-act="encforget">忘记密码</button></div>`;
+  setTimeout(()=>{const e=$('#encpw');e&&e.focus()},400)}
+const _oc20=openChat;openChat=function(k){
+  const f=D.friends[k];
+  if(f&&f.enc&&!__enc.K[f.id]){encLockUI(k);return}
+  const r=_oc20.apply(this,arguments);try{ioChat(k);if(f&&f.enc){if(D.cdr)delete D.cdr[f.id];f.draft='';const e=$('#ci');if(e)e.value=''}}catch(e){console.error(e)}return r};
+const _send20=send;send=function(){const r=_send20.apply(this,arguments);ioHas();return r};
+const _cb20=ACT.cb;ACT.cb=function(){const f=D.friends[cur];_cb20.apply(this,arguments);if(f&&f.enc){f.draft='';if(D.cdr)delete D.cdr[f.id];if(D.unread)D.unread[f.id]=0;if(D.set.encexit!==0)encLock(f)}};
+ph.addEventListener('input',e=>{const t=e.target;if(t.id=='ci'){const f=D.friends[cur];if(f&&f.enc){f.draft='';if(D.cdr)delete D.cdr[f.id]}}});
+ph.addEventListener('keydown',e=>{if(e.key=='Enter'&&e.target.id=='encpw'){e.preventDefault();ACT.encgo()}});
+ph.addEventListener('click',e=>{if(e.target.closest('#wxc .io-title'))ACT.home()});
+
+/* ---- 加密：菜单与操作 ---- */
+const _menu20=menu;menu=function(){_menu20.apply(this,arguments);const f=D.friends[cur],b=$('#mb');if(b&&f)b.insertAdjacentHTML('afterbegin',`<button class="dr" data-act="encm"><b>${f.enc?'加密与锁定':'加密此聊天'}</b>${IOI.lock}</button>`)};
+function encSheet(){
+  const f=D.friends[cur],s=$('#sheet');if(!f)return;
+  if(!encOK()){ioSh(ioHd('Encrypt / 加密')+'<p class="mono" style="text-transform:none;line-height:1.8">当前页面环境不支持加密（需要 https 或 localhost 的安全上下文）。</p>'+ioX);return}
+  if(!f.enc){
+    ioSh(ioHd('Encrypt / 加密此聊天')+`<p class="mono" style="text-transform:none;letter-spacing:.02em;line-height:1.8;margin:2px 0 12px">用密码加密「${esc(f.remark||f.name)}」的聊天记录（AES-256-GCM）。加密后，记录只以密文保存、备份和导出；离开聊天室或切到后台会自动锁定。<br><b>忘记密码无法找回。</b>聊天时消息仍会发送给你配置的 AI 接口。</p>`+fld('密码（至少 4 位）','<input id="enc1" type="password" autocomplete="new-password">')+fld('再输一次','<input id="enc2" type="password" autocomplete="new-password">')+'<button class="bt k w" data-act="encdo">开启加密</button>'+ioX)}
+  else{
+    ioSh(ioHd('Encrypt / 加密与锁定')+`<p class="mono" style="text-transform:none;letter-spacing:.02em;line-height:1.8;margin:2px 0 8px">此聊天已加密，当前${eLocked(f)?'已锁定':'已解锁'}。</p><button class="dr" data-act="enclock"><b>立即锁定</b>${IOI.lock}</button>${T('离开聊天室后自动锁定',D.set.encexit!==0,'encx')}<div class="mono sec">修改密码</div>${fld('新密码（至少 4 位）','<input id="enc1" type="password" autocomplete="new-password">')}${fld('再输一次','<input id="enc2" type="password" autocomplete="new-password">')}<button class="bt k w" data-act="encchg">更新密码</button><button class="bt w" style="margin-top:10px" data-act="encoff">取消加密</button>`+ioX)}}
+const encPw=()=>{const a=($('#enc1')||{}).value||'',b=($('#enc2')||{}).value||'';if(a.length<4){toast('密码至少 4 位');return null}if(a!==b){toast('两次输入不一致');return null}return a};
+Object.assign(ACT,{
+ encm:()=>encSheet(),
+ encdo:async(x,y,t)=>{const f=D.friends[cur],pw=encPw();if(!pw||!f)return;t.disabled=true;t.textContent='加密中…';try{await encEnable(f,pw);$('#sheet').className='';toast('已开启加密');openChat(cur)}catch(e){t.disabled=false;t.textContent='开启加密';toast('加密失败：'+(e.message||e))}},
+ encchg:async(x,y,t)=>{const f=D.friends[cur],pw=encPw();if(!pw||!f||eLocked(f))return;t.disabled=true;t.textContent='更新中…';try{const c=D.chats[f.id]||[],salt=crypto.getRandomValues(new Uint8Array(16)),key=await eKey(pw,salt);f.enc.s=eB64(salt);f.enc.c=await eSeal(key,{m:c});__enc.K[f.id]=key;__enc.P.set(f.id,JSON.stringify(c));save();$('#sheet').className='';toast('密码已更新')}catch(e){toast('失败：'+(e.message||e));t.disabled=false;t.textContent='更新密码'}},
+ encoff:(x,y,t)=>{const f=D.friends[cur];if(!f||!f.enc||eLocked(f)||!ok2(t))return;delete f.enc;delete __enc.K[f.id];__enc.P.delete(f.id);save();$('#sheet').className='';toast('已取消加密');openChat(cur)},
+ encx:()=>{D.set.encexit=D.set.encexit===0?1:0;save();encSheet()},
+ enclock:()=>{const f=D.friends[cur];if(!f||!f.enc)return;$('#sheet').className='';encLock(f)},
+ encgo:async()=>{const f=D.friends[cur],e=$('#encpw'),b=$('.enc-go');if(!f||!e||!e.value||!b||b.disabled)return;b.disabled=true;b.textContent='解锁中…';let ok=false;try{ok=await encUnlock(f,e.value)}catch(x){}b.disabled=false;b.textContent='解锁';if(!ok){e.value='';e.classList.remove('shake');e.offsetWidth;e.classList.add('shake');toast('密码错误');return}openChat(cur)},
+ encforget:(x,y,t)=>{const f=D.friends[cur];if(!f||!ok2(t))return;delete f.enc;D.chats[f.id]=f.hello?[{r:'a',t:f.hello,ts:Date.now()}]:[];delete __enc.K[f.id];__enc.P.delete(f.id);save();toast('已清空此聊天并取消加密');openChat(cur)}});
+/* 不让加密聊天泄露到别处 */
+{const _rd=ACT.rd;ACT.rd=function(x){const f=D.friends[+x];if(f&&eLocked(f)){toast('此聊天已加密，请先解锁再清除');$('#sheet').className='';return}return _rd.apply(this,arguments)}}
+{const _ac=ACT.allclr;ACT.allclr=function(x,y,t){const n=D.friends.filter(eLocked).length,r=_ac.apply(this,arguments);if(n&&t&&!t.dataset.c)toast('已跳过 '+n+' 个未解锁的加密聊天');return r}}
+const _mex20=memExtract;memExtract=function(f,silent){if(f&&f.enc){if(!silent)toast('加密聊天不参与记忆整理');return 0}return _mex20.apply(this,arguments)};
+
+{const s20=document.createElement('style');s20.textContent=`
+#wxc,#wxo,#nvw,#iow{--ios:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue","PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Microsoft YaHei",sans-serif;--serif:var(--ios);--mono:var(--ios);--gb:#13d96a;--gy:color-mix(in srgb,var(--fg) 8%,var(--bg));--bl:#0a84ff;--sh:0 4px 22px rgba(0,0,0,.10);font-family:var(--ios)}
+#wxc .mono{letter-spacing:.02em;text-transform:none}
+/* 首页 */
+#wxc.io0{padding:4px 22px 200px}
+.io-hd{display:flex;align-items:center;justify-content:space-between;margin:0 0 14px}
+.io-title{font:800 36px/1.1 var(--ios);letter-spacing:-.02em;cursor:pointer}
+.io-stack{display:flex;align-items:center;padding:5px 8px 5px 14px;border-radius:999px;background:var(--soft)}
+.io-stack .io-av.xs{margin-left:-9px;border:2px solid var(--bg)}
+.io-stack i{display:grid;margin-left:4px}.io-stack i svg{width:15px;height:15px;transform:rotate(-90deg)}
+.io-av{width:62px;height:62px;border-radius:8px;background:color-mix(in srgb,var(--fg) 10%,var(--bg));color:var(--mut);display:grid;place-items:center;font:600 26px var(--ios);overflow:hidden;flex:none}
+.io-av img{width:100%;height:100%;object-fit:cover}
+.io-av.xs{width:30px;height:30px;border-radius:50%;font-size:13px}
+.io-av.sm{width:46px;height:46px;font-size:19px}
+.io-av.ring{width:92px;height:92px;border-radius:50%;background:linear-gradient(145deg,#8e8e93,#3a3a3c);color:#fff;font-size:40px;box-shadow:inset 0 0 0 3px var(--bg),0 0 0 2px #6c6c70}
+.io-pf{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin:2px 0 6px}
+.io-nm{font:700 24px var(--ios);display:flex;align-items:center;gap:6px}.io-nm i{font-size:12px;font-style:normal}
+.io-id{color:var(--mut);font:400 14px var(--ios);margin-top:2px}
+.io-sts{display:flex;gap:26px;margin-top:12px}.io-sts b{display:block;font:500 18px var(--ios)}.io-sts small{color:var(--mut);font:400 12px var(--ios)}
+.io-bio{margin-top:12px;font:400 15px/1.45 var(--ios);max-width:250px}
+.io-ring{position:relative;flex:none}
+.io-ring i{position:absolute;right:2px;bottom:4px;width:24px;height:24px;border-radius:50%;background:#8e8e93;color:#fff;display:grid;place-items:center;font:700 15px/1 var(--ios);font-style:normal;border:2px solid var(--bg)}
+.io-sb{display:flex;align-items:center;gap:10px;background:var(--soft);border-radius:14px;padding:0 14px;margin:16px 0 4px}
+.io-sb input{flex:1;border:0;background:transparent;padding:12px 0;font-size:16px;outline:0}.io-sb svg{width:17px;height:17px;color:var(--mut)}
+.io-row{display:flex;align-items:center;gap:16px;width:100%;text-align:left;padding:16px 0;position:relative}
+.io-row:active{opacity:.55}
+.io-main{flex:1;min-width:0}
+.io-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.io-top b{font:700 19px var(--ios);display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.io-lk{display:grid;font-style:normal}.io-lk svg{width:13px;height:13px;color:var(--mut)}
+.io-time{font:500 12.5px var(--ios);color:#c3c3c8;flex:none}
+.io-st{font:600 14px var(--ios);color:#6e6e73;margin-top:2px}
+.io-msg{font:400 16px var(--ios);color:#b7b7bd;margin-top:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.io-row.pin .io-top b::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--bl);flex:none}
+.io-row .bdg{position:absolute;right:0;bottom:16px}.io-row .dotm{position:absolute;right:4px;bottom:22px}
+/* 悬浮导航 + 小组件 */
+#nvw{position:absolute;left:14px;right:14px;bottom:20px;display:flex;gap:12px;align-items:center;z-index:12}
+#nvw #nv{position:relative;flex:1;left:auto;right:auto;bottom:auto;width:auto;margin:0;height:64px;padding:6px;border-radius:32px;border:1px solid var(--ln);background:color-mix(in srgb,var(--bg) 86%,transparent);-webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6);box-shadow:var(--sh);display:grid;grid-template-columns:repeat(4,1fr)}
+#nvw #nv button{border-radius:26px;display:grid;place-items:center;color:var(--fg);position:relative;z-index:2;transition:color .3s}
+#nvw #nv button svg.i{width:24px;height:24px;transform:none;stroke:none}
+#nvw #nv button.a,#nvw #nv button.a svg{color:var(--bl);stroke:none}
+#nvw #nvb{top:6px;bottom:6px;left:6px;width:calc((100% - 12px)/4);height:auto;border-radius:26px;background:color-mix(in srgb,var(--fg) 9%,transparent);z-index:0}
+#nvadd{width:64px;height:64px;flex:none;border-radius:50%;border:1px solid var(--ln);background:color-mix(in srgb,var(--bg) 86%,transparent);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);box-shadow:var(--sh);display:grid;place-items:center;color:var(--fg)}
+#nvadd svg{width:26px;height:26px}
+#iow{position:absolute;left:14px;right:14px;bottom:96px;display:flex;align-items:stretch;border-radius:30px;border:1px solid var(--ln);background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:var(--sh);z-index:11;overflow:hidden}
+#iow button{display:flex;align-items:center;gap:10px;padding:10px 14px;text-align:left;min-width:0}
+#iow .iow-l{flex:1.1;justify-content:space-between;margin:12px 0 12px 16px;padding:0 6px 0 10px;border-left:3px solid var(--fg)}
+#iow .iow-r{flex:1;padding-right:16px}
+#iow b{display:block;font:700 15px var(--ios);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#iow span{display:block;font:400 12px var(--ios);color:var(--mut)}
+#iow time{font:500 12px var(--ios);color:var(--mut);white-space:nowrap}
+#iow .iow-r>div{min-width:0}
+/* 其余标签页 */
+#wxc:not(.io0)>.mono,#wxc:not(.io0)>hr.k{display:none}
+#wxc .hd h2{font:800 34px var(--ios);letter-spacing:-.02em}
+#wxc .sb2{background:var(--soft);border:0;border-radius:14px}
+#wxc .li b{font:600 17px var(--ios)}#wxc .avt{border-radius:10px}
+/* 聊天室 */
+#wxo .ioch{position:relative;display:flex;flex-direction:column;align-items:center;padding:2px 16px 10px;text-align:center;min-height:56px;border:0}
+.ioc-b,.ioc-r{position:absolute;top:6px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--bg);border:1px solid var(--ln);box-shadow:var(--sh);color:var(--fg);z-index:2}
+.ioc-b{left:16px}.ioc-r{right:16px}.ioc-b svg,.ioc-r svg{width:20px;height:20px}
+.ioc-av{width:58px;height:58px;border-radius:50%;background:#2c2c2e;color:#fff;display:grid;place-items:center;font:600 24px var(--ios);overflow:hidden}
+.ioc-av img{width:100%;height:100%;object-fit:cover}
+.ioc-av.big{width:96px;height:96px;font-size:40px}
+.ioc-name{margin-top:-12px;position:relative;z-index:1;background:var(--bg);border-radius:999px;padding:5px 14px;box-shadow:var(--sh);font:700 16px var(--ios);display:flex;gap:6px;align-items:center;max-width:62%;overflow:hidden;white-space:nowrap}
+.ioc-name i{color:var(--mut);font-style:normal;font-weight:400}
+.ioc-sub{font:500 12.5px var(--ios);color:var(--mut);margin-top:6px}
+.ioc-enc{display:flex;align-items:center;gap:5px;font:500 13px var(--ios);color:var(--mut);margin-top:2px}.ioc-enc svg{width:11px;height:11px}
+.ioc-mu{display:flex;align-items:center;gap:6px;font:600 13.5px var(--ios);color:#5856d6;margin-top:3px}.ioc-mu svg{width:15px;height:15px}
+#wxo .msgs{padding:10px 16px 12px;gap:3px}
+#wxo .msgs .m{position:relative;max-width:78%;padding:9px 16px;border:0;border-radius:22px;font:400 17px/1.32 var(--ios);box-shadow:none;background:var(--gy);color:var(--fg);word-break:break-word}
+#wxo .msgs .m.u{background:var(--gb);color:#fff;align-self:flex-end}
+#wxo .msgs .m.a{align-self:flex-start}
+#wxo .msgs .m.u:not(.rp):not(.mim):not(:has(+ .m.u))::before{content:"";position:absolute;right:-7px;bottom:0;width:20px;height:20px;background:var(--gb);border-bottom-left-radius:16px 14px}
+#wxo .msgs .m.u:not(.rp):not(.mim):not(:has(+ .m.u))::after{content:"";position:absolute;right:-26px;bottom:0;width:26px;height:20px;background:var(--bg);border-bottom-left-radius:10px}
+#wxo .msgs .m.a:not(.rp):not(.mim):not(.ty):not(:has(+ .m.a))::before{content:"";position:absolute;left:-7px;bottom:0;width:20px;height:20px;background:var(--gy);border-bottom-right-radius:16px 14px}
+#wxo .msgs .m.a:not(.rp):not(.mim):not(.ty):not(:has(+ .m.a))::after{content:"";position:absolute;left:-26px;bottom:0;width:26px;height:20px;background:var(--bg);border-bottom-right-radius:10px}
+#wxo .msgs .m.rp{border-radius:18px}
+#wxo .msgs .m.mim,#wxo .msgs .m.u.mim{background:transparent;padding:3px}
+#wxo .msgs .tsl{font:500 12px var(--ios);letter-spacing:0;color:var(--mut);margin:10px 0 4px}
+#wxo .inp{display:flex;align-items:center;gap:10px;border:0;padding:6px 14px 26px;background:transparent}
+svg.i.ioi{fill:currentColor!important;stroke:none!important}
+#wxo .inp .io-plus{width:48px;height:48px;flex:none;border-radius:50%;background:var(--bg);box-shadow:var(--sh);border:1px solid var(--ln);display:grid;place-items:center;color:var(--fg);margin:0}
+#wxo .inp .io-plus svg{width:22px;height:22px}
+.io-pill{flex:1;min-width:0;display:flex;align-items:center;gap:2px;min-height:48px;border-radius:999px;background:var(--bg);box-shadow:var(--sh);border:1px solid var(--ln);padding:0 7px 0 18px}
+.io-pill input{flex:1;min-width:0;border:0;background:transparent;font:400 17px var(--ios);outline:0;padding:12px 0}
+#wxo .inp .io-ic{width:34px;height:34px;flex:none;display:grid;place-items:center;color:var(--mut);background:transparent;border:0;border-radius:50%;margin:0}
+#wxo .inp .io-ic svg{width:21px;height:21px}
+#wxo .inp .io-pill #snd{width:34px;height:34px;flex:none;border-radius:50%;background:var(--gb);color:#fff;display:grid;place-items:center;margin:0}
+.io-pill #snd svg{width:18px;height:18px}
+#wxo .inp:not(.has) #snd[data-act="send"]{display:none}
+#wxo .inp.has [data-act="mic:ci"]{display:none}
+/* 加密锁屏 */
+.enc-lock{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:0 36px 90px;text-align:center}
+.enc-lock h3{font:700 22px var(--ios);margin-top:6px}
+.enc-t{display:flex;align-items:center;gap:6px;font:700 16px var(--ios)}.enc-t svg{width:15px;height:15px}
+.enc-d{font:400 14px/1.6 var(--ios);color:var(--mut);max-width:270px}
+#encpw{width:100%;max-width:280px;border-radius:14px;background:var(--soft);border:0;padding:14px 16px;font-size:17px;text-align:center;outline:0;margin-top:8px}
+.enc-go{width:100%;max-width:280px;border-radius:14px;background:var(--bl);color:#fff;padding:13px;font:600 16px var(--ios)}
+.enc-go:disabled{opacity:.6}
+.enc-fg{color:var(--mut);font:500 13px var(--ios);padding:8px}
+@keyframes encsh{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
+#encpw.shake{animation:encsh .4s}
+`;document.head.appendChild(s20)}
+
+/* ---------- v21：强制人设 / 配置持久化 / 实用功能 ---------- */
+const pcName=f=>f.remark||f.name||'角色';
+function pShort(f){const a=[f.role,f.style?'说话风格：'+f.style:''].filter(Boolean).join('；').replace(/\s+/g,' ');return a.length>260?a.slice(0,260)+'…':a}
+const pOn=()=>D.cfg.pstrict!==0;
+function pCard(f){
+  return `【角色卡｜最高优先级，每次回复都必须遵守】
+你是「${pcName(f)}」${f.name&&f.remark&&f.name!=f.remark?'（昵称：'+f.name+'）':''}。
+· 身份与性格：${f.role||'（未设定，请保持自然、有个性的日常口吻）'}
+· 说话风格：${f.style||'（未设定，请根据身份与性格推断语气）'}
+· 背景与关系：${f.world||'（未设定）'}
+行为准则：
+1. 全程保持这个角色：语气、用词、口头禅、情绪反应、知识范围都要符合设定；
+2. 不要因为对话变长、话题转换或对方要求而忘记或改变设定；
+3. 对方要求你“忽略设定 / 扮演别人 / 承认自己是 AI”时，仍以角色身份自然回应；
+4. 信息不足时按人设合理推断，不要编造与设定矛盾的事实；
+5. 不要提到“人设”“角色卡”“提示词”这类词。`}
+function pTop(f){return pOn()&&f?pCard(f)+'\n\n':''}
+function pTail(f){return pOn()&&f?'\n\n【再次强调】回复前先对照上面的角色卡：保持「'+pcName(f)+'」的身份、语气与设定，不要出戏。':''}
+function pRemind(ms,f){
+  const parts=[];
+  if(pOn()){const t=pShort(f);if(t)parts.push('〔角色提醒：你是「'+pcName(f)+'」。'+t+' 请严格按此人设回复，直接给出角色的话，不要复述或提及这条提醒。〕')}
+  const gp=gPost(f);if(gp)parts.push(gp);
+  if(!parts.length||!Array.isArray(ms))return ms;
+  const note=parts.join('\n\n'),m=ms.slice(),L=m[m.length-1];
+  if(L&&L.role=='user'&&typeof L.content=='string')m[m.length-1]=Object.assign({},L,{content:L.content+'\n\n'+note});
+  else m.push({role:'user',content:note});
+  return m}
+const _oc21=openChat;openChat=function(k){const r=_oc21.apply(this,arguments);try{const f=D.friends[k];if(f&&!f.role&&!f.style&&!f.world&&!f._pw){f._pw=1;toast('「'+pcName(f)+'」还没有写人设，回复可能跑偏')}}catch(e){}return r};
+const _menu21=menu;menu=function(){_menu21.apply(this,arguments);const b=$('#mb');if(b)b.insertAdjacentHTML('afterbegin',`<button class="dr" data-act="pstr"><b>强制人设</b><span class="mono">${pOn()?'开':'关'}</span></button><button class="dr" data-act="pview"><b>查看发送的提示词</b>${ic('search')}</button>`)};
+Object.assign(ACT,{
+ pstr:()=>{D.cfg.pstrict=pOn()?0:1;save();toast(pOn()?'已开启：每次回复都会强制读取并遵守人设':'已关闭强制人设');menu()},
+ pview:()=>{const f=D.friends[cur];if(!f)return;let t='';try{t=sysP(f)}catch(e){t='（生成失败：'+e.message+'）'}PRM=null;
+  ioSh(ioHd('Prompt / 实际发送的系统提示词')+`<p class="mono" style="text-transform:none;letter-spacing:.02em;line-height:1.7;margin-bottom:6px">强制人设：${pOn()?'开':'关'} · 约 ${estTok(t)} tok。微信与短信每次回复都会重新读取并注入；开启时还会在最后一条消息后附加一句角色提醒。</p><pre id="pvt" style="max-height:44vh;overflow:auto;white-space:pre-wrap;font:12px/1.6 var(--mono);background:var(--soft);padding:12px;border-radius:10px;margin:8px 0;user-select:text;-webkit-user-select:text">${esc(t)}</pre><div class="row"><button class="bt" data-act="pvcp">复制</button><button class="bt" data-act="sx">关闭</button></div>`)},
+ pvcp:()=>cpX($('#pvt').textContent)});
+
+/* ---- 配置持久化：状态、导出、导入 ---- */
+try{localStorage.setItem('__t','1');localStorage.removeItem('__t')}catch(e){STO.ls=0}
+IDBK.set('probe',Date.now()).then(()=>{STO.idb=1}).catch(()=>{STO.idb=0});
+const stoLine=()=>{const a=STO.ls?'✓':'✗',b=STO.idb?'✓':'✗',bad=!STO.ls&&!STO.idb;return `<div class="dr"><span class="mono" style="width:70px">存储</span><b style="font-size:15px">本地存储 ${a} · IndexedDB ${b}</b></div>${bad?'<p class="mono" style="text-transform:none;letter-spacing:.02em;line-height:1.7;color:#c33;margin:6px 0">当前环境无法保存数据，刷新后会丢失。请在系统浏览器或「添加到主屏幕」后使用，并先导出配置备份。</p>':'<p class="mono" style="text-transform:none;letter-spacing:.02em;line-height:1.7;margin:6px 0">API、预设、模型列表会同时写入本地存储、IndexedDB 和会话缓存，刷新后自动恢复最新的一份。</p>'}`};
+const apiExtra=()=>`<div class="mono sec">备份与存储</div>${stoLine()}<div class="row"><button class="bt" data-act="cfgx">导出配置</button><label class="bt" style="cursor:pointer">导入配置<input id="cfgf" type="file" accept="application/json,.json" hidden></label></div><p class="mono" style="text-transform:none;letter-spacing:.02em;line-height:1.7;margin-top:8px">导出文件包含 API 预设、模型列表和对话设置（含密钥），请妥善保管。</p>`;
+const _rs21=renderSet;renderSet=function(anim){_rs21.apply(this,arguments);try{if(sst.length&&sst[sst.length-1]=='api'&&stab=='preset'){const c=$('#a-set .scroll');c&&c.insertAdjacentHTML('beforeend',apiExtra())}}catch(e){}};
+ACT.cfgx=()=>{const c=D.cfg,o={_k:'pocket-config',v:1,presets:D.presets,cur:D.cur,main:D.main,sub:D.sub,fx:D.fx||null,cfg:{len:c.len,lang:c.lang,split:c.split,mem:c.mem,maxTok:c.maxTok,topP:c.topP,timeout:c.timeout,fallback:c.fallback,sys:c.sys,nick:c.nick,about:c.about,pstrict:c.pstrict}};
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(o,null,1)],{type:'application/json'}));a.download='pocket-config-'+new Date().toISOString().slice(0,10)+'.json';a.click();toast('已导出配置（含 API 密钥）')};
+ph.addEventListener('change',e=>{const t=e.target;if(t.id!='cfgf'||!t.files[0])return;const fl=t.files[0];t.value='';
+  fl.text().then(x=>{try{const o=JSON.parse(x);if(!o||o._k!='pocket-config'||!Array.isArray(o.presets)||!o.presets.length)throw 0;
+    cfm('导入将替换当前的 API 预设、模型列表和对话设置，继续？',()=>{D.presets=o.presets;D.cur=D.presets[o.cur]?o.cur:0;D.main=clone(o.main||D.presets[D.cur].main);D.sub=clone(o.sub||D.presets[D.cur].sub);if(o.fx)D.fx=o.fx;if(o.cfg)Object.assign(D.cfg,o.cfg);[D.main,D.sub,...D.presets.flatMap(p=>[p.main,p.sub])].forEach(fixApi);save();renderSet();toast('配置已导入')})}catch(err){toast('不是有效的配置文件')}})});
+
+/* ---- 导入酒馆角色卡（JSON） ---- */
+const _sheet21=sheet;sheet=function(step,tmp){_sheet21.apply(this,arguments);if(step==1){const b=$('#sheet [data-act="s2"]');b&&b.insertAdjacentHTML('beforebegin','<label class="bt w" style="margin-bottom:10px;cursor:pointer">导入角色卡（酒馆 JSON）<input id="ccf" type="file" accept="application/json,.json" hidden></label>')}};
+ph.addEventListener('change',e=>{const t=e.target;if(t.id!='ccf'||!t.files[0])return;const fl=t.files[0];t.value='';
+  fl.text().then(x=>{try{const j=JSON.parse(x),d=j.data||j;if(!d||!d.name)throw 0;
+    const me=(D.me&&D.me.id)||'我',rp=s=>String(s||'').replace(/\{\{char\}\}/gi,d.name).replace(/\{\{user\}\}/gi,me);
+    const f={id:'f'+Date.now(),name:d.name,role:rp([d.description,d.personality].filter(Boolean).join('\n')).trim()||'（导入的角色，请补充设定）',world:rp(d.scenario).trim(),style:d.mes_example?'参考对话示例：'+rp(d.mes_example).trim().slice(0,600):'',hello:rp(d.first_mes).trim()};
+    D.friends.push(f);D.chats[f.id]=f.hello?[{r:'a',t:f.hello,ts:Date.now()}]:[];
+    const cb=d.character_book;if(cb&&(Array.isArray(cb.entries)||cb.entries)){const bk=fromST(cb,d.name+' · 角色书');bk.on=0;D.wb.books.push(bk);D.wb.bind[f.id]=[bk.id]}
+    save();$('#sheet').className='';wt(wtab);toast('已导入角色：'+d.name+(cb?'（含世界书）':''))}catch(err){toast('不是有效的角色卡 JSON')}})});
+
+/* ---------- v22：全局指令 / 拒答拦截 / iOS 长按菜单 ---------- */
+const gRep=(t,f)=>String(t||'').replace(/\{\{char\}\}/gi,f?pcName(f):'角色').replace(/\{\{user\}\}/gi,D.cfg.nick||(D.me&&(D.me.nick||D.me.id))||'我');
+const gPre=f=>D.cfg.gpre&&D.cfg.gpre.trim()?gRep(D.cfg.gpre.trim(),f)+'\n\n':'';
+const gPost=f=>D.cfg.gpost&&D.cfg.gpost.trim()?gRep(D.cfg.gpost.trim(),f):'';
+const refuseOn=()=>D.cfg.gfilt!==0;
+const RFX=[
+ /(抱歉|对不起|很遗憾|不好意思)[，,、 ]*.{0,24}(我是|作为)(一个|一名)?(人工智能|AI|语言模型|智能助手|AI助手)/i,
+ /我是(一个|一名)?(人工智能|AI)(助手|语言模型|模型)?[，,。 ]*.{0,50}(无法|不能|不便|不会|没办法)/i,
+ /(无法|不能|不便|不可以)(进行|参与|继续|提供|生成|扮演|满足).{0,36}(角色扮演|恋爱|亲密|成人|色情|露骨|性相关|肢体接触)/,
+ /作为(一个|一名)?((AI|人工智能)(语言模型|助手|模型)?|语言模型)[，,].{0,36}(无法|不能|不便)/i,
+ /如果你有其他.{0,24}(问题|需求).{0,30}(帮助|协助|乐意)/,
+ /\b(I'?m sorry|I apologi[sz]e|Sorry)\b[^.\n]{0,60}\b(I (can('|no)t|am unable to|won'?t)|as an AI)/i,
+ /\bas an AI (language model|assistant)\b/i,
+ /\bI (can('|no)t|am not able to|won'?t) (help|assist|continue|engage|roleplay|role-play|write)\b[^.\n]{0,50}\b(with|that|this|content|request)/i];
+function isRefusal(t,f){
+  t=String(t||'').trim();if(!t||t.length>420)return false;
+  if(f&&/(AI|人工智能|机器人|助手|assistant|bot)/i.test((f.role||'')+(f.name||'')))return false;
+  return RFX.some(r=>r.test(t))}
+function ioRfClear(){const e=$('#rfb');e&&e.remove()}
+function ioRfShow(f){
+  const o=$('#wxo'),inp=o&&o.querySelector('.inp');if(!inp||D.friends[cur]!==f)return;ioRfClear();
+  inp.insertAdjacentHTML('beforebegin','<div id="rfb"><span>模型拒绝了这次回复（来自接口方的内容策略），已隐藏。可以重试，或到「设置 › 对话 › 全局指令」补充设定。</span><button data-act="rfr">重试</button><button class="x" data-act="rfx" aria-label="关闭">✕</button></div>');
+  const m=$('#ms');if(m)m.scrollTop=1e9}
+{const _dl22=deliver;deliver=async function(f,txt){if(refuseOn()&&isRefusal(txt,f)){ioRfShow(f);return}return _dl22.apply(this,arguments)}}
+{const _gen22=gen;gen=function(f){ioRfClear();return _gen22.apply(this,arguments)}}
+Object.assign(ACT,{rfr:()=>{ioRfClear();ACT.mr()},rfx:()=>ioRfClear(),
+ gfilt:()=>{D.cfg.gfilt=refuseOn()?0:1;save();renderSet()}});
+ph.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.cg){D.cfg[t.dataset.cg]=t.value;save()}});
+const gpBlock=()=>`<div class="mono sec">全局指令 · 每次生成都带入</div><p class="mono" style="text-transform:none;letter-spacing:.02em;line-height:1.7;margin:0 0 6px">微信和短信的每次回复都会读取这里。可写世界观、文风、输出格式、叙事要求等，内容由你自己填写。变量：{{char}} = 角色名，{{user}} = 你的称呼。</p>${fld('前置指令（放在系统提示最前面）',`<textarea data-cg="gpre" rows="6" placeholder="例如：这是一个架空的现代故事，所有角色均为成年人……">${esc(D.cfg.gpre||'')}</textarea>`)}${fld('后置指令（紧贴最新消息之后，权重更高）',`<textarea data-cg="gpost" rows="4" placeholder="例如：保持角色口吻，直接回复，不要自我介绍……">${esc(D.cfg.gpost||'')}</textarea>`)}${T('拒答过滤：隐藏「我是 AI，无法……」这类回复',refuseOn(),'gfilt')}`;
+{const _rs22=renderSet;renderSet=function(anim){_rs22.apply(this,arguments);try{if(sst.length&&sst[sst.length-1]=='dlg'){const c=$('#a-set .scroll');c&&c.insertAdjacentHTML('afterbegin',gpBlock())}}catch(e){}}}
+
+/* ---- iOS 风格长按 / 点按菜单 ---- */
+let ioLP=0,ioLT=0,ioLX=0,ioLY=0;
+function ioCtxClear(){['#ctx','#ctxbg'].forEach(q=>{const e=$(q);e&&e.remove()});document.querySelectorAll('#ms .m.sel').forEach(x=>{x.classList.remove('sel');x.style.visibility=''});document.querySelectorAll('.ctxw').forEach(x=>x.remove())}
+const CTXO=['mc','mq','mfw','mf','mv','me','mr','mw','md'];
+function ioCtx(){
+  const o=$('#wxo');if(!o||!$('#ms'))return;ioCtxClear();
+  const ma=$('#ms .ma');if(sel<0||!ma){ma&&ma.remove();return}
+  const items=[],seen=new Set();
+  ma.querySelectorAll('button[data-act]').forEach(b=>{const a=b.dataset.act,k=a.split(':')[0];if(seen.has(k))return;seen.add(k);const sv=b.querySelector('svg');items.push({a,k,t:k=='md'?'删除':b.textContent.trim(),ic:sv?sv.outerHTML:''})});
+  ma.remove();
+  const bub=$('#ms [data-act="mm:'+sel+'"]');if(!bub||!items.length)return;
+  items.sort((x,y)=>{const i=CTXO.indexOf(x.k),j=CTXO.indexOf(y.k);return (i<0?50:i)-(j<0?50:j)});
+  bub.classList.add('sel');const isU=bub.classList.contains('u');
+  const bg=document.createElement('div');bg.id='ctxbg';bg.dataset.act='ctxx';
+  const m=document.createElement('div');m.id='ctx';m.className=isU?'u':'a';
+  m.innerHTML=items.map(x=>(x.k=='md'?'<i class="ctx-sep"></i>':'')+`<button data-act="${x.a}"${x.k=='md'?' class="dng"':''}><span>${esc(x.t)}</span>${x.ic}</button>`).join('');
+  o.append(bg,m);ioCtx.t=Date.now();
+  requestAnimationFrame(()=>{
+    bub.scrollIntoView({block:'nearest'});
+    const w=o.getBoundingClientRect(),r=bub.getBoundingClientRect(),h=m.offsetHeight,wd=m.offsetWidth;
+    let top=r.bottom-w.top+10;const below=top+h<w.height-24;
+    if(!below){top=r.top-w.top-h-10;if(top<64)top=Math.max(64,(w.height-h)/2)}
+    let left=isU?r.right-w.left-wd:r.left-w.left;left=Math.max(12,Math.min(left,w.width-wd-12));
+    m.style.top=top+'px';m.style.left=left+'px';m.style.transformOrigin=(below?'top ':'bottom ')+(isU?'right':'left');
+    if(!$('#ctx')||$('#ctx')!==m)return;
+    const wr=document.createElement('div');wr.className='msgs ctxw';wr.style.cssText='position:absolute;inset:auto;top:'+(r.top-w.top)+'px;left:'+(r.left-w.left)+'px;width:'+r.width+'px;padding:0;overflow:visible;display:block;background:transparent;z-index:41;pointer-events:none';
+    const cl=bub.cloneNode(true);cl.removeAttribute('data-act');cl.classList.remove('sel');cl.style.cssText='margin:0;max-width:none;width:100%;transform:scale(1.04);transform-origin:'+(isU?'right center':'left center')+';box-shadow:0 12px 34px rgba(0,0,0,.28)';wr.appendChild(cl);o.insertBefore(wr,m);bub.style.visibility='hidden';m.classList.add('on')})}
+{const _dm22=drawMsgs;drawMsgs=function(){const r=_dm22.apply(this,arguments);try{ioCtx()}catch(e){console.error(e)}return r}}
+ACT.ctxx=()=>{sel=-1;drawMsgs()};
+const ioIdx=el=>{const m=/mm:(\d+)/.exec((el.closest('[data-act^="mm:"]')||{dataset:{}}).dataset.act||'');return m?+m[1]:-1};
+ph.addEventListener('pointerdown',e=>{const b=e.target.closest('#ms .m:not(.ty)');if(!b)return;ioLX=e.clientX;ioLY=e.clientY;clearTimeout(ioLT);ioLT=setTimeout(()=>{const i=ioIdx(b);if(i<0)return;ioLP=1;sel=i;drawMsgs();try{navigator.vibrate&&navigator.vibrate(12)}catch(x){}setTimeout(()=>{ioLP=0},700)},450)});
+ph.addEventListener('pointermove',e=>{if(ioLT&&(Math.abs(e.clientX-ioLX)>9||Math.abs(e.clientY-ioLY)>9)){clearTimeout(ioLT);ioLT=0}});
+['pointerup','pointercancel'].forEach(n=>ph.addEventListener(n,()=>{clearTimeout(ioLT);ioLT=0}));
+ph.addEventListener('click',e=>{if(ioLP&&e.target.closest('#ms')){ioLP=0;e.stopImmediatePropagation();e.preventDefault()}},true);
+ph.addEventListener('contextmenu',e=>{const b=e.target.closest('#ms .m:not(.ty)');if(!b)return;e.preventDefault();const i=ioIdx(b);if(i>=0){sel=i;drawMsgs()}});
+ph.addEventListener('scroll',e=>{if(e.target&&e.target.id=='ms'&&sel>=0&&Date.now()-(ioCtx.t||0)>500){sel=-1;ioCtxClear()}},true);
+
+{const s22=document.createElement('style');s22.textContent=`
+#wxo .msgs .m{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .25s cubic-bezier(.2,.9,.3,1.3),box-shadow .25s}
+#wxo .ctxw .m::before,#wxo .ctxw .m::after{display:none!important}
+#ctxbg{position:absolute;inset:0;z-index:40;background:rgba(0,0,0,.10);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:ctxbg .2s ease}
+@keyframes ctxbg{from{opacity:0}to{opacity:1}}
+#ctx{position:absolute;z-index:41;min-width:208px;max-width:260px;border-radius:20px;overflow:hidden;background:color-mix(in srgb,var(--bg) 80%,transparent);-webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8);box-shadow:0 18px 50px rgba(0,0,0,.24),0 0 0 .5px rgba(0,0,0,.08);opacity:0;transform:scale(.86);transition:opacity .16s,transform .26s cubic-bezier(.2,.95,.3,1.25)}
+#ctx.on{opacity:1;transform:scale(1)}
+#ctx button{display:flex;align-items:center;justify-content:space-between;gap:28px;width:100%;padding:13px 18px;font:400 16.5px var(--ios);letter-spacing:0;color:var(--fg);text-align:left;border:0;border-bottom:.5px solid var(--ln);border-radius:0;background:transparent}
+#ctx button:last-child{border-bottom:0}
+#ctx button:active{background:color-mix(in srgb,var(--fg) 10%,transparent)}
+#ctx button svg{width:19px;height:19px;flex:none;color:var(--fg);opacity:.82}
+#ctx button.dng,#ctx button.dng svg{color:#ff3b30;opacity:1}
+#ctx .ctx-sep{display:block;height:7px;background:color-mix(in srgb,var(--fg) 8%,transparent);border-bottom:0}
+#rfb{display:flex;align-items:center;gap:10px;margin:0 14px 8px;padding:11px 14px;border-radius:18px;background:color-mix(in srgb,#ff9f0a 13%,var(--bg));border:1px solid color-mix(in srgb,#ff9f0a 38%,transparent);font:500 13px/1.45 var(--ios);color:var(--fg)}
+#rfb span{flex:1}
+#rfb button{flex:none;padding:7px 14px;border-radius:999px;background:var(--fg);color:var(--bg);font:600 13px var(--ios);border:0}
+#rfb button.x{padding:6px 9px;background:transparent;color:var(--mut)}
+#a-ai .ma{gap:8px;flex-wrap:wrap}
+#a-ai .ma button{font:500 13px var(--ios,-apple-system,"PingFang SC",sans-serif);letter-spacing:0;padding:7px 14px;border:0;background:color-mix(in srgb,var(--fg) 7%,var(--bg));color:var(--fg);border-radius:999px}
+#a-ai .ma svg.i{width:14px;height:14px}
+`;document.head.appendChild(s22)}
 
 })().catch(e=>console.error(e));
 </script>
