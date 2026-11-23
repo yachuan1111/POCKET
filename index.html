@@ -1035,7 +1035,7 @@ setInterval(alarmChk,1000);setInterval(clkLoop,200);
 let ca={c:'0',a:null,o:null,f:1,e:''},phv=null,zs=null,zsx={};
 const ZS=[['白羊','3.21 – 4.19','火象'],['金牛','4.20 – 5.20','土象'],['双子','5.21 – 6.21','风象'],['巨蟹','6.22 – 7.22','水象'],['狮子','7.23 – 8.22','火象'],['处女','8.23 – 9.22','土象'],['天秤','9.23 – 10.23','风象'],['天蝎','10.24 – 11.22','水象'],['射手','11.23 – 12.21','火象'],['摩羯','12.22 – 1.19','土象'],['水瓶','1.20 – 2.18','风象'],['双鱼','2.19 – 3.20','水象']];
 const spk=t=>ttsPlay(String(t).replace(/[`*#]/g,''));
-function shrink(file,max,cb){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.68))};im.src=r.result};r.readAsDataURL(file)}
+function shrink(file,max,cb){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',max>=1000?.88:.68))};im.src=r.result};r.readAsDataURL(file)}
 const cfmt=v=>{if(v==='Error')return v;const n=parseFloat(v);if(!isFinite(n))return 'Error';const s=String(v);if(s.indexOf('e')>=0||Math.abs(n)>=1e12)return n.toExponential(4);const [i,d]=s.split('.');return (i=='-0'?'-0':Number(i).toLocaleString('en-US'))+(d!==undefined?'.'+d:s.endsWith('.')?'.':'')};
 const cop=(a,b,o)=>o=='+'?a+b:o=='−'?a-b:o=='×'?a*b:(b==0?NaN:a/b);
 function cu(){const d=$('#cd');if(!d)return;const s=cfmt(ca.c);d.textContent=s;d.style.fontSize=Math.max(30,60-Math.max(0,s.length-7)*5)+'px';$('#ce').textContent=ca.e}
@@ -1747,7 +1747,7 @@ Object.assign(ACT,{
  smcl:(x,y,t)=>{const n=D.sms.filter(m=>!m.me&&smCode(m.text)).length;if(!n)return toast('没有验证码短信');if(!ok2(t))return;D.sms=D.sms.filter(m=>m.me||!smCode(m.text));save();refreshBadges();renderSMS();toast('已清理 '+n+' 条')}
 });
 ph.addEventListener('input',e=>{if(e.target.id=='smi'&&sv){D.smd[sv]=e.target.value;save()}});
-ph.addEventListener('change',e=>{const t=e.target;if(t.id=='smf'&&t.files[0]&&sv){const n=sv;shrink(t.files[0],520,d=>smPost(n,{text:'[图片]',img:d}));t.value=''}});
+ph.addEventListener('change',e=>{const t=e.target;if(t.id=='smf'&&t.files[0]&&sv){const n=sv;shrink(t.files[0],1600,d=>smPost(n,{text:'[图片]',img:d}));t.value=''}});
 /* 人设收纳：编辑时显示，离开后高斯模糊 */
 D.set.fold=D.set.fold===undefined?1:D.set.fold;applySet();
 ph.addEventListener('click',e=>{const t=e.target.closest('.fo');document.querySelectorAll('.fo.open').forEach(x=>{if(x!==t){x.classList.remove('open');x.querySelector('.fob').style.maxHeight=''}});if(t){const b=t.querySelector('.fob');b.style.maxHeight=t.classList.toggle('open')?b.scrollHeight+'px':''}});
@@ -1860,9 +1860,9 @@ async function fxReq(p0,path,init,o){init=init||{};o=o||{};const p=eff(p0),a=cle
 async function fxOne(p,fn){const t0=Date.now();try{const r=await fn(p);p.ok=1;p.ms=Date.now()-t0;p.n=(p.n||0)+1;delete p.err;save();return r}catch(e){p.ok=0;p.f=(p.f||0)+1;p.n=(p.n||0)+1;p.err=errMsg(e).slice(0,80);save();throw e}}
 async function fxRun(k,fn){const g=D.fx[k],cur=fxCur(k);if(!cur)throw Error('未配置');const L=[cur].concat(g.fb?g.list.filter(x=>x!==cur):[]);let last;for(const p of L){try{return await fxOne(p,fn)}catch(e){last=e}}throw last}
 const vhash=d=>d.length+':'+d.slice(100,164)+d.slice(-64);
-const visionOne=(p,d)=>{const cfg=p.useMain?D.main:eff(p),pr=p.prompt||'请用简洁中文客观描述这张图片的内容，包括画面主体、场景、人物动作和图中文字。150字以内。',b64=d.split(',')[1],mt=(d.match(/^data:([^;]+)/)||[])[1]||'image/jpeg';
-  const c=cfg.type=='anthropic'?[{type:'text',text:pr},{type:'image',source:{type:'base64',media_type:mt,data:b64}}]:cfg.type=='gemini'?[{text:pr},{inlineData:{mimeType:mt,data:b64}}]:[{type:'text',text:pr},{type:'image_url',image_url:{url:d}}];
-  return ask(cfg,'你是图片描述助手。',[{role:'user',content:c}]).then(x=>x.trim())};
+const visionOne=(p,d)=>{const cfg=p.useMain?D.main:eff(p),pr=p.prompt||'请以最高精细度描述这张图片，用中文写成连贯文字，不要用 Markdown。依次覆盖：1）整体场景与图片类型（照片/截图/插画/票据等）；2）画面主体及其位置、数量、颜色、材质、状态；3）人物：性别与年龄段、外貌、发型、衣着配饰、表情、姿态、动作、视线方向；4）背景与环境细节、光线、时间或天气；5）图中所有可见的文字、数字、logo、屏幕或聊天截图/账单/票据内容，逐字转录并说明所在位置；6）细小或容易忽略的细节（小物件、纹理、图案、瑕疵、水印）；7）看不清或不确定的部分请明说，不要臆测。宁详勿漏，800 字以内。',b64=d.split(',')[1],mt=(d.match(/^data:([^;]+)/)||[])[1]||'image/jpeg';
+  const c=cfg.type=='anthropic'?[{type:'text',text:pr},{type:'image',source:{type:'base64',media_type:mt,data:b64}}]:cfg.type=='gemini'?[{text:pr},{inlineData:{mimeType:mt,data:b64}}]:[{type:'text',text:pr},{type:'image_url',image_url:{url:d,detail:'high'}}];
+  const _mt=D.cfg.maxTok;D.cfg.maxTok=Math.max(+_mt||0,2048);return ask(cfg,'你是严谨的图片描述助手，只描述画面中真实可见的内容。',[{role:'user',content:c}]).then(x=>{D.cfg.maxTok=_mt;return x.trim()},e=>{D.cfg.maxTok=_mt;throw e})};
 async function visionCap(d){if(!fxCur('vision'))return '';D.vc=D.vc||{};const h=vhash(d);if(D.vc[h])return D.vc[h];const r=await fxRun('vision',p=>visionOne(p,d));D.vc[h]=r;const ks=Object.keys(D.vc);if(ks.length>80)delete D.vc[ks[0]];save();return r}
 async function ttsGet(p0,text){const p=eff(p0),T=p.type,sp=parseFloat(p.speed)||1,key=cleanApi(p).key;
   if(T=='openai')return (await fxReq(p,'/audio/speech',{method:'POST',headers:Object.assign({},bearer(p),J),body:JSON.stringify({model:p.model||'tts-1',input:text,voice:p.voice||'alloy',speed:sp,response_format:'mp3'})},{v1:1})).blob();
@@ -2400,10 +2400,10 @@ const _mex20=memExtract;memExtract=function(f,silent){if(f&&f.enc){if(!silent)to
 #wxo .msgs .m{position:relative;max-width:78%;padding:9px 16px;border:0;border-radius:22px;font:400 17px/1.32 var(--ios);box-shadow:none;background:var(--gy);color:var(--fg);word-break:break-word}
 #wxo .msgs .m.u{background:var(--gb);color:#fff;align-self:flex-end}
 #wxo .msgs .m.a{align-self:flex-start}
-#wxo .msgs .m.u:not(.rp):not(.mim):not(:has(+ .m.u))::before{content:"";position:absolute;right:-7px;bottom:0;width:20px;height:20px;background:var(--gb);border-bottom-left-radius:16px 14px}
-#wxo .msgs .m.u:not(.rp):not(.mim):not(:has(+ .m.u))::after{content:"";position:absolute;right:-26px;bottom:0;width:26px;height:20px;background:var(--bg);border-bottom-left-radius:10px}
-#wxo .msgs .m.a:not(.rp):not(.mim):not(.ty):not(:has(+ .m.a))::before{content:"";position:absolute;left:-7px;bottom:0;width:20px;height:20px;background:var(--gy);border-bottom-right-radius:16px 14px}
-#wxo .msgs .m.a:not(.rp):not(.mim):not(.ty):not(:has(+ .m.a))::after{content:"";position:absolute;left:-26px;bottom:0;width:26px;height:20px;background:var(--bg);border-bottom-right-radius:10px}
+/* v23: 已移除气泡尖角与白色遮边 */
+
+
+
 #wxo .msgs .m.rp{border-radius:18px}
 #wxo .msgs .m.mim,#wxo .msgs .m.u.mim{background:transparent;padding:3px}
 #wxo .msgs .tsl{font:500 12px var(--ios);letter-spacing:0;color:var(--mut);margin:10px 0 4px}
@@ -2578,6 +2578,148 @@ ph.addEventListener('scroll',e=>{if(e.target&&e.target.id=='ms'&&sel>=0&&Date.no
 #a-ai .ma button{font:500 13px var(--ios,-apple-system,"PingFang SC",sans-serif);letter-spacing:0;padding:7px 14px;border:0;background:color-mix(in srgb,var(--fg) 7%,var(--bg));color:var(--fg);border-radius:999px}
 #a-ai .ma svg.i{width:14px;height:14px}
 `;document.head.appendChild(s22)}
+
+/* ---------- v23：头像盖住胶囊 / 去气泡白边 / 背景穿透模糊栏 / 红包转账重做 / 高精度识图 ---------- */
+{const s23=document.createElement('style');s23.textContent=`
+/* 头像：强制圆形裁剪，盖在名字胶囊之上 */
+#wxo .ioch .ioc-av,.ioc-av{position:relative;z-index:3;flex:none;width:58px;height:58px;min-width:58px;min-height:58px;aspect-ratio:1/1;border-radius:50%!important;overflow:hidden;-webkit-clip-path:circle(50% at 50% 50%);clip-path:circle(50% at 50% 50%);isolation:isolate;box-shadow:0 3px 12px rgba(0,0,0,.18)}
+.ioc-av.big{width:96px;height:96px;min-width:96px;min-height:96px}
+.ioc-av img{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}
+#wxo .ioch .ioc-name{margin-top:-17px;padding:22px 15px 6px;z-index:1}
+/* 聊天室：背景铺满整个聊天室，消息列表延伸到上下栏下方，栏本身是透出背景的模糊遮罩 */
+#wxo{--ioh:100px;--iof:84px}
+#wxo>.ioch{position:relative;z-index:6;margin-bottom:auto}
+#wxo>#qb,#wxo>#rfb,#wxo>#chips,#wxo>#cpl,#wxo>.inp{position:relative;z-index:6}
+#wxo>#ms{position:absolute;left:0;right:0;top:0;bottom:0;z-index:1;background:transparent!important;padding-top:calc(var(--ioh) + 6px);padding-bottom:calc(var(--iof) + 6px);overflow-y:auto;overflow-x:hidden}
+#wxo>.dnb{z-index:7}
+#wxo .msgs>*{flex-shrink:0}
+#wxo>.io-tb,#wxo>.io-bb{position:absolute;left:0;right:0;z-index:5;pointer-events:none;-webkit-backdrop-filter:blur(18px) saturate(1.35);backdrop-filter:blur(18px) saturate(1.35)}
+#wxo>.io-tb{top:0;height:calc(var(--ioh) + 16px);background:linear-gradient(to bottom,color-mix(in srgb,var(--bg) 58%,transparent),color-mix(in srgb,var(--bg) 8%,transparent));-webkit-mask-image:linear-gradient(to bottom,#000 64%,transparent);mask-image:linear-gradient(to bottom,#000 64%,transparent)}
+#wxo>.io-bb{bottom:0;height:calc(var(--iof) + 16px);background:linear-gradient(to top,color-mix(in srgb,var(--bg) 58%,transparent),color-mix(in srgb,var(--bg) 8%,transparent));-webkit-mask-image:linear-gradient(to top,#000 64%,transparent);mask-image:linear-gradient(to top,#000 64%,transparent)}
+/* 图片消息 */
+#wxo .msgs .m.mim img{max-width:min(250px,64vw);max-height:380px;width:auto;height:auto;border-radius:18px;display:block;cursor:zoom-in}
+#ioz{position:absolute;inset:0;z-index:90;background:rgba(0,0,0,.93);display:grid;place-items:center;touch-action:none;overflow:hidden;animation:fi .22s both;-webkit-user-select:none;user-select:none}
+#ioz img{max-width:100%;max-height:100%;object-fit:contain;transform-origin:center;will-change:transform;-webkit-user-drag:none;pointer-events:none}
+#ioz .ioz-x{position:absolute;top:calc(env(safe-area-inset-top,0px) + 54px);right:16px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;font:400 17px/1 var(--ios);display:grid;place-items:center;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+#ioz .ioz-h{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);left:0;right:0;text-align:center;font:400 12px var(--ios);color:rgba(255,255,255,.55);pointer-events:none}
+/* 红包 / 转账卡片 */
+#wxo .msgs .m.rp.rp2{width:min(236px,68vw);padding:0;border-radius:16px;overflow:hidden;color:#fff;display:flex;flex-direction:column;gap:0;background:linear-gradient(135deg,#fb8b3c,#f4583f);box-shadow:0 6px 16px -8px rgba(244,88,63,.75);font-family:var(--ios)}
+#wxo .msgs .m.rp.rp2.tr{background:linear-gradient(135deg,#fab94a,#f48f35);box-shadow:0 6px 16px -8px rgba(244,143,53,.75)}
+#wxo .msgs .m.rp.rp2{align-items:stretch;text-align:left;letter-spacing:0}
+#wxo .msgs .m.rp.rp2.done{filter:saturate(.4) brightness(1.1)}
+#wxo .rp2 .rpc-t{display:flex;align-items:center;gap:12px;padding:14px 16px 12px;width:100%;align-self:stretch}
+#wxo .rp2 .rpc-i{width:40px;height:40px;flex:none;display:grid;place-items:center}
+#wxo .rp2 .rpc-i svg{width:36px;height:36px;display:block;stroke-width:2.3}
+#wxo .rp2 .rpc-x{min-width:0;flex:1;text-align:left}
+#wxo .rp2 .rpc-x b{display:block;font:700 23px/1.1 var(--ios);letter-spacing:-.01em}
+#wxo .rp2 .rpc-x small{display:block;font:400 13px/1.3 var(--ios);opacity:.93;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#wxo .rp2 .rpc-f{display:flex;justify-content:space-between;align-items:center;padding:6px 16px 8px;background:rgba(0,0,0,.11);font:500 11.5px var(--ios);width:100%;align-self:stretch;letter-spacing:0}
+#wxo .rp2 .rpc-f span{font:500 11.5px var(--ios);letter-spacing:0;text-transform:none;color:#fff}
+#wxo .rp2 .rpc-f em{font:500 11.5px var(--ios);font-style:normal;letter-spacing:0;margin:0;opacity:.95}
+.rpa-box{display:flex;align-items:baseline;justify-content:center;gap:6px;margin:14px 0 4px;border-bottom:1px solid var(--ln);padding-bottom:6px}
+.rpa-box span{font:600 30px var(--ios)}
+.rpa-box input{width:70%;border:0!important;background:transparent;font:700 44px var(--ios)!important;text-align:left;padding:0!important;outline:0}
+.rpq{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 2px}
+.rpq button{padding:7px 14px;border-radius:999px;background:var(--soft);font:500 14px var(--ios)}
+.rpq button:active{background:var(--fg);color:var(--bg)}
+.rpo{display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 0 4px;text-align:center}
+.rpo .ioc-av{width:64px;height:64px;min-width:64px;min-height:64px}
+.rpo-n{font:600 16px var(--ios)}.rpo-m{font:400 15px var(--ios);color:var(--mut);max-width:260px}
+.rpo-a{font:700 40px var(--ios);margin:4px 0}
+.rpo-go{width:92px;height:92px;border-radius:50%;margin-top:10px;background:linear-gradient(145deg,#ffe3a1,#f4b94b);color:#7a4a05;font:700 34px var(--ios);box-shadow:0 8px 22px -8px rgba(244,88,63,.8)}
+.rpo.tr .rpo-go{width:auto;height:auto;border-radius:14px;padding:13px 54px;font-size:17px;background:#f48f35;color:#fff;box-shadow:none}
+.rpo-rf{color:var(--mut);font:500 14px var(--ios);padding:8px}
+.rpo-x{color:var(--mut);font:500 13px var(--ios);padding:6px}
+.rpo-ok{font:700 46px var(--ios);margin:8px 0 0}.rpo-sub{font:400 14px var(--ios);color:var(--mut)}
+.rpd{text-align:center;padding:6px 0 10px}.rpd b{display:block;font:700 40px var(--ios)}.rpd p{font:400 14px var(--ios);color:var(--mut);margin-top:4px}
+.rpd-r{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-top:.5px solid var(--ln);font:400 15px var(--ios)}.rpd-r span:first-child{color:var(--mut)}
+`;document.head.appendChild(s23)}
+
+/* ---- 背景 + 模糊遮罩布局 ---- */
+function ioBg(){const o=$('#wxo'),ms=$('#ms'),f=D.friends[cur];if(!o||!ms||!f)return;
+  ms.style.background='';o.style.background=f.bg||'';
+  if(!o.querySelector(':scope>.io-tb')){const a=document.createElement('div'),b=document.createElement('div');a.className='io-tb';b.className='io-bb';o.append(a,b)}
+  ioLay()}
+function ioLay(){const o=$('#wxo');if(!o||!o.classList.contains('on'))return;const ch=o.querySelector(':scope>.ioch');if(!ch||!o.querySelector(':scope>#ms'))return;
+  const r=o.getBoundingClientRect();if(!r.height)return;
+  const h=Math.round(ch.getBoundingClientRect().bottom-r.top);let ft=r.height;
+  [...o.children].forEach(e=>{if(/^(qb|rfb|chips|cpl)$/.test(e.id)||e.classList.contains('inp')){const b=e.getBoundingClientRect();if(b.height>0)ft=Math.min(ft,b.top-r.top)}});
+  const fh=Math.round(r.height-ft),ms=o.querySelector(':scope>#ms'),keep=ms.scrollHeight-ms.scrollTop-ms.clientHeight<90;
+  if(o.__h!==h||o.__f!==fh){o.__h=h;o.__f=fh;o.style.setProperty('--ioh',h+'px');o.style.setProperty('--iof',fh+'px');if(keep)ms.scrollTop=1e9}}
+setInterval(ioLay,300);
+window.addEventListener('resize',()=>{const o=$('#wxo');if(o){o.__h=null;ioLay()}});
+{const _o23=openChat;openChat=function(k){const r=_o23.apply(this,arguments);try{ioBg();requestAnimationFrame(()=>{ioLay();requestAnimationFrame(ioLay)})}catch(e){console.error(e)}return r}}
+{const _cbs=ACT.cbs;ACT.cbs=function(){const r=_cbs.apply(this,arguments);try{ioBg()}catch(e){}return r}}
+{const _cbg=ACT.cbg;ACT.cbg=function(){const r=_cbg.apply(this,arguments);try{const g=$('#sheet .snd');if(g)g.insertAdjacentHTML('afterend','<label class="bt w" style="display:block;text-align:center;margin-top:12px;cursor:pointer">上传本地图片作背景<input type="file" accept="image/*" hidden id="cbimg"></label>')}catch(e){}return r}}
+
+/* ---- 图片：高精度读取 / 识图 / 放大查看 ---- */
+const imgDec=file=>new Promise((ok,no)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{URL.revokeObjectURL(u);ok(im)};im.onerror=()=>{URL.revokeObjectURL(u);no(Error('无法读取该图片格式'))};im.src=u});
+const imgEnc=(im,max,q)=>{const w0=im.naturalWidth||im.width,h0=im.naturalHeight||im.height,k=Math.min(1,max/Math.max(w0,h0)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(w0*k));c.height=Math.max(1,Math.round(h0*k));const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(im,0,0,c.width,c.height);return c.toDataURL('image/jpeg',q)};
+async function ioSendImg(fl){const f=D.friends[cur];if(!f)return;let th,hi;
+  try{const im=await imgDec(fl);th=imgEnc(im,1600,.88);hi=imgEnc(im,2048,.95)}catch(er){toast(er.message||'图片读取失败');return}
+  const c=D.chats[f.id]=D.chats[f.id]||[],m={r:'u',t:'[图片]',img:th,ts:Date.now()};c.push(m);fresh=c.length-1;save();if($('#cpl'))$('#cpl').innerHTML='';drawMsgs();
+  if(ctl||f.local)return;
+  if(fxCur('vision')){toast('识图中（最高精度）…');try{const cp=await visionCap(hi);if(cp){m.t='[用户发来一张图片。以下是识图模型对原图的高精度描述，请当作你亲眼所见，按你的人设自然回应，必要时可以提到具体细节：'+cp.slice(0,4000)+']';save()}}catch(er){toast('识图失败：'+errMsg(er))}}
+  else toast('还没配置识图接口，TA 看不到图片内容（设置 → 识图）');
+  gen(f)}
+ph.addEventListener('change',e=>{const t=e.target;if(!t||t.id!='cimg'||!t.files||!t.files[0])return;e.stopPropagation();const fl=t.files[0];t.value='';ioSendImg(fl)},true);
+ph.addEventListener('change',e=>{const t=e.target;if(!t||t.id!='cbimg'||!t.files||!t.files[0])return;e.stopPropagation();const fl=t.files[0];t.value='';
+  imgDec(fl).then(im=>{const f=D.friends[cur];if(!f)return;f.bg='url('+imgEnc(im,1600,.86)+') center/cover';save();$('#sheet').className='';ioBg()}).catch(er=>toast(er.message||'图片读取失败'))},true);
+function ioZoom(src){let z=$('#ioz');z&&z.remove();z=document.createElement('div');z.id='ioz';
+  z.innerHTML='<img src="'+src+'" alt="" draggable="false"><button class="ioz-x" aria-label="关闭">✕</button><div class="ioz-h">双指缩放 · 双击放大 · 单击关闭</div>';ph.appendChild(z);
+  const im=z.querySelector('img'),P=new Map();let s=1,tx=0,ty=0,d0=0,s0=1,mv=0,lt=0;
+  const ap=()=>{if(s<=1){tx=ty=0}im.style.transform='translate('+tx+'px,'+ty+'px) scale('+s+')'};
+  z.addEventListener('pointerdown',e=>{if(e.target.closest('.ioz-x'))return;P.set(e.pointerId,[e.clientX,e.clientY]);try{z.setPointerCapture(e.pointerId)}catch(x){}mv=0;if(P.size==2){const a=[...P.values()];d0=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])||1;s0=s}});
+  z.addEventListener('pointermove',e=>{if(!P.has(e.pointerId))return;const o=P.get(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);
+    if(P.size==2){const a=[...P.values()],d=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);s=Math.min(6,Math.max(1,s0*d/d0));mv=99}
+    else{const dx=e.clientX-o[0],dy=e.clientY-o[1];mv+=Math.abs(dx)+Math.abs(dy);if(s>1){tx+=dx;ty+=dy}}ap()});
+  const up=e=>{const had=P.delete(e.pointerId);if(!had||P.size)return;if(mv<8){const n=Date.now();if(n-lt<320){s=s>1?1:2.6;ap();lt=0}else{lt=n;setTimeout(()=>{if(lt===n&&s<=1)z.remove()},330)}}};
+  z.addEventListener('pointerup',up);z.addEventListener('pointercancel',e=>{P.delete(e.pointerId)});
+  z.addEventListener('wheel',e=>{e.preventDefault();s=Math.min(6,Math.max(1,s*(e.deltaY<0?1.15:.87)));ap()},{passive:false});
+  z.querySelector('.ioz-x').addEventListener('click',()=>z.remove())}
+ph.addEventListener('click',e=>{const im=e.target.closest&&e.target.closest('#ms .m.mim img');if(!im)return;e.stopImmediatePropagation();e.preventDefault();ioZoom(im.src)},true);
+
+/* ---- 红包 / 转账 ---- */
+const RPI_R='<svg viewBox="0 0 32 32"><rect x="5" y="2.5" width="22" height="27" rx="4.5" fill="#fff"/><path d="M5 11c4.2 4.6 17.8 4.6 22 0V7a4.5 4.5 0 0 0-4.5-4.5h-13A4.5 4.5 0 0 0 5 7z" fill="#f4583f" fill-opacity=".22"/><circle cx="16" cy="13.6" r="3.6" fill="#f4583f"/></svg>';
+const RPI_T='<svg viewBox="0 0 32 32" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="12.8"/><path d="M9.5 13.2h12.2l-3.6-3.6M22.5 18.8H10.3l3.6 3.6"/></svg>';
+const rpLab=(m)=>{const r=m.rp,tr=r.kind=='tr',inc=m.r=='a',st=r.st|0;return tr?(st==2?(inc?'已退还':'已被退还'):st?(inc?'已收款':'已被接收'):(inc?'请收款':'待收款')):(st?(inc?'已领取':'已被领取'):(inc?'领取红包':'待领取'))};
+function rpSkin(){const f=D.friends[cur];if(!f)return;const c=D.chats[f.id]||[];
+  document.querySelectorAll('#ms .m.rp').forEach(el=>{const mt=/(\d+)$/.exec(el.dataset.act||'');if(!mt)return;const m=c[+mt[1]];if(!m||!m.rp)return;const tr=m.rp.kind=='tr';
+    el.classList.add('rp2');el.classList.toggle('tr',tr);el.classList.toggle('done',!!m.rp.st);
+    el.innerHTML='<div class="rpc-t"><span class="rpc-i">'+(tr?RPI_T:RPI_R)+'</span><div class="rpc-x"><b>¥'+esc(m.rp.amt)+'</b><small>'+esc(m.rp.msg)+'</small></div></div><div class="rpc-f"><span>'+(tr?'星转账':'星红包')+'</span><em>'+rpLab(m)+'</em></div>'})}
+{const _dm23=drawMsgs;drawMsgs=function(){const r=_dm23.apply(this,arguments);try{rpSkin();ioLay()}catch(e){console.error(e)}return r}}
+const rpBal=(a,x,ty)=>{const W=D.wallet;W.bal=Math.round((W.bal+a)*100)/100;(W.log=W.log||[]).unshift({id:'TX'+Date.now().toString().slice(-7)+(Math.random()*90|0),t:Date.now(),x,a,ty:ty||'零钱'})};
+ACT.rpk=x=>{const tr=x=='tr',bal=+D.wallet.bal||0,chips=tr?[10,52,100,520,1314]:[1.88,6.66,8.88,18.88,88.88,200];
+  ioSh(ioHd((tr?'转账':'发红包')+' · 零钱 ¥'+bal.toFixed(2))+'<div class="rpa-box"><span>¥</span><input id="rpa" type="number" inputmode="decimal" step="0.01" min="0.01" value="'+(tr?'52.00':'8.88')+'"></div><div class="rpq">'+chips.map(v=>'<button data-act="rpq:'+v+'">'+v+'</button>').join('')+'</div>'+fld(tr?'转账说明':'留言','<input id="rpm" maxlength="25" placeholder="'+(tr?'转账给你':'恭喜发财，大吉大利')+'">')+'<p class="mono" style="text-transform:none;letter-spacing:.02em;margin-top:12px;line-height:1.7">'+(tr?'单笔转账上限 ¥50,000':'单个红包上限 ¥200')+'，金额从零钱扣除。</p><button class="bt k w" data-act="rps:'+x+'">'+(tr?'转账':'塞钱进红包')+'</button>'+ioX);
+  if($('#cpl'))$('#cpl').innerHTML=''};
+ACT.rpq=x=>{const e=$('#rpa');if(e)e.value=(+x).toFixed(2)};
+{const _rps=ACT.rps;ACT.rps=function(x){const a=Math.round((+($('#rpa')||{}).value||0)*100)/100;
+  if(a<=0)return toast('请输入金额');if(x=='rp'&&a>200)return toast('单个红包最多 ¥200');if(x=='tr'&&a>50000)return toast('单笔转账最多 ¥50,000');
+  return _rps.apply(this,arguments)}}
+ACT.rpo=x=>{const f=D.friends[cur],m=(D.chats[f.id]||[])[+x];if(!m||!m.rp||m.rp.st)return;const tr=m.rp.kind=='tr';
+  ioSh('<div class="rpo'+(tr?' tr':'')+'">'+ioAv(f,'ioc-av')+'<p class="rpo-n">'+esc(f.remark||f.name)+(tr?' 向你转账':' 发出的红包')+'</p><p class="rpo-m">'+esc(m.rp.msg)+'</p>'+(tr?'<b class="rpo-a">¥'+esc(m.rp.amt)+'</b>':'')+'<button class="rpo-go" data-act="rpg:'+x+'">'+(tr?'收款':'開')+'</button>'+(tr?'<button class="rpo-rf" data-act="rpr:'+x+'">退还</button>':'')+'<button class="rpo-x" data-act="sx">关闭</button></div>')};
+ACT.rpg=x=>{const f=D.friends[cur],c=D.chats[f.id]||[],m=c[+x];if(!m||!m.rp||m.rp.st)return;const a=+m.rp.amt,tr=m.rp.kind=='tr',nm=f.remark||f.name,kd=tr?'转账':'红包';
+  m.rp.st=1;rpBal(a,(tr?'收到转账 来自 ':'收到红包 来自 ')+nm,kd);
+  c.push({r:'s',t:'你已'+(tr?'收款':'领取')+'「'+nm+'」的'+kd,ts:Date.now()});c.push({r:'u',t:'（我已'+(tr?'收下':'领取')+'你发的'+kd+' ¥'+m.rp.amt+'）',hid:1,ts:Date.now()});save();
+  ioSh('<div class="rpo">'+ioAv(f,'ioc-av')+'<p class="rpo-n">'+esc(nm)+'</p><b class="rpo-ok">¥'+esc(m.rp.amt)+'</b><p class="rpo-sub">已存入零钱</p><button class="bt k w" style="margin-top:14px" data-act="sx">好的</button></div>');drawMsgs()};
+ACT.rpr=x=>{const f=D.friends[cur],c=D.chats[f.id]||[],m=c[+x];if(!m||!m.rp||m.rp.st)return;const nm=f.remark||f.name;
+  m.rp.st=2;c.push({r:'s',t:'你已退还「'+nm+'」的转账',ts:Date.now()});c.push({r:'u',t:'（我退还了你的转账 ¥'+m.rp.amt+'）',hid:1,ts:Date.now()});save();$('#sheet').className='';drawMsgs()};
+function rpDetail(i){const f=D.friends[cur],m=(D.chats[f.id]||[])[i];if(!m||!m.rp)return;const r=m.rp,tr=r.kind=='tr',inc=m.r=='a',nm=esc(f.remark||f.name);
+  ioSh(ioHd(tr?'转账详情':'红包详情')+'<div class="rpd"><b>¥'+esc(r.amt)+'</b><p>'+(inc?'来自「'+nm+'」':'发给「'+nm+'」')+'</p></div><div class="rpd-r"><span>状态</span><span>'+rpLab(m)+'</span></div><div class="rpd-r"><span>'+(tr?'转账说明':'留言')+'</span><span>'+esc(r.msg)+'</span></div><div class="rpd-r"><span>时间</span><span>'+new Date(m.ts||Date.now()).toLocaleString('zh-CN',{hour12:false})+'</span></div><div class="rpd-r"><span>类型</span><span>'+(tr?'星转账':'星红包')+'</span></div>'+ioX)}
+{const _mm=ACT.mm;ACT.mm=function(x){const f=D.friends[cur],m=f&&(D.chats[f.id]||[])[+x];if(m&&m.rp){rpDetail(+x);return}return _mm.apply(this,arguments)}}
+/* 角色主动发红包 / 转账：让模型可以在回复里写 [红包:金额:留言] 或 [转账:金额:留言] */
+const RP_HINT='\n\n【红包与转账】当剧情确实合适时（对方要红包、节日、庆祝、还钱、感谢、道歉等，且符合你的人设与经济状况），你可以主动发红包或转账：在回复中单独写一条 [红包:金额:留言] 或 [转账:金额:留言]，金额为数字，红包不超过 200，转账不超过 5000。不要滥用，绝大多数回复不应包含。对方发来红包/转账时，请自然地道谢或回应。';
+{const _as=askS;askS=function(a,sys,ms,sig,cb){if(typeof sys=='string'&&sys.indexOf('你正在扮演微信好友')>-1&&sys.indexOf('[红包:金额')<0)sys+=RP_HINT;return _as.call(this,a,sys,ms,sig,cb)}}
+{const _dl=deliver;deliver=async function(f,txt){const re=/\[(红包|转账)[:：\s]*¥?\s*(\d+(?:\.\d{1,2})?)\s*(?:[:：]\s*([^\]\n]*))?\]/g,pk=[];
+  const t=String(txt==null?'':txt).replace(re,(s,k,a,mg)=>{pk.push({k,a:+a,mg:(mg||'').trim()});return '\n'}).replace(/\n{2,}/g,'\n').trim();
+  if(!pk.length)return _dl.apply(this,arguments);
+  if(t)await _dl.call(this,f,t);
+  const c=D.chats[f.id];if(!c)return;
+  for(const p of pk){const tr=p.k=='转账',amt=Math.min(tr?5000:200,Math.max(.01,p.a)).toFixed(2),msg=p.mg||(tr?'转账给你':'恭喜发财，大吉大利');
+    await sleep(500);c.push({r:'a',t:'['+p.k+' ¥'+amt+'：'+msg+']',rp:{amt,msg,kind:tr?'tr':'rp',st:0},ts:Date.now()});fresh=c.length-1;
+    const vis=$('#a-wx').classList.contains('on')&&$('#wxo').classList.contains('on')&&D.friends[cur]===f;
+    if(!vis){D.unread[f.id]=(D.unread[f.id]||0)+1;if(!f.mute)notify({app:'wx',title:f.remark||f.name,text:f.enc?'加密消息':'['+p.k+']',go:'wx:'+D.friends.indexOf(f)})}
+    save();redraw(f);refreshBadges()}}}
 
 })().catch(e=>console.error(e));
 </script>
