@@ -2585,7 +2585,7 @@ ph.addEventListener('scroll',e=>{if(e.target&&e.target.id=='ms'&&sel>=0&&Date.no
 #wxo .ioch .ioc-av,.ioc-av{position:relative;z-index:3;flex:none;width:58px;height:58px;min-width:58px;min-height:58px;aspect-ratio:1/1;border-radius:50%!important;overflow:hidden;-webkit-clip-path:circle(50% at 50% 50%);clip-path:circle(50% at 50% 50%);isolation:isolate;box-shadow:0 3px 12px rgba(0,0,0,.18)}
 .ioc-av.big{width:96px;height:96px;min-width:96px;min-height:96px}
 .ioc-av img{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}
-#wxo .ioch .ioc-name{margin-top:-17px;padding:22px 15px 6px;z-index:1}
+#wxo .ioch .ioc-name{margin-top:-12px;padding:8px 14px 5px;z-index:1}
 /* 聊天室：背景铺满整个聊天室，消息列表延伸到上下栏下方，栏本身是透出背景的模糊遮罩 */
 #wxo{--ioh:100px;--iof:84px}
 #wxo>.ioch{position:relative;z-index:6;margin-bottom:auto}
@@ -2659,7 +2659,7 @@ async function ioSendImg(fl){const f=D.friends[cur];if(!f)return;let th,hi;
   try{const im=await imgDec(fl);th=imgEnc(im,1600,.88);hi=imgEnc(im,2048,.95)}catch(er){toast(er.message||'图片读取失败');return}
   const c=D.chats[f.id]=D.chats[f.id]||[],m={r:'u',t:'[图片]',img:th,ts:Date.now()};c.push(m);fresh=c.length-1;save();if($('#cpl'))$('#cpl').innerHTML='';drawMsgs();
   if(ctl||f.local)return;
-  if(fxCur('vision')){toast('识图中（最高精度）…');try{const cp=await visionCap(hi);if(cp){m.t='[用户发来一张图片。以下是识图模型对原图的高精度描述，请当作你亲眼所见，按你的人设自然回应，必要时可以提到具体细节：'+cp.slice(0,4000)+']';save()}}catch(er){toast('识图失败：'+errMsg(er))}}
+  if(D.set.avision===0){}else if(fxCur('vision')){toast('识图中（最高精度）…');try{const cp=await visionCap(hi);if(cp){m.t='[用户发来一张图片。以下是识图模型对原图的高精度描述，请当作你亲眼所见，按你的人设自然回应，必要时可以提到具体细节：'+cp.slice(0,4000)+']';save()}}catch(er){toast('识图失败：'+errMsg(er))}}
   else toast('还没配置识图接口，TA 看不到图片内容（设置 → 识图）');
   gen(f)}
 ph.addEventListener('change',e=>{const t=e.target;if(!t||t.id!='cimg'||!t.files||!t.files[0])return;e.stopPropagation();const fl=t.files[0];t.value='';ioSendImg(fl)},true);
@@ -2709,17 +2709,110 @@ function rpDetail(i){const f=D.friends[cur],m=(D.chats[f.id]||[])[i];if(!m||!m.r
 {const _mm=ACT.mm;ACT.mm=function(x){const f=D.friends[cur],m=f&&(D.chats[f.id]||[])[+x];if(m&&m.rp){rpDetail(+x);return}return _mm.apply(this,arguments)}}
 /* 角色主动发红包 / 转账：让模型可以在回复里写 [红包:金额:留言] 或 [转账:金额:留言] */
 const RP_HINT='\n\n【红包与转账】当剧情确实合适时（对方要红包、节日、庆祝、还钱、感谢、道歉等，且符合你的人设与经济状况），你可以主动发红包或转账：在回复中单独写一条 [红包:金额:留言] 或 [转账:金额:留言]，金额为数字，红包不超过 200，转账不超过 5000。不要滥用，绝大多数回复不应包含。对方发来红包/转账时，请自然地道谢或回应。';
-{const _as=askS;askS=function(a,sys,ms,sig,cb){if(typeof sys=='string'&&sys.indexOf('你正在扮演微信好友')>-1&&sys.indexOf('[红包:金额')<0)sys+=RP_HINT;return _as.call(this,a,sys,ms,sig,cb)}}
+{const _as=askS;askS=function(a,sys,ms,sig,cb){if(typeof sys=='string'&&sys.indexOf('你正在扮演微信好友')>-1&&sys.indexOf('[红包:金额')<0&&D.set.rpai!==0)sys+=RP_HINT;return _as.call(this,a,sys,ms,sig,cb)}}
 {const _dl=deliver;deliver=async function(f,txt){const re=/\[(红包|转账)[:：\s]*¥?\s*(\d+(?:\.\d{1,2})?)\s*(?:[:：]\s*([^\]\n]*))?\]/g,pk=[];
   const t=String(txt==null?'':txt).replace(re,(s,k,a,mg)=>{pk.push({k,a:+a,mg:(mg||'').trim()});return '\n'}).replace(/\n{2,}/g,'\n').trim();
   if(!pk.length)return _dl.apply(this,arguments);
   if(t)await _dl.call(this,f,t);
+  if(D.set.rpai===0)return;
   const c=D.chats[f.id];if(!c)return;
   for(const p of pk){const tr=p.k=='转账',amt=Math.min(tr?5000:200,Math.max(.01,p.a)).toFixed(2),msg=p.mg||(tr?'转账给你':'恭喜发财，大吉大利');
     await sleep(500);c.push({r:'a',t:'['+p.k+' ¥'+amt+'：'+msg+']',rp:{amt,msg,kind:tr?'tr':'rp',st:0},ts:Date.now()});fresh=c.length-1;
     const vis=$('#a-wx').classList.contains('on')&&$('#wxo').classList.contains('on')&&D.friends[cur]===f;
     if(!vis){D.unread[f.id]=(D.unread[f.id]||0)+1;if(!f.mute)notify({app:'wx',title:f.remark||f.name,text:f.enc?'加密消息':'['+p.k+']',go:'wx:'+D.friends.indexOf(f)})}
     save();redraw(f);refreshBadges()}}}
+
+/* ---------- v24：列表更紧凑 / 引用卡片 / 聊天自动化开关 ---------- */
+let Q24=null;
+{const s24=document.createElement('style');s24.textContent=`
+/* 会话列表：更紧凑 */
+#wxc.io0{padding-top:0}
+.io-hd{margin:0 0 8px}
+.io-title{font-size:32px}
+.io-sb{margin:10px 0 2px;border-radius:12px;padding:0 12px}
+.io-sb input{padding:9px 0;font-size:15px}
+.io-row{gap:12px;padding:9px 0}
+.io-av{width:50px;height:50px;border-radius:8px;font-size:21px}
+.io-top b{font-size:16.5px;line-height:1.25}
+.io-time{font-size:12px}
+.io-st{font-size:11.5px;margin-top:0;line-height:1.3;font-weight:500}
+.io-msg{font-size:14.5px;margin-top:2px;line-height:1.3}
+.io-row .bdg{bottom:11px}.io-row .dotm{bottom:15px}
+/* 输入框上方的引用卡片 */
+#wxo>#qb{margin:0 14px 8px;padding:9px 8px 9px 0;border:1px solid var(--ln);border-radius:16px;background:color-mix(in srgb,var(--bg) 94%,transparent);box-shadow:var(--sh);display:flex;align-items:center;gap:10px;color:var(--fg);font:400 13px/1.35 var(--ios);overflow:hidden;animation:qbin .22s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes qbin{from{opacity:0;transform:translateY(8px) scale(.98)}}
+#qb .qb-bar{align-self:stretch;width:3px;flex:none;margin-left:12px;border-radius:3px;background:var(--gb)}
+#qb .qb-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+#qb .qb-t b{font:600 12.5px var(--ios);color:var(--mut)}
+#qb .qb-t span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:normal;overflow:hidden;text-overflow:ellipsis;word-break:break-all;color:var(--fg)}
+#qb .qb-th{width:42px;height:42px;flex:none;border-radius:9px;object-fit:cover}
+#qb .qb-x{width:28px;height:28px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--soft);color:var(--mut)}
+#qb .qb-x svg{width:14px;height:14px}
+/* 气泡里的引用块 */
+#wxo .msgs .m .qt3{display:flex;align-items:center;gap:8px;margin:-2px -6px 7px;padding:6px 10px;border-radius:12px;background:rgba(0,0,0,.07);border-left:3px solid rgba(0,0,0,.28);font-size:13px;line-height:1.35;opacity:1;text-align:left;cursor:pointer}
+#wxo .msgs .m.u .qt3{background:rgba(255,255,255,.24);border-left-color:rgba(255,255,255,.85)}
+#wxo .msgs .m .qt3 div{min-width:0;display:flex;flex-direction:column}
+#wxo .msgs .m .qt3 b{font:600 12px var(--ios);opacity:.78}
+#wxo .msgs .m .qt3 span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;opacity:.85;word-break:break-all}
+#wxo .msgs .m .qt3 img{width:34px;height:34px;border-radius:7px;object-fit:cover;flex:none;max-width:none;max-height:none;cursor:pointer}
+@keyframes qfl{0%,100%{filter:none}30%{filter:brightness(.82)}}
+#wxo .msgs .m.qfl{animation:qfl 1.1s ease 1}
+/* 聊天自动化面板 */
+#sheet{--ios:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+.aut-d{font:400 12px/1.5 var(--ios);color:var(--mut);margin:-4px 0 10px;padding-right:56px}
+#wxo .inp .io-ic.rpl.hot{color:var(--gb)}
+`;document.head.appendChild(s24)}
+
+/* ---- 引用：卡片 ---- */
+const qTxt=m=>m.img?'[图片]':m.rp?'['+(m.rp.kind=='tr'?'转账':'红包')+' ¥'+m.rp.amt+']':m.vo?'[语音] '+(m.vo.tx||m.vo.s+'″'):m.loc?'[位置] '+m.loc.n:(m.d||m.t||'');
+function qCard(){const o=$('#wxo'),old=$('#qb');old&&old.remove();if(!Q24||!o)return;const i=o.querySelector(':scope>.inp');if(!i)return;
+  i.insertAdjacentHTML('beforebegin','<div id="qb"><i class="qb-bar"></i><div class="qb-t"><b>回复 '+esc(Q24.n)+'</b><span>'+esc(Q24.x)+'</span></div>'+(Q24.th?'<img class="qb-th" src="'+Q24.th+'" alt="">':'')+'<button class="qb-x" data-act="mqx" aria-label="取消引用">'+ic('x')+'</button></div>');
+  ioLay()}
+ACT.mq=x=>{const f=D.friends[cur],m=(D.chats[f.id]||[])[+x];if(!m)return;
+  const q={n:m.r=='u'?'我':(f.remark||f.name),x:String(qTxt(m)).replace(/\s+/g,' ').slice(0,80),i:+x};Q24=q;sel=-1;drawMsgs();qCard();
+  if(m.img){const im=new Image();im.onload=()=>{const k=Math.min(1,96/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);if(Q24===q){q.th=c.toDataURL('image/jpeg',.7);qCard()}};im.src=m.img}
+  const e=$('#ci');e&&e.focus()};
+ACT.mqx=()=>{Q24=null;const e=$('#qb');e&&e.remove();ioLay()};
+ACT.qgo=x=>{const e=document.getElementById('mg'+x);if(!e){toast('原消息已不在当前记录里');return}e.scrollIntoView({block:'center',behavior:'smooth'});e.classList.remove('qfl');void e.offsetWidth;e.classList.add('qfl')};
+function qSkin(){const f=D.friends[cur];if(!f)return;const c=D.chats[f.id]||[];
+  document.querySelectorAll('#ms .m .qt2').forEach(el=>{const b=el.closest('.m'),mt=b&&/^mg(\d+)$/.exec(b.id||'');if(!mt)return;const m=c[+mt[1]];if(!m||!m.q)return;
+    el.className='qt3';if(m.q.i!=null)el.dataset.act='qgo:'+m.q.i;
+    el.innerHTML=(m.q.th?'<img src="'+m.q.th+'" alt="">':'')+'<div><b>'+esc(m.q.n)+'</b><span>'+esc(m.q.x)+'</span></div>'})}
+{const _ic=ioCtx;ioCtx=function(){try{rpSkin();qSkin()}catch(e){}return _ic.apply(this,arguments)}}
+{const _dm24=drawMsgs;drawMsgs=function(){const r=_dm24.apply(this,arguments);try{qSkin();rplHot()}catch(e){}return r}}
+
+/* ---- 聊天自动化开关 ---- */
+const AUTO=[
+ ['autoreply','发送后自动回复','关闭后，发消息、发图片、领红包都不会立刻触发 TA 回复；需要时点输入框里的「回复」按钮。',1],
+ ['atts','自动朗读 TA 的回复','需要先在「设置 → 声音合成」配置接口。',0],
+ ['avision','发图后自动识图','关闭后图片只会发送出去，不会调用识图接口。',1],
+ ['asrch','联网搜索自动触发','消息里有「最新 / 新闻 / 搜一下」时自动联网搜索。',0],
+ ['rpai','允许 TA 主动发红包 / 转账','关闭后，即使模型写了红包标记也不会生成红包。',1],
+ ['memauto','自动整理记忆','按记忆库设置的间隔，自动从聊天里提取记忆。',0]];
+const autoGet=([k,,,d])=>k=='memauto'?!!(D.mem&&D.mem.cfg&&D.mem.cfg.auto):(D.set[k]===undefined?!!d:!!D.set[k]&&D.set[k]!==0);
+ACT.autom=()=>ioSh(ioHd('Automation / 聊天自动化')+AUTO.map(a=>T(a[1],autoGet(a),'autog:'+a[0])+'<p class="aut-d">'+a[2]+'</p>').join('')+ioX);
+ACT.autog=x=>{const a=AUTO.find(v=>v[0]==x);if(!a)return;const on=!autoGet(a);
+  if(x=='memauto'){D.mem.cfg.auto=on?1:0}else if(a[3]){D.set[x]=on?1:0}else{D.set[x]=on?1:0}
+  save();ACT.autom();rplUI()};
+{const _mn=menu;menu=function(){_mn.apply(this,arguments);const b=$('#mb');if(b)b.insertAdjacentHTML('afterbegin','<button class="dr" data-act="autom"><b>聊天自动化</b>'+ic('spark')+'</button>')}}
+/* 自动回复开关：关闭时拦截自动触发的 gen，只放行手动按钮 */
+let __man=0;
+ph.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act.split(':')[0];if(a=='mr'||a=='rplnow')__man=Date.now()},true);
+{const _g=gen;gen=function(f){if(D.set.autoreply===0&&Date.now()-__man>800){rplHot();return}return _g.apply(this,arguments)}}
+ACT.rplnow=()=>{const f=D.friends[cur];if(!f||ctl)return;const c=D.chats[f.id]||[];if(!c.length)return;__man=Date.now();gen(f)};
+function rplUI(){const o=$('#wxo'),pill=o&&o.querySelector('.io-pill');if(!pill)return;let b=pill.querySelector('.rpl');
+  if(D.set.autoreply===0){if(!b){b=document.createElement('button');b.className='io-ic rpl';b.dataset.act='rplnow';b.setAttribute('aria-label','让 TA 回复');b.innerHTML=ic('chat');const ref=pill.querySelector('[data-act="mic:ci"]')||pill.querySelector('#snd');pill.insertBefore(b,ref)}}
+  else if(b)b.remove();rplHot()}
+function rplHot(){const f=D.friends[cur],b=document.querySelector('#wxo .rpl');if(!b||!f)return;const c=(D.chats[f.id]||[]).filter(m=>m.r!='s'&&!m.hid),l=c[c.length-1];b.classList.toggle('hot',!!l&&l.r=='u')}
+{const _o24=openChat;openChat=function(k){const r=_o24.apply(this,arguments);try{rplUI()}catch(e){}return r}}
+
+/* 发送：把引用卡片并入消息（旧的引用变量在别的作用域里，这里接管） */
+{const _s24=send;send=function(){const i=$('#ci'),q=Q24,v=i?i.value.trim():'';
+  if(q&&v&&!ctl&&D.friends[cur]){const f=D.friends[cur],c=D.chats[f.id]=D.chats[f.id]||[],n0=c.length;
+    i.value='（引用「'+q.n+'：'+q.x+'」）'+v;Q24=null;const ob=$('#qb');ob&&ob.remove();
+    const r=_s24.apply(this,arguments);const m=c[n0];if(m&&m.r=='u'){m.d=v;m.q=q;save();drawMsgs()}ioLay();return r}
+  return _s24.apply(this,arguments)}}
+{const _o24b=openChat;openChat=function(k){Q24=null;return _o24b.apply(this,arguments)}}
 
 })().catch(e=>console.error(e));
 </script>
