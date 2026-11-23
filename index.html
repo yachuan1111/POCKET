@@ -579,7 +579,7 @@ const SP={
  abt:()=>`<h2 class="big" style="font-size:44px;margin-top:20px">POCKET<br><i>v0.5</i></h2>${NOTE('一部极简的 AI 小手机：多角色聊天、记忆、提示词库、流式输出与用量统计。')}`
 };
 function renderSet(anim){const A=$('#a-set');
-  if(!sst.length){A.innerHTML=`<div class="scroll"><div class="mono">01 / Settings</div><hr class="k"><h2 class="big">设置</h2><div class="card"><span class="mono">当前模型</span><b>${esc(D.main.model||'尚未配置')}</b><span class="mono">${esc(D.presets[D.cur].name)} · ${{openai:'OpenAI 兼容',anthropic:'Anthropic',gemini:'Gemini'}[D.main.type]}</span></div><div class="mono sec">AI</div>${R('spark','模型与 API','','sn:api')}${R('chat','对话','','sn:dlg')}${R('sliders','生成参数与网络','','sn:par')}${R('star','记忆',D.cfg.memories.length+' 条','sn:mem')}${R('edit','提示词库','','sn:lib')}${R('spark','功能接口（识图 / 语音 / 绘图）','','sn:fx')}<div class="mono sec">APP</div>${R('edit','字体与存储','','sn:font')}${R('compass','壁纸','','sn:wp')}${R('bell','通知','','sn:ntf')}${R('compass','外观与交互','','sn:look')}${R('copy','数据管理','','sn:data')}${R('up','用量统计','','sn:use')}${R('lock','隐私与安全','','sn:priv')}${R('info','关于','v0.5','sn:abt')}</div>`;return}
+  if(!sst.length){A.innerHTML=`<div class="scroll"><div class="mono">01 / Settings</div><hr class="k"><h2 class="big">设置</h2><div class="card"><span class="mono">当前模型</span><b>${esc(D.main.model||'尚未配置')}</b><span class="mono">${esc(D.presets[D.cur].name)} · ${{openai:'OpenAI 兼容',anthropic:'Anthropic',gemini:'Gemini'}[D.main.type]}</span></div><div class="mono sec">AI</div>${R('spark','模型与 API','','sn:api')}${R('chat','对话','','sn:dlg')}${R('sliders','生成参数与网络','','sn:par')}${R('star','记忆',D.cfg.memories.length+' 条','sn:mem')}${R('edit','提示词库','','sn:lib')}${R('spark','功能接口（识图 / 语音 / 绘图）','','sn:fx')}<div class="mono sec">APP</div>${R('edit','字体与存储','','sn:font')}${R('compass','壁纸','','sn:wp')}${R('star','应用图标 · PWA','','pwicon')}${R('bell','通知','','sn:ntf')}${R('compass','外观与交互','','sn:look')}${R('copy','数据管理','','sn:data')}${R('up','用量统计','','sn:use')}${R('lock','隐私与安全','','sn:priv')}${R('info','关于','v0.5','sn:abt')}</div>`;return}
   const n=sst[sst.length-1];A.innerHTML=`<div class="chh"><button data-act="sb">${ic('back')}</button><b class="pt">${ST[n]}</b><span style="width:24px"></span></div><div class="scroll${anim?' pgin':''}">${SP[n]()}</div>`}
 const cleanApi=a=>{const o=Object.assign({},a);o.url=String(a.url||'').trim().replace(/\/+$/,'').replace(/\/(chat\/completions|completions|messages|models)$/i,'');if(o.url&&!/^https?:\/\//i.test(o.url))o.url='https://'+o.url;o.key=String(a.key||'').replace(/[^\x21-\x7E]/g,'');o.model=String(a.model||'').trim();return o};
 const hasVer=u=>/\/(v\d+[a-z]*|api\/paas\/v\d+|openai)(\/|$)/i.test(u.replace(/^https?:\/\/[^/]+/,''));
@@ -2760,7 +2760,6 @@ let Q24=null;
 /* 聊天自动化面板 */
 #sheet{--ios:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
 .aut-d{font:400 12px/1.5 var(--ios);color:var(--mut);margin:-4px 0 10px;padding-right:56px}
-#wxo .inp .io-ic.rpl.hot{color:var(--gb)}
 `;document.head.appendChild(s24)}
 
 /* ---- 引用：卡片 ---- */
@@ -2814,6 +2813,551 @@ function rplHot(){const f=D.friends[cur],b=document.querySelector('#wxo .rpl');i
   return _s24.apply(this,arguments)}}
 {const _o24b=openChat;openChat=function(k){Q24=null;return _o24b.apply(this,arguments)}}
 
+
+/* ---------- v25：消息多选（转发 / 收藏 / 复制 / 删除）+ 首页头像完整显示 ---------- */
+const MS={on:false,set:new Set(),mode:'each'};
+const msI=d=>`<svg class="msi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const MSI={sel:msI('<circle cx="12" cy="12" r="9"/><path d="M8 12.4l2.7 2.7L16 9.6"/>'),fwd:msI('<path d="M15 4.5l6 6-6 6"/><path d="M21 10.5H9.5A6.5 6.5 0 0 0 3 17v2"/>'),star:msI('<path d="M12 3.2l2.6 5.5 6 .8-4.4 4.2 1.1 6L12 16.8 6.7 19.7l1.1-6L3.4 9.5l6-.8z"/>'),copy:msI('<rect x="9" y="9" width="11" height="11" rx="2.6"/><path d="M5.5 15V7A2.5 2.5 0 0 1 8 4.5h8"/>'),del:msI('<path d="M4 7h16M9.5 7V4.5h5V7M6.2 7l.9 12.5h9.8L17.8 7M10 11v5.5M14 11v5.5"/>')};
+const msChat=()=>{const f=D.friends[cur];return f?(D.chats[f.id]=D.chats[f.id]||[]):[]};
+const msOK=m=>m&&m.r!='s'&&!m.hid;
+const msSelIdx=()=>{const c=msChat();return [...MS.set].sort((a,b)=>a-b).filter(i=>msOK(c[i]))};
+const msWho=m=>{const f=D.friends[cur];return m.r=='u'?'我':(f.remark||f.name)};
+const msCopy=async t=>{try{await navigator.clipboard.writeText(t);return true}catch(e){try{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0;top:0';document.body.appendChild(a);a.select();const k=document.execCommand('copy');a.remove();return k}catch(x){return false}}};
+function msPos(){const ms=$('#ms');if(!ms||!MS.on)return;ms.querySelectorAll('.mck').forEach(k=>{const b=ms.querySelector('#mg'+k.dataset.i);if(b)k.style.top=(b.offsetTop+b.offsetHeight/2-12)+'px'})}
+function msCount(){const n=msSelIdx().length,t=$('#msn'),bb=$('#msbb'),a=document.querySelector('#msbt .ms-a');if(t)t.textContent=n?'已选择 '+n+' 条':'选择消息';if(bb)bb.classList.toggle('off',!n);if(a)a.textContent=(n&&n>=msChat().filter(msOK).length)?'全不选':'全选'}
+function msRefresh(){const ms=$('#ms');if(!ms||!MS.on)return;ms.classList.add('msel');ms.querySelectorAll('.mck').forEach(x=>x.remove());
+  ms.querySelectorAll('[id^="mg"]').forEach(b=>{const mt=/^mg(\d+)$/.exec(b.id);if(!mt)return;const i=+mt[1],on=MS.set.has(i),k=document.createElement('i');k.className='mck'+(on?' on':'');k.dataset.i=i;ms.appendChild(k);b.classList.toggle('msx-on',on)});
+  msPos();msCount()}
+function msEnter(i){const o=$('#wxo');if(!o||!D.friends[cur])return;MS.on=true;MS.set=new Set(i>=0?[i]:[]);sel=-1;ioCtxClear();o.classList.add('msm');
+  if(!$('#msbt'))o.insertAdjacentHTML('beforeend',`<div id="msbt"><button class="ms-c" data-act="msx">取消</button><b id="msn"></b><button class="ms-a" data-act="msall">全选</button></div><div id="msbb">${[['fwd','转发','msfwd'],['star','收藏','msfav'],['copy','复制','mscp'],['del','删除','msdel']].map(([k,t,a])=>`<button data-act="${a}"${k=='del'?' class="dng"':''}>${MSI[k]}<span>${t}</span></button>`).join('')}</div>`);
+  msRefresh()}
+function msExit(){MS.on=false;MS.set=new Set();const o=$('#wxo');if(o){o.classList.remove('msm');['#msbt','#msbb'].forEach(q=>{const e=o.querySelector(q);e&&e.remove()})}const ms=$('#ms');if(ms){ms.classList.remove('msel');ms.querySelectorAll('.mck').forEach(x=>x.remove());ms.querySelectorAll('.msx-on').forEach(x=>x.classList.remove('msx-on'))}}
+function msTog(i){if(!(i>=0))return;MS.set.has(i)?MS.set.delete(i):MS.set.add(i);const ms=$('#ms');if(ms){const b=ms.querySelector('#mg'+i),k=ms.querySelector('.mck[data-i="'+i+'"]');b&&b.classList.toggle('msx-on',MS.set.has(i));k&&k.classList.toggle('on',MS.set.has(i))}msCount()}
+function msFwdSheet(){const n=msSelIdx().length,list=D.friends.map((f,k)=>k==cur?'':R('user',esc(f.remark||f.name)+(eLocked(f)?'（已加密）':''),'','msfs:'+k)).join('');
+  ioSh(ioHd('Forward / 转发 '+n+' 条')+`<div class="tabs" style="margin-top:0"><button class="${MS.mode=='each'?'a':''}" data-act="msmode:each">逐条转发</button><button class="${MS.mode=='merge'?'a':''}" data-act="msmode:merge">合并转发</button></div>`+(list||'<p class="empty">没有其他好友可转发</p>')+ioX)}
+{const _d=drawMsgs;drawMsgs=function(){const r=_d.apply(this,arguments);try{if(MS.on)msRefresh()}catch(e){console.error(e)}return r}}
+{const _o=openChat;openChat=function(){msExit();return _o.apply(this,arguments)}}
+{const _c=ACT.cb;ACT.cb=function(){msExit();return _c.apply(this,arguments)}}
+{const _h=ACT.home;ACT.home=function(){msExit();return _h.apply(this,arguments)}}
+{const k=CTXO.indexOf('md');if(k>=0&&CTXO.indexOf('msel')<0)CTXO.splice(k,0,'msel')}
+{const _i=ioCtx;ioCtx=function(){try{const ma=$('#ms .ma');if(ma&&sel>=0&&!MS.on&&!ma.querySelector('[data-act^="msel:"]'))ma.insertAdjacentHTML('beforeend',`<button data-act="msel:${sel}">${MSI.sel}多选</button>`)}catch(e){}return _i.apply(this,arguments)}}
+{const _m=menu;menu=function(){_m.apply(this,arguments);const b=$('#mb');if(b)b.insertAdjacentHTML('afterbegin',`<button class="dr" data-act="msel0"><b>多选消息</b>${MSI.sel}</button>`)}}
+['pointerdown','contextmenu','dblclick'].forEach(n=>ph.addEventListener(n,e=>{if(MS.on&&e.target.closest&&e.target.closest('#ms')){e.stopImmediatePropagation();if(n!='pointerdown')e.preventDefault()}},true));
+ph.addEventListener('click',e=>{if(!MS.on)return;const t=e.target;if(!t.closest||!t.closest('#ms'))return;e.stopImmediatePropagation();e.preventDefault();let i=-1;const ck=t.closest('.mck');
+  if(ck)i=+ck.dataset.i;else{const b=t.closest('[id^="mg"]'),mt=b&&/^mg(\d+)$/.exec(b.id);if(mt)i=+mt[1];else{const y=e.clientY;for(const x of $('#ms').querySelectorAll('[id^="mg"]')){const mm=/^mg(\d+)$/.exec(x.id);if(!mm)continue;const r=x.getBoundingClientRect();if(y>=r.top-3&&y<=r.bottom+3){i=+mm[1];break}}}}
+  msTog(i)},true);
+setInterval(()=>{if(MS.on)msPos()},500);
+Object.assign(ACT,{
+ msel:x=>{const i=+x;sel=-1;drawMsgs();msEnter(i)},
+ msel0:()=>{$('#sheet').className='';msEnter(-1)},
+ msx:()=>msExit(),
+ msall:()=>{const c=msChat(),ids=c.map((m,i)=>i).filter(i=>msOK(c[i])),all=ids.length&&ids.every(i=>MS.set.has(i));MS.set=new Set(all?[]:ids);msRefresh()},
+ msfwd:()=>{if(msSelIdx().length)msFwdSheet()},
+ msmode:x=>{MS.mode=x=='merge'?'merge':'each';msFwdSheet()},
+ msfs:x=>{const f=D.friends[+x],src=D.friends[cur];if(!f||!src)return;if(eLocked(f))return toast('此聊天已加密，请先解锁');
+  const c=msChat(),all=msSelIdx(),idx=all.filter(i=>!c[i].rp);if(!idx.length)return toast('红包 / 转账不能转发');
+  const tc=D.chats[f.id]=D.chats[f.id]||[],now=Date.now();
+  if(MS.mode=='merge')tc.push({r:'u',t:'【聊天记录】我与「'+(src.remark||src.name)+'」\n'+idx.map(i=>msWho(c[i])+'：'+String(qTxt(c[i])).replace(/\s+/g,' ').slice(0,200)).join('\n'),ts:now});
+  else idx.forEach((i,k)=>tc.push(Object.assign({},c[i],{r:'u',ts:now+k,q:null})));
+  save();try{encDirty()}catch(e){}$('#sheet').className='';msExit();toast('已转发 '+(MS.mode=='merge'?'1 份聊天记录':idx.length+' 条')+'给 '+(f.remark||f.name)+(all.length>idx.length?'（红包/转账已跳过）':''))},
+ msfav:()=>{const c=msChat(),idx=msSelIdx().filter(i=>!c[i].rp);if(!idx.length)return toast('没有可收藏的消息');D.fav=D.fav||[];idx.slice().reverse().forEach(i=>D.fav.unshift({who:msWho(c[i]),x:qTxt(c[i]),ts:Date.now()}));save();msExit();toast('已收藏 '+idx.length+' 条')},
+ mscp:async()=>{const c=msChat(),idx=msSelIdx();if(!idx.length)return;const t=idx.length==1?String(qTxt(c[idx[0]])):idx.map(i=>msWho(c[i])+'：'+qTxt(c[i])).join('\n');if(await msCopy(t)){msExit();toast('已复制 '+idx.length+' 条')}else toast('复制失败')},
+ msdel:()=>{const n=msSelIdx().length;if(!n)return;ioSh(ioHd('Delete / 删除消息')+`<p class="mono" style="text-transform:none;letter-spacing:.02em;line-height:1.8;margin:2px 0 12px">将从本机聊天记录中删除所选的 ${n} 条消息，无法撤销。</p><button class="bt k w" style="background:#ff3b30;border-color:#ff3b30;color:#fff" data-act="msdel2">删除 ${n} 条</button>`+ioX)},
+ msdel2:()=>{const c=msChat(),idx=msSelIdx();$('#sheet').className='';if(!idx.length)return;idx.slice().reverse().forEach(i=>c.splice(i,1));msExit();save();try{encDirty()}catch(e){}drawMsgs();toast('已删除 '+idx.length+' 条消息')}
+});
+{const s25=document.createElement('style');s25.textContent=`
+.msi{width:22px;height:22px;flex:none;display:block}
+#wxo>#ms.msel{padding-left:50px}
+#wxo .mck{position:absolute;left:14px;width:24px;height:24px;border-radius:50%;border:1.6px solid color-mix(in srgb,var(--fg) 30%,transparent);background:var(--bg);z-index:3;display:block;transition:background .18s,border-color .18s}
+#wxo .mck.on{background:var(--bl);border-color:var(--bl)}
+#wxo .mck.on::after{content:"";position:absolute;left:7px;top:3px;width:6px;height:11px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+#wxo .msgs .m.msx-on{box-shadow:0 0 0 2px color-mix(in srgb,var(--bl) 55%,transparent)}
+#msbt,#msbb{position:absolute;left:0;right:0;z-index:9;display:flex;align-items:center;background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6);font-family:var(--ios)}
+#msbt{top:0;height:var(--ioh,100px);padding:0 16px 12px;align-items:flex-end;border-bottom:.5px solid var(--ln)}
+#msbt .ms-c,#msbt .ms-a{flex:1;font:500 16px var(--ios);color:var(--bl);padding:6px 4px}
+#msbt .ms-c{text-align:left}#msbt .ms-a{text-align:right}
+#msbt b{flex:none;font:600 16px var(--ios);padding:6px 0}
+#msbb{bottom:0;height:var(--iof,84px);padding:8px 8px 24px;justify-content:space-around;border-top:.5px solid var(--ln)}
+#msbb button{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--fg);font:500 11px var(--ios);padding:6px 0;border-radius:12px}
+#msbb button:active{background:color-mix(in srgb,var(--fg) 8%,transparent)}
+#msbb button.dng{color:#ff3b30}
+#msbb.off button{opacity:.32;pointer-events:none}
+#wxo.msm>.inp{visibility:hidden}
+#wxo.msm>#qb,#wxo.msm>#rfb,#wxo.msm>#chips,#wxo.msm>#cpl{display:none}
+/* 首页头像：放大并完整显示（不裁切） */
+.io-pf{align-items:center}
+.io-pfl{flex:1;min-width:0}
+.io-av.ring{width:112px;height:112px}
+.io-av.ring:has(img){width:auto;height:auto;border-radius:24px;background:transparent;display:block;box-shadow:0 8px 24px -8px rgba(0,0,0,.35),0 0 0 .5px var(--ln)}
+.io-av.ring:has(img) img{display:block;width:132px;height:auto;max-height:176px;object-fit:contain;border-radius:inherit}
+`;document.head.appendChild(s25)}
+
+
+/* ---------- v26：液态玻璃聊天室 / 加号面板 / 短信加号 / 音乐 App ---------- */
+const gI=d=>`<svg class="gi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const GI={img:gI('<rect x="3" y="4.5" width="18" height="15" rx="3.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5"/>'),rp:gI('<rect x="5" y="3" width="14" height="18" rx="3"/><path d="M5 9c4 3 10 3 14 0"/><circle cx="12" cy="11.5" r="1.6"/>'),tr:gI('<path d="M4 8h14l-3.5-3.5M20 16H6l3.5 3.5"/>'),emo:gI('<circle cx="12" cy="12" r="9"/><path d="M8.5 14.2c1 1.5 2.1 2.2 3.5 2.2s2.5-.7 3.5-2.2M9 9.6v.6M15 9.6v.6"/>'),mic:gI('<rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/>'),pin:gI('<path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>'),req:gI('<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5h4"/>'),mu:gI('<path d="M9 18V5.5l11-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>'),prev:gI('<path d="M19 5v14l-9-7zM6 5v14"/>'),next:gI('<path d="M5 5v14l9-7zM18 5v14"/>'),play:gI('<path d="M8 5v14l11-7z"/>'),pause:gI('<path d="M8.5 5v14M15.5 5v14" stroke-width="2.6"/>')};
+const gPanel=(items,id)=>`<div class="gpn"${id?` id="${id}"`:''}>${items.map(([k,t,a,tn,file])=>file?`<label class="gb" style="--tn:${tn}"><i>${GI[k]}</i><span>${t}</span><input type="file" accept="image/*" hidden id="${file}"></label>`:`<button class="gb" style="--tn:${tn}" data-act="${a}"><i>${GI[k]}</i><span>${t}</span></button>`).join('')}</div>`;
+ACT.cplus=()=>{const e=$('#cpl');e.innerHTML=e.innerHTML?'':gPanel([['img','图片','','#34c759','cimg'],['rp','红包','rpk:rp','#ff3b30'],['tr','转账','rpk:tr','#ff9f0a'],['emo','表情','emo','#f5b800'],['mic','语音','vcs','#0a84ff'],['pin','位置','locs','#30b0c7'],['req','要红包','rqr','#ff6482'],['mu','一起听','mutg','#bf5af2']])};
+/* 短信加号 */
+{const _r=renderSMS;renderSMS=function(){const r=_r.apply(this,arguments);try{const l=document.querySelector('#a-sms .sf label.pc');if(l&&!l.querySelector('input').disabled)l.outerHTML='<button class="pc" data-act="smplus" aria-label="更多">'+ic('plus')+'</button>'}catch(e){}return r}}
+Object.assign(ACT,{
+ smplus:()=>{const o=$('#smpl');if(o){o.remove();return}const s=document.querySelector('#a-sms .sf');if(s)s.insertAdjacentHTML('beforebegin',gPanel([['img','图片','','#000','smf'],['emo','表情','smemo','#000'],['mic','语音','smvo','#000'],['pin','位置','smloc','#000'],['mu','分享歌曲','smmu','#000']],'smpl'))},
+ smemo:()=>{const o=$('#smpl');if(o)o.innerHTML='<div class="gem">'+'😀 😂 🥹 😍 🥰 😘 😎 🤔 😭 😡 🥳 😴 🙏 👍 👏 💪 ❤️ 🔥 🌙 ⭐ 🎉 🌹 ☕ 🎧'.split(' ').map(e=>`<button data-act="smei">${e}</button>`).join('')+'</div>'},
+ smei:(x,y,t)=>{const i=$('#smi');if(!i||i.disabled)return;i.value+=t.textContent;if(sv){D.smd[sv]=i.value;save()}i.focus()},
+ smloc:()=>{if(!sv||!navigator.geolocation)return toast('无法获取定位');navigator.geolocation.getCurrentPosition(p=>smPost(sv,{text:'[位置] '+p.coords.latitude.toFixed(4)+', '+p.coords.longitude.toFixed(4)}),()=>toast('无法获取定位'))},
+ smmu:()=>{const T=MU.t();T?smPost(sv,{text:'🎧 正在听「'+T.t+'」'+(T.a?' — '+T.a:'')+'，要不要一起听？'}):toast('先在音乐 App 里放一首歌')}});
+/* ---- 音乐 ---- */
+const muDB=()=>new Promise((ok,no)=>{const r=indexedDB.open('pocket-mu',1);r.onupgradeneeded=()=>r.result.createObjectStore('b');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)});
+const muTx=async(m,f)=>{const d=await muDB();return new Promise((ok,no)=>{const t=d.transaction('b',m),q=f(t.objectStore('b'));t.oncomplete=()=>ok(q&&q.result);t.onerror=()=>no(t.error)})};
+const muPut=(k,v)=>muTx('readwrite',s=>s.put(v,k)),muGet=k=>muTx('readonly',s=>s.get(k)),muDel=k=>muTx('readwrite',s=>s.delete(k));
+const MU={au:new Audio(),i:-1,tab:0,pick:null,tg:null,tick:0,lr:[],k:-2,url:null};
+const muD=()=>(D.mu=D.mu||{tracks:[],log:[],tg:{},plays:{}});
+MU.t=()=>muD().tracks[MU.i];
+const muFmt=s=>{s=Math.max(0,s|0);return (s/60|0)+':'+String(s%60).padStart(2,'0')},muDur=s=>s>=3600?(s/3600).toFixed(1)+' 小时':s>=60?Math.round(s/60)+' 分钟':(s|0)+' 秒',dc=s=>{try{return decodeURIComponent(s)}catch(e){return s}};
+function muLrc(tx){const o=[],re=/\[(\d+):(\d+(?:\.\d+)?)\]/g;(tx||'').split(/\r?\n/).forEach(l=>{const ts=[...l.matchAll(re)],t=l.replace(re,'').trim();if(ts.length){if(t)ts.forEach(m=>o.push({s:+m[1]*60+ +m[2],t}))}else if(l.trim()&&!/^\[[a-z]+:/i.test(l.trim()))o.push({s:null,t:l.trim()})});return o.some(x=>x.s!=null)?o.filter(x=>x.s!=null).sort((a,b)=>a.s-b.s):o}
+function muSeg(){const g=MU.tg;if(g&&g.acc>0){const d=muD();d.log.unshift({fid:g.fid,tid:g.tid,sec:g.acc,ts:Date.now()});d.log.length=Math.min(d.log.length,200);g.acc=0;save()}}
+async function muPlay(i){const d=muD(),t=d.tracks[i];if(!t)return;muSeg();MU.i=i;
+ try{let s=t.src;if(t.kind=='local'){const b=await muGet(t.id);if(!b)return toast('本地音频已丢失，请重新上传');if(MU.url)URL.revokeObjectURL(MU.url);s=MU.url=URL.createObjectURL(b)}
+  MU.au.src=s;await MU.au.play();d.plays[t.id]=(d.plays[t.id]||0)+1;save()}catch(e){toast('无法播放：'+(e.message||'链接不可用或不支持跨域'))}
+ if(MU.tg)MU.tg.tid=t.id;renderMu()}
+const muNext=n=>{const c=muD().tracks.length;if(c)muPlay((MU.i+n+c)%c)};
+function muTgStart(id){const f=D.friends.find(v=>v.id==id),t=MU.t();if(!f)return;if(!t)return toast('先放一首歌再邀请');if(eLocked(f))return toast('此聊天已加密，请先解锁');
+ MU.tg={fid:id,tid:t.id,acc:0};const s=(muD().tg[id]=muD().tg[id]||{sec:0,n:0,last:0});s.n++;s.last=Date.now();(D.chats[id]=D.chats[id]||[]).push({r:'s',t:'你邀请「'+(f.remark||f.name)+'」一起听《'+t.t+'》',ts:Date.now()});save();renderMu();toast('开始和 '+(f.remark||f.name)+' 一起听')}
+function muTgEnd(){const g=MU.tg;if(!g)return;muSeg();const f=D.friends.find(v=>v.id==g.fid),s=muD().tg[g.fid];if(f&&s)(D.chats[f.id]=D.chats[f.id]||[]).push({r:'s',t:'一起听歌结束，累计 '+muDur(s.sec),ts:Date.now()});MU.tg=null;save();renderMu()}
+function muProg(){const A=MU.au,b=$('#mu-bar');if(b&&!MU.drag){b.max=A.duration||0;b.value=A.currentTime}const c=$('#mu-cur'),d=$('#mu-dur');if(c)c.textContent=muFmt(A.currentTime);if(d)d.textContent=muFmt(A.duration||0);
+ const box=$('#mu-ly'),L=MU.lr;if(!box||!L.length||L[0].s==null)return;let k=-1;for(let j=0;j<L.length;j++){if(L[j].s<=A.currentTime+.15+((MU.t()||{}).off||0))k=j;else break}
+ if(k!==MU.k){MU.k=k;box.querySelectorAll('p').forEach((p,j)=>p.classList.toggle('on',j==k));const e=box.children[k];if(e)box.scrollTo({top:e.offsetTop-box.clientHeight/2+e.clientHeight/2,behavior:'smooth'})}}
+function renderMu(){const A=$('#a-mu');if(!A||!A.classList.contains('on'))return;const d=muD(),t=MU.t(),pl=!MU.au.paused;MU.lr=t?muLrc(t.lrc):[];MU.k=-2;let h='';
+ const nm=f=>esc(f.remark||f.name),tabs=`<div class="tabs" style="margin-top:14px">${['播放','曲库','记录'].map((x,i)=>`<button class="${MU.tab==i?'a':''}" data-act="mutab:${i}">${x}</button>`).join('')}</div>`;
+ if(MU.tab==0){const g=MU.tg,gf=g&&D.friends.find(v=>v.id==g.fid),gs=g&&d.tg[g.fid]||{sec:0,n:0};
+  h=`<div class="mu-cv" style="background:${muGrad(t?t.id:'0')}">${GI.mu}</div><h3 class="mu-t">${t?esc(t.t):'未在播放'}</h3><div class="mu-a">${t?esc(t.a||'未知歌手'):'去「曲库」添加歌曲'}</div><div class="mu-ly" id="mu-ly">${MU.lr.length?MU.lr.map(l=>`<p>${esc(l.t)}</p>`).join(''):'<p class="d">暂无歌词 · 可在曲库里给这首歌添加</p>'}</div><input type="range" id="mu-bar" min="0" max="${t&&t.dur||0}" step="0.1" value="0"><div class="mu-tm"><span id="mu-cur">0:00</span><span id="mu-dur">0:00</span></div><div class="mu-ct"><button class="gl" data-act="mupv">${GI.prev}</button><button class="gl big" data-act="mupp">${pl?GI.pause:GI.play}</button><button class="gl" data-act="munx">${GI.next}</button></div>`
+  +(g&&gf?`<div class="mu-tgc on"><b>正在和 ${nm(gf)} 一起听</b><span>累计 <em id="mu-tg">${muDur(gs.sec)}</em> · 第 ${gs.n} 次</span><button class="gl" data-act="mutge">结束</button></div>`:`<div class="mu-tgc"><b>一起听</b><div class="mu-fr">${D.friends.map((f,k)=>`<button class="gl${MU.pick==f.id?' a':''}" data-act="mupk:${k}">${nm(f)}</button>`).join('')||'<span>先添加好友</span>'}</div><button class="gl" data-act="mutgs">开始一起听</button></div>`)}
+ else if(MU.tab==1)h=`<button class="gl wide" data-act="muadd" style="margin:6px 0 4px">＋ 添加歌曲（链接 / 本地上传）</button>`+(d.tracks.length?d.tracks.map((x,i)=>`<div class="mu-r${i==MU.i?' on':''}"><button class="mu-rm" data-act="muplay:${i}"><b>${esc(x.t)}</b><span>${esc(x.a||'未知歌手')} · ${x.kind=='local'?'本地':'链接'}${x.lrc?' · 有歌词':''}${x.dur?' · '+muFmt(x.dur):''}</span></button><button class="gl sm" data-act="mulrc:${i}">歌词</button><button class="gl sm dng" data-act="mudel:${i}">删</button></div>`).join(''):'<p class="mu-e">曲库是空的</p>');
+ else{const T=Object.values(d.tg).reduce((a,s)=>({s:a.s+s.sec,n:a.n+s.n}),{s:0,n:0}),top=d.tracks.map(x=>[x,d.plays[x.id]||0]).filter(x=>x[1]).sort((a,b)=>b[1]-a[1]).slice(0,5),fs=Object.entries(d.tg).map(([id,s])=>[D.friends.find(v=>v.id==id),s]).filter(x=>x[0]).sort((a,b)=>b[1].sec-a[1].sec);
+  h=`<div class="mu-st"><div class="mu-sc"><b>${muDur(T.s)}</b><span>一起听总时长</span></div><div class="mu-sc"><b>${T.n}</b><span>一起听次数</span></div><div class="mu-sc"><b>${d.tracks.length}</b><span>曲库歌曲</span></div><div class="mu-sc"><b>${Object.values(d.plays).reduce((a,b)=>a+b,0)}</b><span>累计播放</span></div></div>`
+  +'<div class="mono" style="margin:22px 0 4px">和谁一起听</div>'+(fs.length?fs.map(([f,s])=>`<div class="mu-r"><div class="mu-rm"><b>${nm(f)}</b><span>${s.n} 次 · ${muDur(s.sec)} · 最近 ${new Date(s.last).toLocaleDateString('zh-CN')}</span></div></div>`).join(''):'<p class="mu-e">还没有一起听过</p>')
+  +'<div class="mono" style="margin:22px 0 4px">播放最多</div>'+(top.length?top.map(([x,n])=>`<div class="mu-r"><div class="mu-rm"><b>${esc(x.t)}</b><span>${n} 次</span></div></div>`).join(''):'<p class="mu-e">暂无</p>')
+  +'<div class="mono" style="margin:22px 0 4px">最近记录</div>'+(d.log.length?d.log.slice(0,15).map(l=>{const x=d.tracks.find(v=>v.id==l.tid),f=D.friends.find(v=>v.id==l.fid);return `<div class="mu-r"><div class="mu-rm"><b>${x?esc(x.t):'已删除的歌曲'}</b><span>${f?nm(f):'?'} · ${muDur(l.sec)} · ${new Date(l.ts).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span></div></div>`}).join(''):'<p class="mu-e">暂无</p>')}
+ A.innerHTML=`<div class="scroll mu"><button class="mu-home" data-act="home">‹ 主页</button><div class="mono">12 / Music</div><hr class="k"><div class="hd"><h2>音乐</h2></div>${tabs}${h}</div>`;muProg()}
+{const A=MU.au;A.addEventListener('timeupdate',muProg);A.addEventListener('ended',()=>muEnd());A.addEventListener('play',renderMu);A.addEventListener('pause',renderMu);A.addEventListener('loadedmetadata',()=>{const t=MU.t();if(t&&isFinite(A.duration)){t.dur=A.duration;save()}muProg()})}
+setInterval(()=>{const a=MU.au;if(MU.tg&&!a.paused&&!a.ended){MU.tg.acc++;const s=muD().tg[MU.tg.fid];if(s){s.sec++;s.last=Date.now()}if(++MU.tick%10==0)save();const e=$('#mu-tg');if(e&&s)e.textContent=muDur(s.sec)}},1000);
+ph.addEventListener('input',e=>{if(e.target.id=='mu-bar'){MU.drag=1;MU.au.currentTime=+e.target.value}});
+ph.addEventListener('change',async e=>{const t=e.target;
+ if(t.id=='mu-bar')MU.drag=0;
+ else if(t.id=='mu-f'&&t.files.length){const d=muD(),ar=($('#mu-a')||{}).value||'';let n=0;for(const f of t.files){const id='m'+Date.now()+n;try{await muPut(id,f);d.tracks.push({id,t:f.name.replace(/\.[^.]+$/,''),a:ar,kind:'local',lrc:''});n++}catch(x){toast('保存失败：'+f.name)}}save();$('#sheet').className='';renderMu();toast('已添加 '+n+' 首')}
+ else if(t.id=='mu-lf'&&t.files[0]){const r=new FileReader();r.onload=()=>{const a=$('#mu-lx');if(a)a.value=r.result};r.readAsText(t.files[0]);t.value=''}});
+Object.assign(ACT,{
+ mutab:x=>{MU.tab=+x;renderMu()},
+ mupp:()=>{if(!MU.t())return muD().tracks.length?muPlay(0):toast('曲库还是空的');MU.au.paused?MU.au.play().catch(()=>toast('无法播放')):MU.au.pause()},
+ mupv:()=>muNext(-1),munx:()=>muNext(1),
+ muplay:x=>{MU.tab=0;muPlay(+x)},
+ mupk:x=>{MU.pick=(D.friends[+x]||{}).id;renderMu()},
+ mutgs:()=>{const f=MU.pick||(D.friends[cur]||{}).id;f?muTgStart(f):toast('先选一位好友')},
+ mutge:()=>muTgEnd(),
+ mutg:()=>{const f=D.friends[cur];if(!f)return;MU.pick=f.id;MU.tab=0;$('#cpl').innerHTML='';openApp('mu')},
+ muadd:()=>ioSh(ioHd('添加歌曲')+fld('标题（可选）','<input id="mu-t">')+fld('歌手（可选）','<input id="mu-a">')+fld('外部音频链接（http/https，需允许跨域播放）','<input id="mu-u" inputmode="url" autocapitalize="off" placeholder="https://…/song.mp3">')+'<button class="bt k w" data-act="muaddu">添加链接</button><label class="bt w" style="margin-top:10px;display:block;text-align:center;cursor:pointer">上传本地音频（可多选）<input type="file" accept="audio/*,.mp3,.m4a,.flac,.wav,.ogg" multiple hidden id="mu-f"></label>'+ioX),
+ muaddu:()=>{const u=($('#mu-u')||{}).value.trim();if(!/^https?:\/\//i.test(u))return toast('请输入 http(s) 开头的音频地址');muD().tracks.push({id:'m'+Date.now(),t:$('#mu-t').value.trim()||dc(u.split('?')[0].split('/').pop()||'未命名').replace(/\.\w+$/,''),a:$('#mu-a').value.trim(),kind:'url',src:u,lrc:''});save();$('#sheet').className='';renderMu();toast('已添加')},
+ mulrc:x=>{const t=muD().tracks[+x];if(!t)return;ioSh(ioHd('歌词 · '+esc(t.t))+fld('LRC 歌词（带时间轴会同步滚动，纯文本则静态显示）',`<textarea id="mu-lx" rows="8" placeholder="[00:12.50]第一句歌词">${esc(t.lrc||'')}</textarea>`)+'<label class="bt w" style="display:block;text-align:center;cursor:pointer">上传 .lrc / .txt<input type="file" accept=".lrc,.txt,text/plain" hidden id="mu-lf"></label>'+`<button class="bt k w" style="margin-top:10px" data-act="mulrcs:${x}">保存歌词</button>`+ioX)},
+ mulrcs:x=>{const t=muD().tracks[+x];if(!t)return;t.lrc=$('#mu-lx').value;save();$('#sheet').className='';renderMu();toast('歌词已保存')},
+ mudel:(x,y,b)=>{if(!ok2(b))return;const d=muD(),i=+x,t=d.tracks[i];if(!t)return;if(t.kind=='local')muDel(t.id).catch(()=>{});d.tracks.splice(i,1);if(MU.i==i){MU.au.pause();MU.au.removeAttribute('src');MU.i=-1}else if(MU.i>i)MU.i--;save();renderMu()}});
+document.getElementById('a-nox').insertAdjacentHTML('afterend','<section class="app" id="a-mu"></section>');
+document.getElementById('sms').parentNode.insertAdjacentHTML('beforeend','<symbol id="mu" viewBox="0 0 24 24"><path d="M9 18V5.5l11-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></symbol>');
+CON.mu={p:[[14,62],[30,40],[46,58],[62,32],[80,50]],e:[[0,1],[1,2],[2,3],[3,4]]};META.mu={n:'12',t:'Music',ic:'mu'};APPS.push(['mu','音乐','Music']);
+$('#hg').innerHTML=APPS.map(a=>`<button class="ap" data-act="app:${a[0]}">${appIcon(a[0],52)}<b>${a[1]}</b><em>${a[2]}</em><i class="bd2" id="b-${a[0]}"></i></button>`).join('');
+{const _s=show;show=function(id){const r=_s.apply(this,arguments);if(id=='mu')renderMu();return r}}
+{const s26=document.createElement('style');s26.textContent=`
+:root{--gl:color-mix(in srgb,var(--bg) 44%,transparent);--glb:rgba(255,255,255,.5);--glh:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -1px 0 rgba(255,255,255,.12),0 8px 22px -10px rgba(0,0,0,.35)}
+/* 液态玻璃：聊天室 / 短信按钮 */
+#wxo .inp .io-plus,#wxo .inp .io-pill,#wxo .ioch .ioc-b,#wxo .ioch .ioc-r,#wxo .ioch .ioc-name{background:var(--gl);-webkit-backdrop-filter:blur(20px) saturate(1.8);backdrop-filter:blur(20px) saturate(1.8);border:.5px solid var(--glb);box-shadow:var(--glh)}
+#wxo .inp .io-pill{position:relative;overflow:visible}
+#wxo .inp .io-pill::after{content:"";position:absolute;right:24px;bottom:-7px;width:15px;height:9px;background:var(--gl);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);clip-path:polygon(0 0,100% 0,100% 100%)}
+#wxo .inp .io-pill #snd{background:var(--fg);color:var(--bg);box-shadow:0 6px 16px -8px rgba(0,0,0,.45)}
+/* 加号面板 */
+.gpn,#cpl .emg,.gem{position:relative}
+.gpn{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 4px;margin:4px 14px 14px;padding:18px 8px 14px;border-radius:30px;background:linear-gradient(145deg,color-mix(in srgb,var(--bg) 66%,transparent),color-mix(in srgb,var(--bg) 34%,transparent));-webkit-backdrop-filter:blur(28px) saturate(1.9);backdrop-filter:blur(28px) saturate(1.9);border:.5px solid var(--glb);box-shadow:inset 0 1px 0 rgba(255,255,255,.65),inset 0 -1px 0 rgba(255,255,255,.1),0 20px 44px -16px rgba(0,0,0,.4);transform-origin:12% 100%;animation:gpop .38s cubic-bezier(.2,.95,.3,1.25)}
+.gpn::after{content:"";position:absolute;left:24px;bottom:-9px;width:20px;height:10px;background:color-mix(in srgb,var(--bg) 52%,transparent);-webkit-backdrop-filter:blur(28px);backdrop-filter:blur(28px);clip-path:polygon(0 0,100% 0,28% 100%)}
+@keyframes gpop{from{opacity:0;transform:translateY(14px) scale(.86)}}
+.gb{display:flex;flex-direction:column;align-items:center;gap:7px;font:500 11.5px -apple-system,"PingFang SC","Noto Sans CJK SC",sans-serif;color:var(--fg);cursor:pointer}
+.gb i{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;color:var(--fg);position:relative;overflow:hidden;background:linear-gradient(150deg,color-mix(in srgb,var(--fg) 14%,var(--bg)),color-mix(in srgb,var(--fg) 4%,var(--bg)));border:.5px solid var(--ln);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -3px 8px rgba(0,0,0,.05),0 10px 20px -12px rgba(0,0,0,.5);transition:transform .2s}
+.gb i::after{content:"";position:absolute;left:12%;top:5%;width:76%;height:44%;border-radius:50%;background:linear-gradient(rgba(255,255,255,.45),transparent)}
+.gb:active i{transform:scale(.9)}
+#cpl .emg,.gem{margin:4px 14px 14px;border-radius:26px;background:var(--gl);-webkit-backdrop-filter:blur(26px) saturate(1.8);backdrop-filter:blur(26px) saturate(1.8);border:.5px solid var(--glb);box-shadow:var(--glh)}
+.gem{grid-column:1/-1;display:grid;grid-template-columns:repeat(8,1fr);gap:2px;padding:6px}.gem button{font-size:22px;padding:5px}
+/* 音乐 · 极简黑白杂志风 */
+.gl{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 18px;background:none;border:1px solid var(--fg);border-radius:0;color:var(--fg);font:400 10px var(--mono);letter-spacing:.3em;text-transform:uppercase;white-space:nowrap;transition:background .5s var(--ez),color .5s var(--ez)}
+.gl:active,.gl.a{background:var(--fg);color:var(--bg)}.gl.dng{border-color:var(--ln);color:var(--mut)}.gl.sm{padding:7px 10px;font-size:9px;letter-spacing:.2em}.gl.wide{width:100%}
+.gi{width:26px;height:26px;display:block}#a-mu .gi{stroke-width:1}
+#a-mu .scroll.mu{padding:14px 32px 120px}
+.mu-home{font:400 9.5px var(--mono);letter-spacing:.32em;color:var(--mut);padding:4px 0 8px;text-transform:uppercase}
+.mu-cv{width:100%;height:210px;margin:22px 0 18px;border:1px solid var(--ln);display:grid;place-items:center;color:var(--fg)}.mu-cv .gi{width:54px;height:54px;stroke-width:.8}
+.mu-t{font:300 40px/1.05 var(--serif);letter-spacing:-.01em;margin-top:6px}
+.mu-a{font:italic 300 17px var(--serif);color:var(--mut);margin:6px 0 14px}
+.mu-ly{position:relative;height:150px;overflow:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent);mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent)}.mu-ly::-webkit-scrollbar{display:none}
+.mu-ly p{font:italic 300 17px/1.6 var(--serif);color:var(--mut);padding:4px 0;transition:.4s}.mu-ly p.on{color:var(--fg);font-style:normal;font-size:21px}.mu-ly p.d{margin-top:52px;font-size:15px}
+#mu-bar{width:100%;accent-color:var(--fg);margin-top:14px}
+.mu-tm{display:flex;justify-content:space-between;font:400 9.5px var(--mono);letter-spacing:.2em;color:var(--mut);margin-top:6px}
+.mu-ct{display:flex;justify-content:space-between;align-items:center;margin:20px 0 26px}.mu-ct .gl{width:60px;height:60px;padding:0;border-radius:50%}.mu-ct .gl.big{width:76px;height:76px}.mu-ct .gi{width:24px;height:24px}
+.mu-tgc{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--ln);padding-top:18px;font:300 15px var(--serif);color:var(--mut)}.mu-tgc b{font:400 10px var(--mono);letter-spacing:.32em;text-transform:uppercase;color:var(--fg)}.mu-tgc.on em{font-style:italic;color:var(--fg)}
+.mu-fr{display:flex;flex-wrap:wrap;gap:8px}
+.mu-r{display:flex;align-items:center;gap:8px;padding:16px 0;border-bottom:1px solid var(--ln)}.mu-r.on b{font-style:italic}
+.mu-rm{flex:1;min-width:0;text-align:left}.mu-rm b{display:block;font:400 22px/1.15 var(--serif);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mu-rm span{display:block;font:400 9px var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--mut);margin-top:5px}
+.mu-e{color:var(--mut);font:italic 300 16px var(--serif);padding:14px 0}
+.mu-st{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--ln);margin-top:18px}.mu-sc{padding:18px 0;border-bottom:1px solid var(--ln)}.mu-sc:nth-child(odd){padding-right:14px;border-right:1px solid var(--ln)}.mu-sc:nth-child(even){padding-left:18px}.mu-sc b{display:block;font:300 40px/1 var(--serif)}.mu-sc span{display:block;margin-top:8px;font:400 9px var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--mut)}
+`;document.head.appendChild(s26)}
+
+
+Object.assign(ACT,{
+ smvo:()=>{const o=$('#smpl');o&&o.remove();ioSh(ioHd('语音消息')+'<div class="row" style="margin-top:0"><button class="bt k" data-act="smvr">开始录音</button></div>'+fld('转写内容','<textarea id="smvt" rows="3" placeholder="点「开始录音」说话；不支持语音识别时请直接输入"></textarea>')+'<button class="bt k w" data-act="smvs">发送语音</button>'+ioX)},
+ smvr:(x,y,t)=>{const S=window.SpeechRecognition||window.webkitSpeechRecognition;if(MU.rec){try{MU.rec.stop()}catch(e){}MU.rec=null;t.textContent='开始录音';return}if(!S)return toast('当前浏览器不支持语音识别，请手动输入');try{const r=MU.rec=new S();r.lang='zh-CN';r.interimResults=true;r.onresult=e=>{const v=$('#smvt');if(v)v.value=[...e.results].map(q=>q[0].transcript).join('')};r.onend=()=>{MU.rec=null;if(t.isConnected)t.textContent='开始录音'};r.start();t.textContent='停止录音'}catch(e){MU.rec=null}},
+ smvs:()=>{if(MU.rec){try{MU.rec.stop()}catch(e){}MU.rec=null}const v=($('#smvt')||{}).value.trim();if(!v)return toast('请先说话或输入内容');$('#sheet').className='';smPost(sv,{text:'[语音] '+v})}});
+
+/* ---------- v27：头像铺满 / 聊天室一起听卡片 · 提示条 ---------- */
+function muSkin(){const f=D.friends[cur];if(!f)return;const c=D.chats[f.id]||[];document.querySelectorAll('#ms [id^="mg"]').forEach(b=>{const mt=/^mg(\d+)$/.exec(b.id),m=mt&&c[+mt[1]];if(!m||!m.mu)return;b.classList.add('mucd');const T=MU.t(),live=MU.tg&&MU.tg.fid==f.id&&T&&T.id==m.mu.id;
+ b.innerHTML=`<span class="mc-k">Listen together · 一起听</span><b class="mc-t">${esc(m.mu.t)}</b><i class="mc-a">${esc(m.mu.a||'未知歌手')}</i><span class="mc-f"><em>${m.r=='u'?'你发起了邀请':'TA 邀请你'}${live?' · 进行中':''}</em><button class="mc-b" data-act="mujoin">${live?'打开':'加入'} →</button></span>`})}
+{const _d=drawMsgs;drawMsgs=function(){const r=_d.apply(this,arguments);try{muSkin()}catch(e){}return r}}
+{const _i=ioCtx;ioCtx=function(){try{muSkin()}catch(e){}return _i.apply(this,arguments)}}
+function muSendCard(f){const t=MU.t();if(!t||!f)return;if(eLocked(f))return toast('此聊天已加密，请先解锁');if(MU.tg&&MU.tg.fid!=f.id)muTgEnd();
+ const c=D.chats[f.id]=D.chats[f.id]||[];c.push({r:'u',t:'[一起听] 邀请你一起听《'+t.t+'》'+(t.a?' — '+t.a:''),mu:{id:t.id,t:t.t,a:t.a||'',n:muNum(t.id),d:t.dur||0,k:t.kind},ts:Date.now()});fresh=c.length-1;save();
+ if(!MU.tg)muTgStart(f.id);if(MU.au.paused)MU.au.play().catch(()=>{});drawMsgs();muBar();if(!f.local&&!ctl)gen(f)}
+function muBar(){const o=$('#wxo'),f=D.friends[cur],T=MU.t();let b=$('#mubar');const on=o&&o.classList.contains('on')&&f&&MU.tg&&MU.tg.fid==f.id&&T;if(!on){b&&b.remove();return}
+ const pl=!MU.au.paused,k=pl+'|'+T.id;if(!b){o.insertAdjacentHTML('beforeend','<div id="mubar"></div>');b=$('#mubar')}
+ if(b.dataset.k!==k){b.dataset.k=k;b.innerHTML=`<span class="mb-cv" style="background:${muGrad(T.id)}">${GI.mu}</span><span class="mb-tx"><b>${esc(T.t)}</b><small>${pl?'♪ 一起听中':'已暂停'} · <time></time></small></span><button class="mb-b" data-act="mubp">${pl?GI.pause:GI.play}</button><button class="mb-x" data-act="mubx">结束</button>`}
+ b.querySelector('time').textContent=muFmt((muD().tg[f.id]||{sec:0}).sec)}
+setInterval(muBar,1000);
+{const _o=openChat;openChat=function(){const r=_o.apply(this,arguments);try{muBar()}catch(e){}return r}}
+{const _p=muPlay;muPlay=async function(i){const r=await _p.apply(this,arguments);try{const t=muD().tracks[i],g=MU.tg;if(g&&t&&MU.i==i){(D.chats[g.fid]=D.chats[g.fid]||[]).push({r:'s',t:'一起听 · 现在播放《'+t.t+'》',ts:Date.now()});save();if(D.friends[cur]&&D.friends[cur].id==g.fid&&$('#wxo').classList.contains('on'))drawMsgs()}}catch(e){}return r}}
+Object.assign(ACT,{
+ mutg:()=>{const f=D.friends[cur];if(!f)return;$('#cpl').innerHTML='';if(!MU.t()){MU.pick=f.id;MU.tab=1;toast('先选一首歌，再回来发起一起听');openApp('mu');return}muSendCard(f)},
+ mujoin:()=>{const f=D.friends[cur];if(f&&MU.t()&&(!MU.tg||MU.tg.fid!=f.id))muTgStart(f.id);MU.pick=f?f.id:null;MU.tab=0;openApp('mu')},
+ mubp:()=>{MU.au.paused?MU.au.play().catch(()=>{}):MU.au.pause();setTimeout(muBar,150)},
+ mubx:()=>{muTgEnd();muBar();if($('#wxo').classList.contains('on'))drawMsgs()}});
+{const s27=document.createElement('style');s27.textContent=`
+#iow .io-av{position:relative;display:block;width:58px;height:58px;border-radius:16px;padding:0;overflow:hidden;font:600 22px/58px var(--ios);text-align:center}
+.io-row .io-av{position:relative}
+#iow .io-av img,.io-row .io-av img{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;object-fit:cover}
+`;document.head.appendChild(s27)}
+
+/* ---------- v28：网易云式一起听分享卡片（长方形 · 点开看歌曲 ID） ---------- */
+function muNum(id){let h=7;for(const c of String(id))h=(h*131+c.charCodeAt(0))>>>0;return 1000000000+h%900000000}
+muSkin=function(){const f=D.friends[cur];if(!f)return;const c=D.chats[f.id]||[];document.querySelectorAll('#ms [id^="mg"]').forEach(b=>{const mt=/^mg(\d+)$/.exec(b.id),m=mt&&c[+mt[1]];if(!m||!m.mu)return;b.classList.add('mcd');
+ b.innerHTML=`<span class="mcd-in" data-act="mucd:${mt[1]}"><span class="mcd-top"><i class="mcd-cv">${GI.mu}</i><span class="mcd-tx"><b>${esc(m.mu.t)}</b><em>${esc(m.mu.a||'未知歌手')}</em></span></span><span class="mcd-ft"><span>POCKET Music · 一起听</span><span>›</span></span></span>`})};
+Object.assign(ACT,{
+ mucd:x=>{const f=D.friends[cur],m=f&&(D.chats[f.id]||[])[+x];if(!m||!m.mu)return;const u=m.mu,n=u.n||muNum(u.id),live=MU.tg&&MU.tg.fid==f.id&&MU.t()&&MU.t().id==u.id;
+  ioSh(ioHd('Song / 歌曲信息')+`<h2 style="font:300 34px/1.1 var(--serif,serif);letter-spacing:-.01em;margin:4px 0 4px">${esc(u.t)}</h2><div class="mono" style="text-transform:none;letter-spacing:.04em;margin-bottom:12px">${esc(u.a||'未知歌手')}</div>`
+   +[['歌曲 ID',n],['来源',u.k=='local'?'本地上传':'外部链接'],['时长',u.d?muFmt(u.d):'--:--'],['分享时间',new Date(m.ts).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})],['状态',live?'一起听进行中':'未在一起听']].map(([a,b])=>`<div class="rpd-r"><span>${a}</span><span>${esc(String(b))}</span></div>`).join('')
+   +`<button class="bt k w" style="margin-top:16px" data-act="mucid:${n}">复制歌曲 ID</button><button class="bt w" style="margin-top:10px" data-act="mujoin2">${live?'打开音乐':'加入一起听'}</button>`+ioX)},
+ mucid:async x=>{toast(await msCopy(String(x))?'已复制歌曲 ID '+x:'复制失败')},
+ mujoin2:()=>{$('#sheet').className='';ACT.mujoin()}});
+
+
+/* ---------- v29：iOS 风格一起听卡片（我方发出）+ 音乐 App 样式重构 ---------- */
+function muGrad(id){const h=muNum(id)%360;return `linear-gradient(145deg,hsl(${h} 72% 62%),hsl(${(h+48)%360} 78% 42%))`}
+muSkin=function(){const f=D.friends[cur];if(!f)return;const c=D.chats[f.id]||[];document.querySelectorAll('#ms [id^="mg"]').forEach(b=>{const mt=/^mg(\d+)$/.exec(b.id),m=mt&&c[+mt[1]];if(!m||!m.mu)return;b.classList.add('mcd');
+ b.innerHTML=`<span class="mcd-in" data-act="mucd:${mt[1]}"><span class="mcd-cv" style="background:${muGrad(m.mu.id)}">${GI.mu}</span><span class="mcd-bd"><b>${esc(m.mu.t)}</b><em>${esc(m.mu.a||'未知歌手')}</em></span><span class="mcd-ft"><span>♪ POCKET Music</span><span class="mcd-pl">一起听</span></span></span>`})};
+ACT.mucd=x=>{const f=D.friends[cur],m=f&&(D.chats[f.id]||[])[+x];if(!m||!m.mu)return;const u=m.mu,n=u.n||muNum(u.id),live=MU.tg&&MU.tg.fid==f.id&&MU.t()&&MU.t().id==u.id,F='-apple-system,"PingFang SC","Noto Sans CJK SC",sans-serif';
+ ioSh(ioHd('Song / 歌曲信息')+`<div style="display:flex;gap:14px;align-items:center;margin:2px 0 14px"><i class="mcd-cv sm" style="background:${muGrad(u.id)}">${GI.mu}</i><div style="min-width:0"><div style="font:700 22px/1.2 ${F}">${esc(u.t)}</div><div style="font:400 15px ${F};color:var(--mut);margin-top:3px">${esc(u.a||'未知歌手')}</div></div></div>`
+  +[['歌曲 ID',n],['来源',u.k=='local'?'本地上传':'外部链接'],['时长',u.d?muFmt(u.d):'--:--'],['分享时间',new Date(m.ts).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})],['状态',live?'一起听进行中':'未在一起听']].map(([a,b])=>`<div class="rpd-r"><span>${a}</span><span>${esc(String(b))}</span></div>`).join('')
+  +`<button class="bt k w" style="margin-top:16px;background:#0a84ff;border-color:#0a84ff;color:#fff;border-radius:14px" data-act="mucid:${n}">复制歌曲 ID</button><button class="bt w" style="margin-top:10px;border-radius:14px" data-act="mujoin2">${live?'打开音乐':'加入一起听'}</button>`+ioX)};
+{const s29=document.createElement('style');s29.textContent=`
+/* 聊天室里我方发出的卡片（iOS 富链接样式） */
+#wxo .msgs .m.mcd,#wxo .msgs .m.u.mcd{width:min(252px,70vw);max-width:none;padding:0;border-radius:20px;background:var(--gy);color:var(--fg);border:0;box-shadow:none;overflow:hidden;display:block;white-space:normal}
+#wxo .msgs .m.mcd::before,#wxo .msgs .m.mcd::after{display:none}
+.mcd-in{display:block;cursor:pointer;text-align:left}
+.mcd-cv{position:relative;display:grid;place-items:center;height:128px;color:rgba(255,255,255,.94);overflow:hidden}
+.mcd-cv .gi{width:46px;height:46px;stroke-width:1.5;position:relative;z-index:1}
+.mcd-cv::before,.mcd-cv::after{content:"";position:absolute;border-radius:50%;border:1px solid rgba(255,255,255,.28)}
+.mcd-cv::before{width:170px;height:170px;right:-50px;top:-60px}.mcd-cv::after{width:110px;height:110px;left:-30px;bottom:-50px}
+.mcd-cv.sm{width:76px;height:76px;border-radius:18px;flex:none}.mcd-cv.sm .gi{width:34px;height:34px}
+.mcd-bd{display:block;padding:11px 14px 4px}
+.mcd-bd b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font:600 16px/1.3 var(--ios)}
+.mcd-bd em{display:block;margin-top:3px;font:400 13px var(--ios);font-style:normal;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mcd-ft{display:flex;justify-content:space-between;align-items:center;padding:6px 14px 12px;font:500 11px var(--ios);color:var(--mut)}
+.mcd-pl{padding:4px 10px;border-radius:999px;background:var(--fg);color:var(--bg);font-weight:600}
+/* 音乐 App · iOS 重构 */
+#a-mu{--ios:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Noto Sans CJK SC",sans-serif;font-family:var(--ios)}
+#a-mu .scroll.mu{padding:6px 24px 120px}
+#a-mu .scroll.mu>.mono,#a-mu .scroll.mu>hr.k{display:none}
+#a-mu .mu-home{font:400 16px var(--ios);letter-spacing:0;text-transform:none;color:var(--fg);padding:6px 0 2px}
+#a-mu .hd h2{font:800 34px/1.1 var(--ios);letter-spacing:-.02em}
+#a-mu .tabs{display:flex;gap:0;padding:3px;margin:14px 0 6px;background:var(--soft);border:0;border-radius:12px}
+#a-mu .tabs button{flex:1;padding:8px 0;border:0;border-radius:9px;background:transparent;color:var(--fg);font:500 13px var(--ios);letter-spacing:0;text-transform:none}
+#a-mu .tabs button.a{background:var(--bg);color:var(--fg);box-shadow:0 1px 4px rgba(0,0,0,.16)}
+#a-mu .gl{padding:9px 16px;border:0;border-radius:999px;background:var(--soft);color:var(--fg);font:600 13px var(--ios);letter-spacing:0;text-transform:none}
+#a-mu .gl:active{background:color-mix(in srgb,var(--fg) 14%,var(--bg));color:var(--fg)}
+#a-mu .gl.a{background:var(--fg);color:var(--bg)}#a-mu .gl.dng{color:#ff3b30;background:var(--soft)}#a-mu .gl.sm{padding:6px 12px;font-size:12px}
+#a-mu .gi{stroke-width:1.6}
+#a-mu .mu-cv{width:min(100%,280px);height:auto;aspect-ratio:1/1;margin:20px auto 22px;border:0;border-radius:26px;color:rgba(255,255,255,.95);box-shadow:0 22px 40px -18px rgba(0,0,0,.5);position:relative;overflow:hidden}
+#a-mu .mu-cv .gi{width:76px;height:76px;stroke-width:1.2;position:relative;z-index:1}
+#a-mu .mu-cv::before,#a-mu .mu-cv::after{content:"";position:absolute;border-radius:50%;border:1px solid rgba(255,255,255,.26)}
+#a-mu .mu-cv::before{width:70%;height:70%;right:-18%;top:-22%}#a-mu .mu-cv::after{width:50%;height:50%;left:-10%;bottom:-18%}
+#a-mu .mu-t{font:700 24px/1.2 var(--ios);letter-spacing:-.01em;margin:0;text-align:center}
+#a-mu .mu-a{font:400 16px var(--ios);font-style:normal;color:var(--mut);margin:4px 0 12px;text-align:center}
+#a-mu .mu-ly{height:132px;text-align:center}
+#a-mu .mu-ly p{font:700 18px/1.5 var(--ios);font-style:normal;color:color-mix(in srgb,var(--fg) 32%,var(--bg));padding:5px 8px}
+#a-mu .mu-ly p.on{color:var(--fg);font-size:20px}#a-mu .mu-ly p.d{font:400 13px var(--ios);margin-top:48px;color:var(--mut)}
+#a-mu #mu-bar{-webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:3px;background:color-mix(in srgb,var(--fg) 14%,transparent);outline:0;margin:14px 0 0}
+#a-mu #mu-bar::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--fg);border:0}
+#a-mu #mu-bar::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--fg);border:0}
+#a-mu .mu-tm{font:500 11px var(--ios);letter-spacing:0;margin-top:6px}
+#a-mu .mu-ct{justify-content:center;gap:34px;margin:14px 0 26px}
+#a-mu .mu-ct .gl{width:56px;height:56px;padding:0;background:transparent}
+#a-mu .mu-ct .gl .gi{width:30px;height:30px;fill:currentColor;stroke:currentColor}
+#a-mu .mu-ct .gl.big{width:72px;height:72px;background:var(--fg);color:var(--bg)}#a-mu .mu-ct .gl.big .gi{width:32px;height:32px}
+#a-mu .mu-tgc{gap:12px;padding:16px;border:0;border-radius:22px;background:var(--soft);font:400 14px var(--ios);color:var(--mut)}
+#a-mu .mu-tgc b{font:600 16px var(--ios);letter-spacing:0;text-transform:none;color:var(--fg)}#a-mu .mu-tgc.on em{font-style:normal;font-weight:600}
+#a-mu .mu-tgc .gl{background:var(--bg)}#a-mu .mu-tgc .gl.a{background:var(--fg)}
+#a-mu .mu-r{padding:12px 0;border-bottom:.5px solid var(--ln)}#a-mu .mu-r.on b{font-style:normal;color:#0a84ff}
+#a-mu .mu-rm b{font:600 17px/1.3 var(--ios)}
+#a-mu .mu-rm span{font:400 13px var(--ios);letter-spacing:0;text-transform:none;margin-top:3px}
+#a-mu .mu-e{font:400 14px var(--ios);font-style:normal}
+#a-mu .mu-st{gap:10px;border:0;margin-top:14px}
+#a-mu .mu-sc,#a-mu .mu-sc:nth-child(odd),#a-mu .mu-sc:nth-child(even){padding:16px;border:0;border-radius:20px;background:var(--soft)}
+#a-mu .mu-sc b{font:700 26px var(--ios)}#a-mu .mu-sc span{font:400 12px var(--ios);letter-spacing:0;text-transform:none;margin-top:4px}
+#a-mu .mono{font:600 13px var(--ios);letter-spacing:0;text-transform:none;color:var(--mut)}
+`;document.head.appendChild(s29)}
+
+{const s30=document.createElement('style');s30.textContent=`
+#mubar{position:absolute;left:14px;right:14px;top:calc(var(--ioh,100px) + 2px);z-index:7;display:flex;align-items:center;gap:10px;padding:8px;border-radius:24px;background:color-mix(in srgb,var(--bg) 72%,transparent);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);border:.5px solid rgba(255,255,255,.5);box-shadow:0 10px 28px -12px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.6);color:var(--fg)}
+#mubar .mb-cv{width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;color:#fff}#mubar .mb-cv .gi{width:19px;height:19px}
+#mubar .mb-tx{flex:1;min-width:0}
+#mubar b{display:block;font:600 14px var(--ios);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#mubar small{display:block;margin-top:1px;font:400 11px var(--ios);color:var(--mut)}
+#mubar .mb-b{width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--fg);color:var(--bg)}#mubar .mb-b .gi{width:17px;height:17px;fill:currentColor}
+#mubar .mb-x{padding:8px 13px;border-radius:999px;background:color-mix(in srgb,var(--fg) 8%,transparent);font:600 12px var(--ios);color:#ff3b30;white-space:nowrap}
+`;document.head.appendChild(s30)}
+
+/* ---------- v31：PWA 图标（月相星宿 / 各 App 图标 · 自选或每日轮换） ---------- */
+const pwS=()=>(D.pw=D.pw||{sel:'moon',auto:0,light:0});
+const PWN={moon:'月相星宿'};APPS.forEach(a=>PWN[a[0]]=a[1]);
+const pwPool=()=>['moon',...APPS.map(a=>a[0])];
+function pwSVG(id,light,sz){const X='xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="'+sz+'" height="'+sz+'"';let svg;
+ if(id=='moon'){const m=moonD(50,52,22,mPhase()),P=[[14,32],[28,16],[50,10],[72,16],[86,32],[86,70],[66,88],[32,86]],E=[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7]];
+  const dust=[...Array(12)].map((_,i)=>`<circle cx="${(i*47+13)%88+6}" cy="${(i*29+7)%88+6}" r=".7" fill="#fff" opacity=".45"/>`).join('');
+  svg=`<svg ${X}><rect width="100" height="100" fill="#0b0b0c"/><g transform="translate(8 8) scale(.84)">${dust}<circle cx="50" cy="52" r="22" fill="none" stroke="#fff" stroke-width=".8" opacity=".5"/><path d="${m.d}" fill="#fff"${m.w?' transform="translate(100 0) scale(-1 1)"':''}/>${E.map(([a,b])=>`<path d="M${P[a]}L${P[b]}" stroke="#fff" stroke-width=".7" opacity=".5" fill="none"/>`).join('')}${P.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="${i%3==0?2.4:1.5}" fill="#fff"/>`).join('')}</g></svg>`}
+ else svg=appIcon(id,100).replace(/<svg[^>]*>/,'<svg '+X+'>').replace('rx="24" fill="#0b0b0c"/>','fill="#0b0b0c"/><g transform="translate(8 8) scale(.84)">').replace('</svg>','</g></svg>');
+ return light?svg.replace(/#fff/g,'#111').replace(/#0b0b0c/g,'#f4f4f2'):svg}
+const pwCur=()=>{const p=pwS(),pool=pwPool();return p.auto?pool[Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/864e5)%pool.length]:(pool.includes(p.sel)?p.sel:'moon')};
+const pwPNG=(svg,z)=>new Promise(ok=>{const i=new Image();i.onload=()=>{const c=document.createElement('canvas');c.width=c.height=z;c.getContext('2d').drawImage(i,0,0,z,z);ok(c.toDataURL('image/png'))};i.onerror=()=>ok(null);i.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)});
+async function pwApply(){try{const p=pwS(),id=pwCur(),[a,b,c]=await Promise.all([180,192,512].map(z=>pwPNG(pwSVG(id,p.light,z),z)));if(!c)return;
+ const L=(rel,href)=>{let e=document.head.querySelector('link[rel="'+rel+'"]');if(!e){e=document.createElement('link');e.rel=rel;document.head.appendChild(e)}e.href=href;return e};
+ L('icon',b).type='image/png';L('apple-touch-icon',a);const bg=p.light?'#f4f4f2':'#0b0b0c';
+ const man={name:'POCKET',short_name:'POCKET',display:'standalone',orientation:'portrait',start_url:location.href.split('#')[0],background_color:bg,theme_color:bg,icons:[{src:b,sizes:'192x192',type:'image/png',purpose:'any maskable'},{src:c,sizes:'512x512',type:'image/png',purpose:'any maskable'}]};
+ if(pwApply.u)URL.revokeObjectURL(pwApply.u);pwApply.u=URL.createObjectURL(new Blob([JSON.stringify(man)],{type:'application/manifest+json'}));L('manifest',pwApply.u);
+ let m=document.head.querySelector('meta[name="apple-mobile-web-app-title"]');if(!m){m=document.createElement('meta');m.name='apple-mobile-web-app-title';document.head.appendChild(m)}m.content='POCKET';
+ pwApply.png=c;pwApply.id=id}catch(e){console.error(e)}}
+function pwSheet(){const p=pwS(),cur=pwCur();
+ ioSh(ioHd('App Icon / 应用图标')+`<p class="mono" style="text-transform:none;letter-spacing:.02em;line-height:1.7;margin:2px 0 12px">选一个作为 PWA 图标，或开启每日轮换。「月相星宿」会随当天月相变化。已安装的图标是否刷新取决于系统：iOS 需删除后重新「添加到主屏幕」，安卓 Chrome 会过一阵自行更新。</p><div class="pwg">${pwPool().map(id=>`<button class="pwt${id==cur?' on':''}" data-act="pwpick:${id}"><span>${pwSVG(id,p.light,64)}</span><small>${PWN[id]}</small></button>`).join('')}</div>`+T('浅色底',!!p.light,'pwlight')+T('每日轮换（每天换下一个）',!!p.auto,'pwauto')+`<button class="bt k w" style="margin-top:12px" data-act="pwdl">下载当前图标 PNG</button>`+ioX)}
+Object.assign(ACT,{
+ pwicon:()=>pwSheet(),
+ pwpick:x=>{const p=pwS();p.sel=x;p.auto=0;save();pwApply().then(pwSheet);toast('图标已设为「'+(PWN[x]||x)+'」')},
+ pwlight:()=>{const p=pwS();p.light=p.light?0:1;save();pwApply().then(pwSheet)},
+ pwauto:()=>{const p=pwS();p.auto=p.auto?0:1;save();pwApply().then(pwSheet)},
+ pwdl:()=>{if(!pwApply.png)return toast('图标尚未生成');const a=document.createElement('a');a.href=pwApply.png;a.download='pocket-icon-'+pwApply.id+'.png';document.body.appendChild(a);a.click();a.remove()}});
+{const s31=document.createElement('style');s31.textContent=`
+.pwg{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 10px;margin-bottom:8px}
+.pwt{display:flex;flex-direction:column;align-items:center;gap:6px}
+.pwt span{display:block;width:100%;border-radius:22%;overflow:hidden;box-shadow:0 0 0 1px var(--ln)}.pwt span svg{display:block;width:100%;height:auto}
+.pwt.on span{box-shadow:0 0 0 2.5px var(--fg)}
+.pwt small{font:400 11px var(--sys);color:var(--mut)}.pwt.on small{color:var(--fg);font-weight:600}
+`;document.head.appendChild(s31)}
+setTimeout(pwApply,800);
+
+/* ---------- v32：音乐增强（播放模式 / 喜欢 / 搜索 / 倍速 / 睡眠定时 / 锁屏控制） ---------- */
+const MMODE=['顺序播放','随机播放','单曲循环'],MRATE=[1,1.25,1.5,2,0.75];
+const muRnd=()=>{const n=muD().tracks.length;let k;do{k=Math.floor(Math.random()*n)}while(k==MU.i&&n>1);return k};
+function muEnd(){const d=muD();if(MU.sleepEnd){MU.sleepEnd=0;MU.sleepAt=0;return renderMu()}
+ if(d.mode==2&&MU.i>=0)return muPlay(MU.i);
+ if(d.mode==1&&d.tracks.length>1)return muPlay(muRnd());
+ muNext(1)}
+function muFilter(){const q=(MU.q||'').trim().toLowerCase(),d=muD();document.querySelectorAll('#a-mu .mu-r[data-i]').forEach(r=>{const x=d.tracks[+r.dataset.i];r.style.display=x&&(!MU.fv||x.fav)&&(!q||(x.t+' '+(x.a||'')).toLowerCase().includes(q))?'':'none'})}
+function muPlus(){const A=$('#a-mu'),sc=A&&A.classList.contains('on')&&A.querySelector('.scroll.mu');if(!sc)return;const d=muD();
+ if(MU.tab==0){const ct=sc.querySelector('.mu-ct');if(!ct)return;const t=MU.t(),r=MU.au.playbackRate,lf=MU.sleepEnd?'播完停':MU.sleepAt?Math.ceil((MU.sleepAt-Date.now())/6e4)+' 分':'';
+  ct.insertAdjacentHTML('afterend',`<div class="mu-x"><button class="gl${d.mode?' a':''}" data-act="mumode">${MMODE[d.mode||0]}</button><button class="gl${t&&t.fav?' a':''}" data-act="mufav:${MU.i}">${t&&t.fav?'♥ 已喜欢':'♡ 喜欢'}</button><button class="gl${r!=1?' a':''}" data-act="murate">${r}x</button><button class="gl${lf?' a':''}" data-act="musleep">${lf?'定时 '+lf:'定时'}</button></div><div class="mu-x" style="margin-top:-8px"><button class="gl sm" data-act="muoff:-0.5">歌词延后</button><button class="gl sm" disabled style="opacity:.6">${(t&&t.off)||0}s</button><button class="gl sm" data-act="muoff:0.5">歌词提前</button></div>`)}
+ else if(MU.tab==1){sc.querySelectorAll('.mu-r').forEach(r=>{const m=/muplay:(\d+)/.exec(r.innerHTML);if(!m)return;const i=+m[1],x=d.tracks[i];if(!x)return;r.dataset.i=i;const l=r.querySelector('[data-act^="mulrc"]');if(l)l.insertAdjacentHTML('beforebegin',`<button class="gl sm" data-act="muedit:${i}">改</button><button class="gl sm" data-act="mufav:${i}">${x.fav?'♥':'♡'}</button>`);const b=r.querySelector('.mu-rm b');if(b&&x.fav)b.textContent='♥ '+b.textContent});
+  const w=sc.querySelector('.gl.wide');if(w)w.insertAdjacentHTML('afterend',`<div class="mu-fb"><input id="mu-q" placeholder="搜索歌曲 / 歌手" value="${esc(MU.q||'')}"><button class="gl sm${MU.fv?' a':''}" data-act="mufv">只看喜欢</button></div><div class="mu-fb"><button class="gl sm" data-act="muexp">导出链接歌单</button><button class="gl sm" data-act="muimp">导入歌单</button></div>`);muFilter()}}
+{const _r=renderMu;renderMu=function(){const r=_r.apply(this,arguments);try{muPlus()}catch(e){console.error(e)}return r}}
+ph.addEventListener('input',e=>{if(e.target.id=='mu-q'){MU.q=e.target.value;muFilter()}});
+Object.assign(ACT,{
+ munx:()=>{muD().mode==1&&muD().tracks.length>1?muPlay(muRnd()):muNext(1)},
+ mumode:()=>{const d=muD();d.mode=((d.mode||0)+1)%3;save();toast(MMODE[d.mode]);renderMu()},
+ mufav:x=>{const t=muD().tracks[+x];if(!t)return;t.fav=t.fav?0:1;save();renderMu()},
+ mufv:()=>{MU.fv=!MU.fv;renderMu()},
+ murate:()=>{const A=MU.au,r=MRATE[(MRATE.indexOf(A.playbackRate)+1)%MRATE.length];A.defaultPlaybackRate=A.playbackRate=r;toast('倍速 '+r+'x');renderMu()},
+ musleep:()=>ioSh(ioHd('睡眠定时')+[[15,'15 分钟后停止'],[30,'30 分钟后停止'],[60,'60 分钟后停止'],['end','播完这首歌后停止'],[0,'关闭定时']].map(([v,t])=>`<button class="bt w" style="margin-top:10px;border-radius:14px" data-act="musl:${v}">${t}</button>`).join('')+ioX),
+ musl:x=>{clearTimeout(MU.sleepT);MU.sleepEnd=0;MU.sleepAt=0;if(x=='end')MU.sleepEnd=1;else if(+x){MU.sleepAt=Date.now()+x*6e4;MU.sleepT=setTimeout(()=>{MU.au.pause();MU.sleepAt=0;renderMu();toast('定时结束，已暂停')},x*6e4)}
+  $('#sheet').className='';renderMu();toast(x=='end'?'播完这首后停止':+x?x+' 分钟后停止':'已关闭定时')}});
+/* 锁屏 / 通知栏控制（PWA 里尤其有用） */
+function muMS(){const m=navigator.mediaSession,t=MU.t();if(!m||!t)return;try{m.metadata=new MediaMetadata({title:t.t,artist:t.a||'POCKET Music',album:'POCKET',artwork:pwApply.png?[{src:pwApply.png,sizes:'512x512',type:'image/png'}]:[]});m.playbackState=MU.au.paused?'paused':'playing'}catch(e){}}
+{const A=MU.au;['play','pause','loadedmetadata'].forEach(k=>A.addEventListener(k,muMS));
+ try{const m=navigator.mediaSession;m.setActionHandler('play',()=>MU.au.play());m.setActionHandler('pause',()=>MU.au.pause());m.setActionHandler('previoustrack',()=>muNext(-1));m.setActionHandler('nexttrack',()=>ACT.munx());m.setActionHandler('seekto',e=>{MU.au.currentTime=e.seekTime})}catch(e){}}
+{const s32=document.createElement('style');s32.textContent=`
+#a-mu .mu-x{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:-8px 0 18px}
+#a-mu .mu-fb{display:flex;gap:8px;align-items:center;margin:10px 0 2px}
+#a-mu .mu-fb input{flex:1;min-width:0;border:0;background:var(--soft);border-radius:12px;padding:10px 14px;font:400 15px var(--ios);outline:0}
+`;document.head.appendChild(s32)}
+
+/* ---------- v33：阅读 App（任意格式导入 / 字体·字号·背景 / char 阅读进度 / 讨论剧情）+ 音乐小增强 ---------- */
+const RDBG={paper:['#f4ecd8','#3b3226','纸黄'],white:['#ffffff','#222222','纯白'],green:['#cfe6d2','#25352a','护眼'],pink:['#f8e3e8','#4a2f37','粉'],navy:['#0f1b2d','#c5d3ea','深蓝'],night:['#121212','#b4b4b4','夜间']};
+const RDFF={serif:['宋体','"Songti SC","Noto Serif SC","STSong",serif'],sans:['黑体','-apple-system,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif'],kai:['楷体','"Kaiti SC","STKaiti","KaiTi",serif'],round:['圆体','"Yuanti SC","Arial Rounded MT Bold","PingFang SC",sans-serif']};
+const rdD=()=>{const d=D.rd=D.rd||{};d.books=d.books||[];d.talk=d.talk||{};d.spd=d.spd==null?1:d.spd;d.set=Object.assign({ff:'serif',fs:19,lh:1.9,bg:'paper',bgc:'#f4ecd8',fc:'#3b3226',img:0,dim:.35},d.set||{});return d};
+const RD={id:null,data:null,secs:[],si:0,pn:null,q:null,ctl:null,tk:0,acc:0,bgurl:null};
+const rdBk=()=>rdD().books.find(b=>b.id==RD.id),rdF=()=>D.friends.find(v=>v.id==rdD().fid)||null;
+const rdPct=(i,n)=>Math.round((i||0)/Math.max(1,n-1)*100);
+function rdChap(i){const ch=RD.data.ch;let t=rdBk().title;for(const [k,s] of ch){if(k<=i)t=s;else break}return t}
+/* ---- 解析：zip / 各格式 → 文本 ---- */
+async function rdUnzip(buf){const u=new Uint8Array(buf),v=new DataView(buf);let e=u.length-22;while(e>=0&&v.getUint32(e,true)!=0x06054b50)e--;if(e<0)throw Error('不是有效的压缩包');
+ const n=v.getUint16(e+10,true);let p=v.getUint32(e+16,true);const out={};
+ for(let i=0;i<n;i++){const m=v.getUint16(p+10,true),cs=v.getUint32(p+20,true),nl=v.getUint16(p+28,true),xl=v.getUint16(p+30,true),cl=v.getUint16(p+32,true),lo=v.getUint32(p+42,true),nm=new TextDecoder().decode(u.subarray(p+46,p+46+nl));p+=46+nl+xl+cl;
+  out[nm]=async()=>{const s=lo+30+v.getUint16(lo+26,true)+v.getUint16(lo+28,true),d=u.subarray(s,s+cs);if(m==0)return d;return new Uint8Array(await new Response(new Blob([d]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer())}}
+ return out}
+function rdDec(b){const u=b instanceof Uint8Array?b:new Uint8Array(b);if(u[0]==0xFF&&u[1]==0xFE)return new TextDecoder('utf-16le').decode(u);if(u[0]==0xFE&&u[1]==0xFF)return new TextDecoder('utf-16be').decode(u);try{return new TextDecoder('utf-8',{fatal:true}).decode(u)}catch(e){}try{return new TextDecoder('gb18030').decode(u)}catch(e){}return new TextDecoder('utf-8').decode(u)}
+const rdHtml=h=>{const d=new DOMParser().parseFromString(h,'text/html');d.querySelectorAll('script,style').forEach(x=>x.remove());d.querySelectorAll('h1,h2,h3').forEach(x=>x.prepend('\u0001'));d.querySelectorAll('br').forEach(x=>x.replaceWith('\n'));d.querySelectorAll('p,div,h1,h2,h3,h4,h5,h6,li,tr').forEach(x=>x.append('\n'));return d.body.textContent};
+async function rdDocx(z){const d=new DOMParser().parseFromString(new TextDecoder().decode(await z['word/document.xml']()),'application/xml');return [...d.getElementsByTagName('w:p')].map(p=>{const t=[...p.getElementsByTagName('w:t')].map(n=>n.textContent).join(''),s=p.getElementsByTagName('w:pStyle')[0],st=s?s.getAttribute('w:val')||'':'';return (/^(Heading|Title|标题)/i.test(st)&&t.trim()?'\u0001':'')+t}).join('\n')}
+async function rdEpub(z){const rd=async k=>new TextDecoder().decode(await z[k]());let order=[];
+ try{const op=/full-path="([^"]+)"/.exec(await rd('META-INF/container.xml'))[1],o=await rd(op),base=op.replace(/[^/]*$/,''),man={};[...o.matchAll(/<item\b[^>]*>/g)].forEach(m=>{const i=/\bid="([^"]+)"/.exec(m[0]),h=/\bhref="([^"]+)"/.exec(m[0]);if(i&&h)man[i[1]]=h[1]});order=[...o.matchAll(/<itemref\b[^>]*idref="([^"]+)"/g)].map(m=>base+decodeURIComponent(man[m[1]]||'')).filter(k=>z[k])}catch(e){}
+ if(!order.length)order=Object.keys(z).filter(k=>/\.x?html?$/i.test(k)).sort();let o='';for(const k of order)o+=rdHtml(rdDec(await z[k]()))+'\n';return o}
+async function rdPdf(buf){if(!window.pdfjsLib){await new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';s.onload=ok;s.onerror=()=>no(Error('PDF 解析库加载失败（需要联网）'));document.head.appendChild(s)});pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'}
+ const pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;let o='';for(let i=1;i<=pdf.numPages;i++){const c=await (await pdf.getPage(i)).getTextContent();o+=c.items.map(t=>t.str+(t.hasEOL?'\n':'')).join('')+'\n'}return o}
+const rdRtf=r=>r.replace(/\\u(-?\d+)\??/g,(m,n)=>String.fromCharCode(n<0?+n+65536:+n)).replace(/\\par[d]?/g,'\n').replace(/\{\\\*[^}]*\}/g,'').replace(/\\[a-z]+-?\d* ?/gi,'').replace(/[{}]/g,'');
+async function rdRead(f){const b=await f.arrayBuffer(),u=new Uint8Array(b),ext=(f.name.split('.').pop()||'').toLowerCase(),h=String.fromCharCode(...u.subarray(0,5));
+ if(h.startsWith('%PDF'))return rdPdf(b);if(h.startsWith('{\\rtf'))return rdRtf(rdDec(u));
+ if(u[0]==0x50&&u[1]==0x4B){const z=await rdUnzip(b);if(z['word/document.xml'])return rdDocx(z);if(z['META-INF/container.xml']||ext=='epub')return rdEpub(z);
+  if(z['content.xml'])return new TextDecoder().decode(await z['content.xml']()).replace(/<\/text:(p|h)>/g,'\n').replace(/<[^>]+>/g,'');
+  const ks=Object.keys(z).filter(k=>/\.(txt|md|x?html?)$/i.test(k)).sort();if(!ks.length)throw Error('压缩包里没有可读的文本');let o='';for(const k of ks){const t=rdDec(await z[k]());o+=(/html?$/i.test(k)?rdHtml(t):t)+'\n'}return o}
+ const t=rdDec(u),s=t.slice(0,4000);if(/^(html?|xhtml|xml)$/.test(ext)||/^\s*<(!doctype|html)/i.test(s))return rdHtml(t);
+ if((s.match(/[\uFFFD\u0000-\u0008]/g)||[]).length>s.length*.05)throw Error('无法识别这个文件格式（旧版 .doc 请先另存为 docx / txt）');return t}
+function rdSplit(tx){const P=[],CH=[],re=/^\s*(第\s*[零〇一二三四五六七八九十百千万两\d]+\s*[章节回卷集部篇幕]|chapter\s*[\dIVXivx]+|序章|序言|楔子|引子|尾声|后记|番外|终章)/i;
+ tx.replace(/\r/g,'').split('\n').forEach(l=>{let s=l.replace(/\s+$/,'').replace(/^[\u3000 \t]+/,''),h=0;if(!s)return;if(s[0]=='\u0001'){s=s.slice(1).trim();h=1}if(!s)return;
+  if(h||(s.length<40&&re.test(s))){CH.push([P.length,s.slice(0,40)]);P.push(s);return}
+  if(s.length>1200){let c='';s.split(/(?<=[。！？!?”」])/).forEach(x=>{c+=x;if(c.length>500){P.push(c);c=''}});if(c)P.push(c)}else P.push(s)});return {p:P,ch:CH}}
+function rdSecs(d){const P=d.p,cs=new Map(d.ch),S=[];let s=0,len=0,t='正文',ct='';for(let i=0;i<P.length;i++){if(i>s&&(cs.has(i)||len>9000)){S.push({s,e:i,t});s=i;len=0;t=cs.has(i)?cs.get(i):(ct||'正文')+' · 续'}if(cs.has(i)){ct=cs.get(i);if(i==s)t=ct}len+=P[i].length}S.push({s,e:P.length,t});if(!d.ch.length)S.forEach((x,i)=>x.t='第 '+(i+1)+' 页');return S}
+async function rdImport(fs){for(const f of fs){try{toast('导入中：'+f.name);const r=rdSplit(await rdRead(f));if(!r.p.length)throw Error('没有读到文字');const id='b'+Date.now()+Math.random().toString(36).slice(2,5);await IDBK.set('rd:'+id,r);rdD().books.unshift({id,title:f.name.replace(/\.[^.]+$/,''),n:r.p.length,len:r.p.join('').length,pos:0,cp:{},hl:{},ts:Date.now()});save();renderRd();toast('已导入《'+f.name.replace(/\.[^.]+$/,'')+'》')}catch(e){toast('导入失败：'+f.name+'｜'+errMsg(e))}}}
+/* ---- 界面 ---- */
+function renderRd(){const A=$('#a-rd');if(!A)return;const d=rdD();if(!d.fid||!rdF())d.fid=(D.friends[cur]||D.friends[0]||{}).id||'';const f=rdF();
+ if(!RD.id){A.innerHTML=`<div class="scroll rd"><button class="rd-home" data-act="home">‹ 主页</button><div class="hd"><h2>阅读</h2></div><div class="rd-l">和谁一起读</div><div class="rd-g">${D.friends.map(x=>`<button class="rb${x.id==d.fid?' a':''}" data-act="rdfid:${x.id}">${esc(x.remark||x.name)}</button>`).join('')||'<span class="rd-e">先添加好友</span>'}</div><label class="rd-imp">＋ 导入小说（txt / docx / epub / pdf / html … 任意格式，可多选）<input type="file" id="rd-f" multiple hidden></label>${d.books.map(b=>`<div class="rd-r"><button class="rd-rm" data-act="rdopen:${b.id}"><b>${esc(b.title)}</b><span>我 ${rdPct(b.pos,b.n)}% · 共 ${(b.len/1e4).toFixed(1)} 万字${f?' · TA '+rdPct(b.cp[f.id],b.n)+'%':''}</span></button><button class="rb dng" data-act="rddel:${b.id}">删</button></div>`).join('')||'<p class="rd-e">书库是空的，导入一本开始吧</p>'}</div>`;return}
+ const bk=rdBk();A.innerHTML=`<div id="rd-v" class="rd-v"><div id="rd-bgi"></div><div class="rd-top"><button data-act="rdlib">‹ 书库</button><div class="rd-tt"><b>${esc(bk.title)}</b><small id="rd-sub"></small></div><button data-act="rdtoc">目录</button><button data-act="rdset">Aa</button></div><div id="rd-jp" class="rd-jump" data-act="rdjump" hidden></div><div id="rd-sc" class="rd-sc"></div><div class="rd-bot"><div class="rd-pb"><input type="range" id="rd-bar" min="0" max="${Math.max(0,bk.n-1)}" value="${bk.pos||0}"><i id="rd-cm"></i></div><div class="rd-bb"><button data-act="rdpv">‹ 上一节</button><button data-act="rdtalk">💬 和 TA 讨论</button><button data-act="rdnx">下一节 ›</button></div></div><div id="rd-pn" class="rd-pn" hidden></div></div>`}
+function rdApply(keep){const v=$('#rd-v');if(!v)return;const s=rdD().set;let ff=RDFF[s.ff]?RDFF[s.ff][1]:RDFF.serif[1];if(s.ff.startsWith('f:')){const f=D.fonts.find(x=>x.id==s.ff.slice(2));if(f){loadFont(f).catch(()=>toast('字体加载失败'));ff='"'+f.fam+'",serif'}}
+ v.style.setProperty('--rf',ff);v.style.setProperty('--rs',s.fs+'px');v.style.setProperty('--rl',s.lh);v.style.background=s.bgc;v.style.color=s.fc;
+ $('#rd-bgi').style.background=s.img&&RD.bgurl?`linear-gradient(rgba(0,0,0,${s.dim}),rgba(0,0,0,${s.dim})),url(${RD.bgurl}) center/cover`:'none';if(keep)rdTo(rdBk().pos)}
+function rdTo(i){const sc=$('#rd-sc'),el=$('#rp'+i);RD.lock=1;if(sc)sc.scrollTop=el?el.offsetTop-6:0;setTimeout(()=>RD.lock=0,200)}
+function rdBody(){const sc=$('#rd-sc'),S=RD.secs[RD.si];if(!sc||!S)return;const P=RD.data.p,bk=rdBk(),f=rdF(),cp=f?bk.cp[f.id]||0:-1,hs=new Set(RD.data.ch.map(c=>c[0]));if(bk.pos<S.s||bk.pos>=S.e)bk.pos=S.s;
+ let h='';for(let i=S.s;i<S.e;i++)h+=`<p class="rd-p${hs.has(i)?' rd-h':''}${bk.hl[i]?' hl':''}${cp==i?' cp':''}" id="rp${i}" data-act="rdp:${i}">${esc(P[i])}${cp==i?`<span class="rd-tag">${esc(((f.remark||f.name)||'TA').slice(0,4))} 读到这里</span>`:''}</p>`;
+ sc.innerHTML=h;rdTo(bk.pos);rdChrome()}
+function rdMark(){const sc=$('#rd-sc'),f=rdF();if(!sc||!f)return;sc.querySelectorAll('.rd-tag').forEach(x=>x.remove());sc.querySelectorAll('.cp').forEach(x=>x.classList.remove('cp'));const el=$('#rp'+(rdBk().cp[f.id]||0));if(el){el.classList.add('cp');el.insertAdjacentHTML('beforeend',`<span class="rd-tag">${esc((f.remark||f.name).slice(0,4))} 读到这里</span>`)}rdChrome()}
+function rdChrome(){const bk=rdBk(),f=rdF(),S=RD.secs[RD.si];if(!bk||!S)return;const cp=f?bk.cp[f.id]||0:0,sub=$('#rd-sub');if(sub)sub.textContent=rdChap(bk.pos)+' · '+rdPct(bk.pos,bk.n)+'%'+(f?' · TA '+rdPct(cp,bk.n)+'%':'');
+ const cm=$('#rd-cm');if(cm){cm.style.display=f?'block':'none';cm.style.left=rdPct(cp,bk.n)+'%'}const jp=$('#rd-jp');if(jp){if(f&&(cp<S.s||cp>=S.e)){jp.hidden=false;jp.textContent=(cp<S.s?'↑ ':'↓ ')+(f.remark||f.name)+' 在「'+rdChap(cp)+'」'}else jp.hidden=true}}
+function rdGo(i){const si=RD.secs.findIndex(x=>i>=x.s&&i<x.e);if(si<0)return;rdBk().pos=i;if(si!=RD.si){RD.si=si;rdBody()}else{rdTo(i);rdChrome()}const b=$('#rd-bar');if(b)b.value=i}
+function rdScroll(){const sc=$('#rd-sc');if(!sc||RD.lock||!sc.children.length)return;let k=0;const ps=sc.children;for(;k<ps.length-1;k++)if(ps[k].offsetTop+ps[k].offsetHeight>sc.scrollTop+10)break;const i=+ps[k].id.slice(2),bk=rdBk();if(bk.pos!=i){bk.pos=i;bk.ts=Date.now();clearTimeout(RD.st);RD.st=setTimeout(save,800);const b=$('#rd-bar');if(b&&!RD.drag)b.value=i;rdChrome()}}
+async function rdOpen(id){const data=await IDBK.get('rd:'+id);if(!data)return toast('书籍数据丢失，请重新导入');if(rdD().set.img&&!RD.bgurl){try{const b=await IDBK.get('blob:rdbg');if(b)RD.bgurl=URL.createObjectURL(b)}catch(e){}}
+ RD.id=id;RD.data=data;RD.secs=rdSecs(data);RD.pn=null;RD.q=null;const bk=rdBk();bk.cp=bk.cp||{};bk.hl=bk.hl||{};RD.si=Math.max(0,RD.secs.findIndex(x=>bk.pos>=x.s&&bk.pos<x.e));renderRd();rdApply();rdBody()}
+function rdPanel(){const pn=$('#rd-pn');if(!pn)return;if(!RD.pn){pn.hidden=true;return}pn.hidden=false;pn.className='rd-pn '+RD.pn;const d=rdD(),s=d.set,bk=rdBk(),f=rdF();
+ if(RD.pn=='chat'){pn.innerHTML=`<div class="rd-ph"><b>${f?esc(f.remark||f.name):'选择好友'}<small> · 读到 ${f?rdPct(bk.cp[f.id],bk.n):0}%</small></b><span><button class="rb" data-act="rdclr">清空</button><button class="rb" data-act="rdpx">收起</button></span></div><div id="rd-ms"></div><div class="rd-cp">${['这段是什么意思','说说你读到现在的感受','你觉得他为什么这样做','猜猜后面会怎样','帮我回顾一下前情'].map((t,i)=>`<button data-act="rdchip:${i}">${t}</button>`).join('')}</div><div id="rd-q" class="rd-qq"></div><div class="rd-ir"><input id="rd-in" placeholder="和 TA 聊聊剧情…" enterkeyhint="send"><button class="rb a" data-act="rdsend">发送</button></div>`;rdTalk();rdQ()}
+ else if(RD.pn=='toc'){pn.innerHTML=`<div class="rd-ph"><b>目录</b><button class="rb" data-act="rdpx">收起</button></div><div class="rd-tc">${RD.secs.map((x,i)=>`<button class="${i==RD.si?'a':''}" data-act="rdsec:${i}">${esc(x.t)}</button>`).join('')}</div>`}
+ else{const B=(a,t,on)=>`<button class="${on?'a':''}" data-act="${a}">${t}</button>`;pn.innerHTML=`<div class="rd-ph"><b>阅读设置</b><button class="rb" data-act="rdpx">完成</button></div><div class="rd-l">字体</div><div class="rd-g">${Object.entries(RDFF).map(([k,v])=>B('rdff:'+k,v[0],s.ff==k)).join('')}${D.fonts.map(x=>B('rdff:f:'+x.id,esc(x.name||x.fam),s.ff=='f:'+x.id)).join('')}</div><div class="rd-l">字号 ${s.fs}</div><input type="range" id="rd-fs" min="14" max="32" step="1" value="${s.fs}"><div class="rd-l">行距 ${s.lh}</div><input type="range" id="rd-lh" min="1.4" max="2.6" step="0.1" value="${s.lh}"><div class="rd-l">背景</div><div class="rd-g">${Object.entries(RDBG).map(([k,v])=>`<button class="rd-sw${s.bg==k&&!s.img?' a':''}" style="background:${v[0]};color:${v[1]}" data-act="rdbg:${k}">${v[2]}</button>`).join('')}</div><div class="rd-g"><label class="rb">背景色<input type="color" id="rd-bgc" value="${s.bgc}" hidden></label><label class="rb">文字色<input type="color" id="rd-fc" value="${s.fc}" hidden></label><label class="rb${s.img?' a':''}">背景图片<input type="file" id="rd-bgf" accept="image/*" hidden></label>${s.img?'<button class="rb" data-act="rdbgx">移除图片</button>':''}</div>${s.img?`<div class="rd-l">图片暗度</div><input type="range" id="rd-dim" min="0" max="0.8" step="0.05" value="${s.dim}">`:''}<div class="rd-l">和谁一起读</div><div class="rd-g">${D.friends.map(x=>B('rdfid:'+x.id,esc(x.remark||x.name),x.id==d.fid)).join('')}</div><div class="rd-l">TA 的阅读速度</div><div class="rd-g">${['手动','慢','中','快'].map((t,i)=>B('rdspd:'+i,t,d.spd==i)).join('')}</div><div class="rd-g"><button data-act="rdsync1">让 TA 读到我这里</button><button data-act="rdsync2">我跳到 TA 那里</button></div>`}}
+function rdTalk(s){const el=$('#rd-ms'),f=rdF();if(!el)return;const L=f?rdD().talk[RD.id+':'+f.id]||[]:[];el.innerHTML=L.length?L.map(m=>`<div class="rd-m ${m.r}">${esc(m.t||'…').replace(/\n/g,'<br>')}</div>`).join(''):'<p class="rd-e">说点什么吧，TA 读到哪就聊到哪。点任意段落可以「问问 TA 这一段」。</p>';if(!s||el.scrollHeight-el.scrollTop-el.clientHeight<140)el.scrollTop=el.scrollHeight}
+function rdQ(){const e=$('#rd-q');if(e)e.innerHTML=RD.q?`<span>「${esc(RD.q.slice(0,40))}…」</span><button data-act="rdq0">✕</button>`:''}
+function rdSlice(P,i,n){const o=[];let c=0;for(let k=i;k>=0&&c<n;k--){o.unshift(P[k]);c+=P[k].length}return o.join('\n')}
+async function rdAsk(txt,quote){const f=rdF();if(!f)return toast('先选一位 TA 一起读');if(RD.ctl)return toast('TA 还在回复');if(eLocked(f))return toast('此聊天已加密，请先解锁');
+ const d=rdD(),bk=rdBk(),P=RD.data.p,key=RD.id+':'+f.id,L=d.talk[key]=d.talk[key]||[],cp=bk.cp[f.id]||0,pos=bk.pos||0;L.push({r:'u',t:(quote?'「'+quote.slice(0,60)+'…」\n':'')+txt});const m={r:'a',t:''};L.push(m);RD.ctl=new AbortController();rdTalk();
+ const sys=sysP(f)+`\n\n【场景：你正在和用户在手机上「一起读小说」《${bk.title}》，并聊剧情。】\n你读到第 ${cp+1}/${P.length} 段（${rdChap(cp)}）。你只知道自己读过的内容，下面是你刚读完的片段，更早的只记得大概：\n${rdSlice(P,cp,2200)}\n用户读到第 ${pos+1} 段（${rdChap(pos)}）。${pos>cp?'用户比你读得快，他读到的后续情节你并不知道，要诚实说还没读到，不要编造。':'不要剧透用户还没读到的后续情节（除非用户明确要求）。'}\n${quote?'用户正在讨论的这一段：'+quote+'\n':''}保持你的人设，口语化回复，一般不超过 150 字。`;
+ try{m.t=await askS(f.temp==null?D.main:Object.assign({},D.main,{temp:f.temp}),sys,L.slice(0,-1).slice(-16).map(x=>({role:x.r=='u'?'user':'assistant',content:x.t})),RD.ctl.signal,o=>{m.t=o;rdTalk(1)});D.stat.calls++}catch(e){if(e.name!='AbortError'){D.stat.fails++;toast('请求失败：'+errMsg(e))}}
+ if(!m.t){const k=L.indexOf(m);if(k>-1)L.splice(k,1)}RD.ctl=null;if(L.length>80)L.splice(0,L.length-80);save();rdTalk()}
+/* TA 自己往下读 */
+setInterval(()=>{const A=$('#a-rd');if(!RD.id||!RD.data||!A||!A.classList.contains('on'))return;const f=rdF(),sp=[0,360,720,1200][rdD().spd||0];if(!f||!sp)return;const bk=rdBk(),P=RD.data.p;let cp=bk.cp[f.id]||0;if(cp>=P.length-1)return;RD.acc+=sp/30;let mv=0;while(RD.acc>=P[cp].length&&cp<P.length-1){RD.acc-=P[cp].length;cp++;mv=1}if(mv){bk.cp[f.id]=cp;rdMark();if(++RD.tk%8==0)save()}},2000);
+ph.addEventListener('scroll',e=>{if(e.target.id=='rd-sc')rdScroll()},true);
+ph.addEventListener('input',e=>{const t=e.target,s=RD.id?rdD().set:null;if(!s)return;
+ if(t.id=='rd-bar'){RD.drag=1;rdGo(+t.value)}else if(t.id=='rd-fs'){s.fs=+t.value;rdApply(1)}else if(t.id=='rd-lh'){s.lh=+t.value;rdApply(1)}else if(t.id=='rd-dim'){s.dim=+t.value;rdApply()}else if(t.id=='rd-bgc'){s.bgc=t.value;s.bg='custom';rdApply()}else if(t.id=='rd-fc'){s.fc=t.value;rdApply()}});
+ph.addEventListener('change',async e=>{const t=e.target;
+ if(t.id=='rd-bar'){RD.drag=0;save()}else if(t.id=='rd-f'&&t.files.length){rdImport([...t.files]);t.value=''}
+ else if(t.id=='rd-bgf'&&t.files[0]){try{await IDBK.set('blob:rdbg',t.files[0]);if(RD.bgurl)URL.revokeObjectURL(RD.bgurl);RD.bgurl=URL.createObjectURL(t.files[0]);const s=rdD().set;s.img=1;s.fc='#ffffff';s.dim=Math.max(s.dim,.4);save();rdApply();rdPanel()}catch(x){toast('背景保存失败')}}});
+ph.addEventListener('keydown',e=>{if(e.target.id=='rd-in'&&e.key=='Enter'&&!e.isComposing){e.preventDefault();ACT.rdsend()}});
+const rdSend=t=>{if(!t)return;RD.pn='chat';const q=RD.q;RD.q=null;rdQ();rdAsk(t,q)};
+const RDCHIP=['这一段是什么意思？','说说你读到现在的感受吧','你觉得他为什么这样做？','你猜后面会怎样？','帮我回顾一下前情'];
+Object.assign(ACT,{
+ rdopen:x=>rdOpen(x),rdlib:()=>{save();RD.id=null;RD.data=null;RD.pn=null;renderRd()},
+ rddel:(x,y,t)=>{if(!ok2(t))return;const d=rdD();d.books=d.books.filter(b=>b.id!=x);Object.keys(d.talk).forEach(k=>{if(k.startsWith(x+':'))delete d.talk[k]});IDBK.del('rd:'+x).catch(()=>{});save();renderRd()},
+ rdfid:x=>{rdD().fid=x;save();if(RD.id){rdBody();rdPanel()}else renderRd()},
+ rdpv:()=>{if(RD.si>0){RD.si--;rdBk().pos=RD.secs[RD.si].s;rdBody();const b=$('#rd-bar');if(b)b.value=rdBk().pos}},
+ rdnx:()=>{if(RD.si<RD.secs.length-1){RD.si++;rdBk().pos=RD.secs[RD.si].s;rdBody();save();const b=$('#rd-bar');if(b)b.value=rdBk().pos}else toast('已经是最后一节了')},
+ rdtoc:()=>{RD.pn=RD.pn=='toc'?null:'toc';rdPanel()},rdset:()=>{RD.pn=RD.pn=='set'?null:'set';rdPanel()},rdtalk:()=>{RD.pn=RD.pn=='chat'?null:'chat';rdPanel()},rdpx:()=>{RD.pn=null;rdPanel();save()},
+ rdsec:x=>{RD.si=+x;rdBk().pos=RD.secs[+x].s;RD.pn=null;rdPanel();rdBody();const b=$('#rd-bar');if(b)b.value=rdBk().pos},
+ rdjump:()=>{const f=rdF();if(f)rdGo(rdBk().cp[f.id]||0)},
+ rdff:x=>{rdD().set.ff=x;save();rdApply(1);rdPanel()},rdbg:x=>{const s=rdD().set,v=RDBG[x];s.bg=x;s.bgc=v[0];s.fc=v[1];s.img=0;save();rdApply();rdPanel()},rdbgx:()=>{const s=rdD().set;s.img=0;s.fc=RDBG[s.bg]?RDBG[s.bg][1]:s.fc;save();rdApply();rdPanel()},
+ rdspd:x=>{rdD().spd=+x;save();rdPanel()},
+ rdsync1:()=>{const f=rdF();if(!f)return toast('先选一位好友');rdBk().cp[f.id]=rdBk().pos;RD.acc=0;save();rdMark();toast('TA 读到你这里了')},
+ rdsync2:()=>{const f=rdF();if(!f)return;rdGo(rdBk().cp[f.id]||0)},
+ rdp:x=>{const i=+x,bk=rdBk(),B=(a,t)=>`<button class="bt w" style="margin-top:10px;border-radius:14px" data-act="${a}:${i}">${t}</button>`;ioSh(ioHd('第 '+(i+1)+' 段')+`<p style="font:400 15px/1.6 var(--ios);color:var(--mut);max-height:96px;overflow:hidden">${esc(RD.data.p[i].slice(0,120))}</p>`+B('rdpq','问问 TA 这一段')+B('rdpcp','让 TA 读到这里')+B('rdhl',bk.hl[i]?'取消高亮':'高亮这一段')+ioX)},
+ rdpq:x=>{$('#sheet').className='';RD.q=RD.data.p[+x];RD.pn='chat';rdPanel()},
+ rdpcp:x=>{const f=rdF();$('#sheet').className='';if(!f)return toast('先选一位好友');rdBk().cp[f.id]=+x;RD.acc=0;save();rdMark()},
+ rdhl:x=>{const h=rdBk().hl;h[x]?delete h[x]:h[x]=1;save();$('#sheet').className='';const e=$('#rp'+x);if(e)e.classList.toggle('hl',!!h[x])},
+ rdq0:()=>{RD.q=null;rdQ()},rdclr:(x,y,t)=>{const f=rdF();if(!f||!ok2(t))return;delete rdD().talk[RD.id+':'+f.id];save();rdTalk()},
+ rdsend:()=>{const i=$('#rd-in');if(!i)return;const v=i.value.trim();if(!v)return;i.value='';rdSend(v)},rdchip:x=>rdSend(RDCHIP[+x]),
+ /* 音乐：歌词偏移 / 改名 */
+ muoff:x=>{const t=MU.t();if(!t)return;t.off=Math.round(((t.off||0)+ +x)*10)/10;MU.k=-2;save();renderMu()},
+ muedit:x=>{const t=muD().tracks[+x];if(!t)return;ioSh(ioHd('编辑歌曲')+fld('标题',`<input id="mu-et" value="${esc(t.t)}">`)+fld('歌手',`<input id="mu-ea" value="${esc(t.a||'')}">`)+`<button class="bt k w" data-act="muesv:${x}">保存</button>`+ioX)},
+ muesv:x=>{const t=muD().tracks[+x];if(!t)return;t.t=$('#mu-et').value.trim()||t.t;t.a=$('#mu-ea').value.trim();save();$('#sheet').className='';renderMu()}});
+/* 注册 App */
+document.getElementById('a-mu').insertAdjacentHTML('afterend','<section class="app" id="a-rd"></section>');
+document.getElementById('sms').parentNode.insertAdjacentHTML('beforeend','<symbol id="rd" viewBox="0 0 24 24"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5c-.8 0-1.5-.7-1.5-1.5zM20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5-.7 1.5-1.5z"/></symbol>');
+CON.rd={p:[[16,60],[32,38],[50,52],[68,30],[84,56]],e:[[0,1],[1,2],[2,3],[3,4]]};META.rd={n:'13',t:'Read',ic:'rd'};APPS.push(['rd','阅读','Read']);PWN.rd='阅读';
+$('#hg').innerHTML=APPS.map(a=>`<button class="ap" data-act="app:${a[0]}">${appIcon(a[0],52)}<b>${a[1]}</b><em>${a[2]}</em><i class="bd2" id="b-${a[0]}"></i></button>`).join('');
+{const _s=show;show=function(id){const r=_s.apply(this,arguments);if(id=='rd')renderRd();return r}}
+{const s33=document.createElement('style');s33.textContent=`
+[hidden]{display:none!important}
+#a-rd{--ios:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Noto Sans CJK SC",sans-serif;font-family:var(--ios);padding-top:0}
+#a-rd .scroll.rd{padding:52px 24px 120px}
+#a-rd .hd h2{font:800 34px/1.1 var(--ios);letter-spacing:-.02em}
+.rd-home{font:400 16px var(--ios);padding:6px 0 2px;color:var(--fg)}
+.rd-l{font:600 12px var(--ios);color:var(--mut);margin:10px 0 4px}
+.rd-e{display:block;color:var(--mut);font:400 14px/1.6 var(--ios);padding:18px 0;text-align:center}
+.rd-imp{display:block;text-align:center;padding:14px;border-radius:14px;background:var(--fg);color:var(--bg);font:600 14px var(--ios);margin:14px 0 6px;cursor:pointer}
+.rd-r{display:flex;align-items:center;gap:8px;padding:14px 0;border-bottom:.5px solid var(--ln)}
+.rd-rm{flex:1;min-width:0;text-align:left}.rd-rm b{display:block;font:600 17px var(--ios);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rd-rm span{display:block;margin-top:3px;font:400 12px var(--ios);color:var(--mut)}
+#a-rd .rb,.rd-pn .rb{padding:7px 13px;border-radius:999px;background:var(--soft);color:var(--fg);font:600 12px var(--ios);cursor:pointer}
+#a-rd .rb.a,.rd-pn .rb.a{background:var(--fg);color:var(--bg)}#a-rd .rb.dng{color:#ff3b30}
+.rd-g{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 8px}
+.rd-g>button,.rd-tc>button,.rd-cp>button{padding:7px 13px;border-radius:999px;background:var(--soft);color:var(--fg);font:500 13px var(--ios);white-space:nowrap}
+.rd-g>button.a,.rd-tc>button.a{background:var(--fg);color:var(--bg)}
+.rd-g>.rd-sw{min-width:52px;border:1.5px solid var(--ln)}.rd-g>.rd-sw.a{border-color:var(--fg);background-clip:padding-box}
+.rd-v{position:relative;flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;background:#f4ecd8;color:#3b3226}
+#rd-bgi{position:absolute;inset:0;z-index:0}
+.rd-top{position:relative;z-index:2;display:flex;align-items:center;gap:6px;padding:48px 12px 8px}
+.rd-top button,.rd-bb button{padding:8px 12px;border-radius:999px;background:rgba(127,127,127,.18);color:inherit;font:600 13px var(--ios);white-space:nowrap}
+.rd-tt{flex:1;min-width:0;text-align:center}.rd-tt b{display:block;font:700 14px var(--ios);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rd-tt small{display:block;font:400 11px var(--ios);opacity:.65;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rd-sc{position:relative;z-index:1;flex:1;overflow:auto;padding:6px 24px 40px;font-family:var(--rf,serif);font-size:var(--rs,19px);line-height:var(--rl,1.9)}
+.rd-p{margin:0 0 .7em;text-indent:2em;word-break:break-word}.rd-p.rd-h{text-indent:0;text-align:center;font-weight:700;font-size:1.15em;margin:1.3em 0 .9em}
+.rd-p.hl{background:rgba(255,214,10,.35);border-radius:4px}.rd-p.cp{border-left:3px solid #ff375f;padding-left:8px;margin-left:-11px}
+.rd-tag{display:inline-block;margin-left:8px;padding:1px 9px;border-radius:999px;background:#ff375f;color:#fff;font:600 11px/1.6 var(--ios);text-indent:0;vertical-align:middle;white-space:nowrap}
+.rd-jump{position:absolute;z-index:3;top:100px;left:50%;transform:translateX(-50%);padding:6px 14px;border-radius:999px;background:#ff375f;color:#fff;font:600 12px var(--ios);box-shadow:0 6px 18px -6px rgba(0,0,0,.45);white-space:nowrap;cursor:pointer}
+.rd-bot{position:relative;z-index:2;padding:4px 18px 30px}
+.rd-pb{position:relative;display:flex;align-items:center}.rd-pb input{width:100%;margin:6px 0}
+#rd-cm{position:absolute;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:#ff375f;border:2px solid #fff;pointer-events:none}
+.rd-bb{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:4px}
+.rd-pn{position:absolute;z-index:5;left:0;right:0;bottom:0;background:var(--bg);color:var(--fg);border-radius:24px 24px 0 0;box-shadow:0 -14px 40px -16px rgba(0,0,0,.5);display:flex;flex-direction:column;padding:14px 16px 30px;font-family:var(--ios)}
+.rd-pn.chat{height:62%}.rd-pn.set,.rd-pn.toc{max-height:58%;overflow:auto;display:block}.rd-pn input[type=range]{width:100%}
+.rd-ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}.rd-ph b{font:700 16px var(--ios)}.rd-ph small{font-weight:400;color:var(--mut);font-size:12px}.rd-ph span{display:flex;gap:6px}
+.rd-tc{display:flex;flex-direction:column;gap:6px}.rd-tc>button{text-align:left;border-radius:12px;overflow:hidden;text-overflow:ellipsis}
+#rd-ms{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:6px 0}
+.rd-m{max-width:84%;padding:9px 13px;border-radius:18px;font:400 15px/1.55 var(--ios);word-break:break-word}.rd-m.u{align-self:flex-end;background:var(--fg);color:var(--bg)}.rd-m.a{align-self:flex-start;background:var(--soft)}
+.rd-cp{display:flex;gap:6px;overflow-x:auto;padding:6px 0}
+.rd-qq:not(:empty){display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:12px;background:var(--soft);font:400 12px var(--ios);color:var(--mut);margin-bottom:6px}.rd-qq span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rd-ir{display:flex;gap:8px;align-items:center}.rd-ir input{flex:1;min-width:0;border:0;background:var(--soft);border-radius:999px;padding:11px 16px;font:400 16px var(--ios);outline:0}
+`;document.head.appendChild(s33)}
+
+/* ---------- v34：链接歌单导出/导入 + 主屏幕迷你播放条 ---------- */
+Object.assign(ACT,{
+ muexp:async()=>{const a=muD().tracks.filter(x=>x.kind=='url').map(x=>({t:x.t,a:x.a||'',src:x.src,lrc:x.lrc||'',fav:x.fav?1:0,off:x.off||0}));if(!a.length)return toast('没有链接类歌曲可导出（本地上传的文件无法导出）');toast(await msCopy(JSON.stringify(a))?'已复制 '+a.length+' 首到剪贴板':'复制失败')},
+ muimp:()=>ioSh(ioHd('导入歌单')+fld('粘贴导出的歌单 JSON','<textarea id="mu-ix" rows="8" placeholder="[{&quot;t&quot;:&quot;歌名&quot;,&quot;src&quot;:&quot;https://…&quot;}]"></textarea>')+'<button class="bt k w" data-act="muimps">导入</button>'+ioX),
+ muimps:()=>{let a;try{a=JSON.parse($('#mu-ix').value)}catch(e){return toast('格式不对，请粘贴导出的内容')}if(!Array.isArray(a))return toast('格式不对');const d=muD(),have=new Set(d.tracks.map(x=>x.src));let n=0;a.forEach(x=>{if(!x||!/^https?:\/\//i.test(x.src||'')||have.has(x.src))return;have.add(x.src);d.tracks.push({id:'m'+Date.now()+n,t:String(x.t||'未命名'),a:String(x.a||''),kind:'url',src:x.src,lrc:String(x.lrc||''),fav:x.fav?1:0,off:+x.off||0});n++});save();$('#sheet').className='';renderMu();toast('已导入 '+n+' 首'+(a.length>n?'（跳过重复或无效的 '+(a.length-n)+' 首）':''))}});
+ph.insertAdjacentHTML('beforeend','<div id="mmini" hidden></div>');
+setInterval(()=>{const b=$('#mmini'),T=MU.t(),h=$('#a-home');if(!b)return;const on=T&&h&&h.classList.contains('on')&&!$('#sp').classList.contains('on');if(!on){b.hidden=true;return}b.hidden=false;const pl=!MU.au.paused,k=T.id+'|'+pl;if(b.dataset.k!==k){b.dataset.k=k;b.innerHTML=`<button class="mm-i" data-act="app:mu"><span class="mm-cv" style="background:${muGrad(T.id)}">${GI.mu}</span><span class="mm-t"><b>${esc(T.t)}</b><small>${esc(T.a||'未知歌手')}${MU.tg?' · 一起听中':''}</small></span></button><button class="mm-b" data-act="mubp">${pl?GI.pause:GI.play}</button><button class="mm-b" data-act="munx">${GI.next}</button>`}},800);
+{const s34=document.createElement('style');s34.textContent=`
+#mmini{position:absolute;left:14px;right:14px;bottom:34px;z-index:15;display:flex;align-items:center;gap:6px;padding:7px 8px 7px 7px;border-radius:22px;background:color-mix(in srgb,var(--bg) 74%,transparent);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);border:.5px solid var(--ln);box-shadow:0 10px 28px -12px rgba(0,0,0,.35);color:var(--fg);font-family:-apple-system,"PingFang SC",sans-serif}
+#mmini .mm-i{flex:1;min-width:0;display:flex;align-items:center;gap:10px;text-align:left}
+#mmini .mm-cv{width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;color:#fff}#mmini .mm-cv .gi{width:19px;height:19px}
+#mmini .mm-t{min-width:0}#mmini b{display:block;font:600 14px/1.25 -apple-system,"PingFang SC",sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#mmini small{display:block;font:400 11px -apple-system,"PingFang SC",sans-serif;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#mmini .mm-b{width:36px;height:36px;flex:none;border-radius:50%;display:grid;place-items:center}#mmini .mm-b .gi{width:20px;height:20px;fill:currentColor;stroke:currentColor}
+`;document.head.appendChild(s34)}
 })().catch(e=>console.error(e));
 </script>
 </body>
