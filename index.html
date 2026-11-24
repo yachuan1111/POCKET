@@ -3817,6 +3817,327 @@ $('#hg').innerHTML=APPS.map(a=>`<button class="ap" data-act="app:${a[0]}">${appI
 .xp-u{font:400 11px ui-monospace,monospace;color:var(--mut);margin:4px 0 10px;word-break:break-all}
 .xp-l{display:flex;justify-content:space-between;gap:8px;padding:6px 0;font:400 13px var(--ios)}.xp-l small{color:var(--mut)}
 `;document.head.appendChild(s39)}
+/* ---------- v43：邀约状态机（接受/婉拒→票根变状态）+ 双向邀约 + 地图 App（虚构地图 / 高德） ---------- */
+{
+const IV={pend:null},IVST={pending:'待回应',ok:'已确认',no:'已婉拒',used:'已赴约',cx:'已取消'},IVSTAMP={pending:'PENDING',ok:'CONFIRMED',no:'DECLINED',used:'ADMITTED',cx:'CANCELLED'};
+const ivp=()=>IV.pend&&Date.now()-IV.pend.ts<6e5?IV.pend:null;
+const frOf=id=>D.friends.find(x=>x.id==id)||{};
+function ivSet(id,st){D.tix.forEach(v=>{if(v.id==id){v.st=st;v.sts=Date.now()}});Object.values(D.chats).forEach(c=>c.forEach(m=>{if(m.inv&&m.inv.id==id){m.inv.st=st;m.t=String(m.t).replace(/ · 状态：[^\]]*\]$/,']').replace(/\]$/,' · 状态：'+IVST[st]+']')}}));save()}
+/* AI 回应用户发出的邀约：提示词 + 解析 */
+{const _as=askS;askS=function(a,sys,ms,sig,cb){const p=ivp();if(p&&typeof sys=='string'&&sys.indexOf('你正在扮演微信好友「'+p.name+'」')>-1){const v=D.tix.find(x=>x.id==p.id);if(v)sys+='\n\n【待回应的邀约】对方刚刚邀请你「'+v.kind+'」：'+v.title+'，地点 '+v.place+'，时间 '+v.time+(v.msg?'，留言：'+v.msg:'')+'。请按你的人设、与对方的关系和当前剧情决定接受还是婉拒；在回复最前面单独写一条 [接受邀约] 或 [婉拒邀约:理由]，然后再用你的口吻自然地回复（婉拒时可以提议改天）。不要再发出新的 [邀约:…]。'}return _as.call(this,a,sys,ms,sig,cb)}}
+{const _dv=deliver,RE=/\[(接受邀约|婉拒邀约|拒绝邀约)[:：]?[^\]]*\]/g;deliver=async function(f,txt){const n0=D.tix.length;let t=String(txt==null?'':txt);const p=ivp();
+  if(p&&p.fid==f.id){const m=t.match(/\[(接受邀约|婉拒邀约|拒绝邀约)/);let st=null;if(m)st=m[1]=='接受邀约'?'ok':'no';else if(!/\[邀约[:：]/.test(t))st=/(不了|没空|去不了|不方便|改天|抱歉|对不起|不能去|拒绝)/.test(t)?'no':'ok';
+   t=t.replace(RE,'').trim();IV.pend=null;if(st){ivSet(p.id,st);const c=D.chats[f.id];c&&c.push({r:'s',t:(f.remark||f.name)+(st=='ok'?' 接受了你的邀约，票根已确认':' 婉拒了你的邀约，票根已作废'),ts:Date.now()})}}
+  if(!t){save();try{redraw(f)}catch(e){}return}
+  const r=await _dv.call(this,f,t);D.tix.slice(n0).forEach(v=>{if(!v.st){v.st='pending';v.from='a'}});save();try{redraw(f)}catch(e){}return r}}
+/* 聊天里的邀约卡：状态 + 接受/婉拒按钮；回应变成系统小条 */
+function ivSkin2(){const f=D.friends[cur];if(!f)return;const ms=$('#ms');if(!ms)return;const c=D.chats[f.id]||[],L=c.filter(m=>m.inv);
+ [...ms.querySelectorAll('.m.inv')].forEach((el,k)=>{const m=L[k];if(!m)return;const v=D.tix.find(x=>x.id==m.inv.id)||m.inv,st=v.st||'ok',mine=v.from=='u';el.classList.add('st-'+st,mine?'mine':'theirs');
+  const ft=el.querySelector('.iv-f');if(ft){ft.innerHTML='<span>'+IVST[st]+' · 2 TICKETS</span><em>查看票根 ›</em>';if(st=='pending'&&!mine)ft.insertAdjacentHTML('afterend','<div class="iv-a"><button data-act="ivn:'+v.id+'">婉拒</button><button class="y" data-act="ivy:'+v.id+'">接受</button></div>')}
+  if(mine){const p=el.previousElementSibling;if(p&&p.classList.contains('nsys'))p.textContent='系统通知 · 你向 '+(f.remark||f.name)+' 发出约会邀请，已生成 2 张票根'}});
+ c.forEach((m,i)=>{if(!m.ivr)return;const el=ms.querySelector('[data-act="mm:'+i+'"]');if(el){el.className='nsys';el.removeAttribute('data-act');el.textContent=String(m.t).replace(/^\[|\]$/g,'')}})}
+{const _d=drawMsgs;drawMsgs=function(){const r=_d.apply(this,arguments);try{ivSkin2()}catch(e){console.error(e)}return r}}
+/* 用户响应 / 发出 / 收回 / 赴约 */
+const say=(f,t,x)=>{const c=D.chats[f.id];c.push(Object.assign({r:'u',t,ivr:1,ts:Date.now()},x));fresh=c.length-1};
+const afterAct=f=>{save();$('#sheet').className='';redraw(f);refreshBadges();if(!ctl&&!f.local)gen(f)};
+ACT.ivy=id=>{const v=D.tix.find(x=>x.id==id);if(!v||v.st!='pending'||v.from=='u')return;const f=frOf(v.fid);ivSet(id,'ok');say(f,'[我接受了你的邀约「'+v.title+'」]');afterAct(f)};
+ACT.ivn=id=>{const v=D.tix.find(x=>x.id==id);if(!v||v.st!='pending'||v.from=='u')return;const f=frOf(v.fid);ivSet(id,'no');say(f,'[我婉拒了你的邀约「'+v.title+'」]');afterAct(f)};
+ACT.ivx=id=>{const v=D.tix.find(x=>x.id==id);if(!v)return;const f=frOf(v.fid),w=v.st;ivSet(id,'cx');IV.pend=null;say(f,w=='pending'?'[我收回了给你的邀约「'+v.title+'」]':'[我取消了与你的「'+v.title+'」行程]');afterAct(f)};
+ACT.ivu=id=>{const v=D.tix.find(x=>x.id==id);if(!v)return;const f=frOf(v.fid);ivSet(id,'used');D.chats[f.id].push({r:'s',t:'已赴约 · '+v.title+'，票根已撕',ts:Date.now()});save();$('#sheet').className='';redraw(f)};
+function ivForm(pre){pre=pre||{};const fs=D.friends.filter(f=>!f.local);if(!fs.length)return toast('先添加好友');const df=pre.fid||(D.friends[cur]&&!D.friends[cur].local&&D.friends[cur].id)||fs[0].id;
+ ioSh(ioHd('Invite / 邀请 TA')+fld('邀请谁','<select id="iv-f">'+fs.map(f=>'<option value="'+f.id+'"'+(f.id==df?' selected':'')+'>'+esc(f.remark||f.name)+'</option>').join('')+'</select>')+fld('类型','<select id="iv-k">'+Object.keys(TK_K).map(k=>'<option'+(k==pre.kind?' selected':'')+'>'+k+'</option>').join('')+'</select>')+fld('片名 / 展名 / 活动','<input id="iv-t" maxlength="30" placeholder="如：《花样年华》重映" value="'+esc(pre.title||'')+'">')+fld('地点','<input id="iv-p" maxlength="30" value="'+esc(pre.place||'')+'">')+fld('时间','<input id="iv-w" maxlength="30" placeholder="如：周六 19:30">')+fld('留言（可选）','<input id="iv-m" maxlength="40">')+'<button class="bt k w" data-act="ivgo">发出邀约</button>'+ioX)}
+ACT.ivgo=()=>{const g=i=>$('#'+i).value.trim(),f=frOf(g('iv-f'));if(!f.id)return;if(!g('iv-t')&&!g('iv-p'))return toast('请填写活动或地点');
+ const v=tkMake(f,[g('iv-k'),g('iv-t'),g('iv-p'),g('iv-w'),g('iv-m')]);v.from='u';v.st='pending';D.tix.push(v);const c=D.chats[f.id]=D.chats[f.id]||[];
+ c.push({r:'u',t:'[约会邀请·'+v.kind+'：'+v.title+' · '+v.place+' · '+v.time+']',inv:v,ts:Date.now()});fresh=c.length-1;IV.pend={fid:f.id,id:v.id,name:f.name,ts:Date.now()};save();$('#sheet').className='';redraw(f);toast('已向 '+(f.remark||f.name)+' 发出邀约');if(!ctl)gen(f)};
+ACT.ivnew=()=>{const f=D.friends[cur];ivForm({fid:f&&f.id})};
+{const _m=menu;menu=function(){_m.apply(this,arguments);const b=$('#mb'),f=D.friends[cur];if(b&&f&&!f.local)b.insertAdjacentHTML('afterbegin','<button class="dr" data-act="ivnew"><b>邀请 TA 出门</b>'+ic('plus')+'</button>')}}
+/* 票根：带状态的票根页 + 票根夹 */
+ACT.tko=id=>{const v=D.tix.find(x=>x.id==id);if(!v)return;const st=v.st||'ok',mine=v.from=='u',f=frOf(v.fid),me=(D.me&&D.me.name)||'我',ta=f.remark||f.name||'TA';let a='';
+ if(st=='pending')a=mine?'<p class="tk-c">等待 TA 回应…</p><button class="bt w" data-act="ivx:'+id+'">收回邀约</button>':'<button class="bt k w" data-act="ivy:'+id+'">接受邀约</button><button class="bt w" data-act="ivn:'+id+'">婉拒</button>';
+ else if(st=='ok')a='<button class="bt k w" data-act="ivu:'+id+'">已赴约 · 撕票</button><button class="bt w" data-act="ivx:'+id+'">取消行程</button>';
+ ioSh(ioHd('Tickets / 票根 · '+esc(v.kind)+' · '+IVST[st])+'<div class="tkl">'+tkHTML(v,me,v.su,v.nu,'w')+'<p class="tk-c">'+esc(me)+' 的票根</p>'+tkHTML(v,ta,v.sc,v.nc,'k')+'<p class="tk-c">'+esc(ta)+' 的票根</p></div>'+a+'<button class="bt w" data-act="sx">关闭</button>');
+ document.querySelectorAll('#sheet .tkw').forEach(e=>{e.classList.add('st-'+st);e.insertAdjacentHTML('beforeend','<em class="tk-stamp">'+IVSTAMP[st]+'</em>')})};
+ACT.tkl=x=>{const all=x=='all',f=D.friends[cur];if(!all&&!f)return;const l=D.tix.filter(v=>all||v.fid==f.id).slice().reverse();
+ ioSh(ioHd('Tickets / 票根夹')+(l.length?l.map(v=>'<button class="dr" data-act="tko:'+v.id+'"><b>'+esc(v.kind)+' · '+esc(v.title)+(all?' · '+esc(frOf(v.fid).remark||frOf(v.fid).name||''):'')+'</b><span class="mono">'+IVST[v.st||'ok']+' · '+esc(v.time)+'</span></button>').join(''):'<p class="mono" style="padding:14px 0;text-align:center">还没有票根</p>')+ioX)};
+
+/* ================= 地图 App ================= */
+const MPD=()=>{const d=D.map=D.map||{};d.maps=d.maps||{};d.amap=d.amap||{};d.mode=d.mode||'fic';return d};
+const MP={vb:[0,0,100,100],sel:null,am:null,mk:[],last:[],busy:0,pl:null};
+const mpFr=()=>{const d=MPD();return D.friends.find(f=>f.id==d.cur&&!f.local)||D.friends.find(f=>!f.local)};
+const mpCtx=f=>{let w='';try{const bind=D.wb.bind[f.id]||[];D.wb.books.forEach(b=>{if(b.on||bind.includes(b.id))(b.entries||[]).slice(0,30).forEach(e=>{w+='\n'+(e.title||e.comment||'')+'：'+String(e.content||e.text||e.t||'').slice(0,200)})})}catch(e){}
+ return '角色名：'+f.name+'\n人设：'+(f.role||'')+'\n说话风格：'+(f.style||'')+'\n背景与关系：'+(f.world||'')+(w?'\n世界书：'+w.slice(0,2800):'')};
+async function mpGen(extra){const f=mpFr();if(!f)return toast('先添加好友');if(MP.busy)return;MP.busy=1;mpRender();
+ try{const out=await askS(D.main,'你是地图设计师。根据下面角色的人设和世界书，为TA和「'+((D.me&&D.me.name)||'用户')+'」生成一张虚构的小型地图（可以是现实城市的某个街区，也可以是世界书里的奇幻/架空世界）。地点要体现角色的生活、喜好和世界观，必须包含：TA的住处(t=home)，以及适合约会的地点（各至少一处：电影院/放映厅 cinema、美术馆或展览 museum、演出场地 live、餐厅 food 或咖啡馆 cafe、散步的地方 park）。只输出 JSON，不要解释和 Markdown：{"name":"地图名","desc":"一句话介绍","districts":[{"n":"区名","x":0-100,"y":0-100}],"places":[{"n":"地名","t":"home|cinema|museum|live|food|cafe|park|work|shop|other","x":0-100,"y":0-100,"d":"一句话描述，体现人设"}],"roads":[[地点序号,地点序号]]}。districts 3-5 个，places 10-14 个，坐标均匀分布避免重叠，roads 用地点序号（从0开始）连成路网。'+(extra?'\n额外要求：'+extra:''),[{role:'user',content:mpCtx(f)}]);
+  const j=JSON.parse(String(out).match(/\{[\s\S]*\}/)[0]);if(!j.places||!j.places.length)throw Error('没有生成地点');
+  j.places=j.places.slice(0,16).map(p=>({n:String(p.n||'?').slice(0,12),t:String(p.t||'other'),x:Math.max(4,Math.min(96,+p.x||50)),y:Math.max(6,Math.min(94,+p.y||50)),d:String(p.d||'').slice(0,80)}));
+  j.roads=(j.roads||[]).filter(r=>j.places[r[0]]&&j.places[r[1]]&&r[0]!=r[1]);j.districts=(j.districts||[]).slice(0,5).map(d=>({n:String(d.n||''),x:+d.x||50,y:+d.y||50}));j.ts=Date.now();MPD().maps[f.id]=j;MP.vb=[0,0,100,100];MP.sel=null;save()}
+ catch(e){toast('生成失败：'+errMsg(e))}MP.busy=0;mpRender()}
+const mpSvg=()=>{const f=mpFr(),m=f&&MPD().maps[f.id];let g='';for(let i=0;i<=100;i+=10)g+='<path d="M'+i+' 0V100M0 '+i+'H100"/>';
+ let s='<svg id="mp-sv" viewBox="'+MP.vb.join(' ')+'"><g class="mg">'+g+'</g>';
+ if(m){m.districts.forEach(d=>s+='<text class="md" x="'+d.x+'" y="'+d.y+'">'+esc(d.n)+'</text>');
+  m.roads.forEach(r=>{const a=m.places[r[0]],b=m.places[r[1]];s+='<path class="mr" d="M'+a.x+' '+a.y+'Q'+((a.x+b.x)/2+(a.y-b.y)/10)+' '+((a.y+b.y)/2+(b.x-a.x)/10)+' '+b.x+' '+b.y+'"/>'});
+  m.places.forEach((p,i)=>{s+='<g class="mpl'+(MP.sel===i?' on':'')+'" data-act="mpp:'+i+'"><circle cx="'+p.x+'" cy="'+p.y+'" r="'+(p.t=='home'?2:1.5)+'" class="'+(/home|cinema|museum|live/.test(p.t)?'f':'')+'"/><circle cx="'+p.x+'" cy="'+p.y+'" r="4" fill="transparent"/><text x="'+p.x+'" y="'+(p.y+4.4)+'">'+esc(p.n)+'</text></g>'})}
+ return s+'</svg>'};
+function mpRender(){const A=$('#a-map');if(!A)return;const d=MPD(),f=mpFr(),m=f&&d.maps[f.id],am=d.mode=='amap';
+ A.innerHTML='<div class="mpt"><button class="rd-home" data-act="home">‹ 主页</button><div class="mps"><button class="'+(am?'':'a')+'" data-act="mpm:fic">虚构</button><button class="'+(am?'a':'')+'" data-act="mpm:amap">高德</button></div><button class="rb" data-act="tkl:all">票根</button></div>'
+ +'<div class="mpf">'+(D.friends.filter(x=>!x.local).map(x=>'<button class="rb'+(f&&x.id==f.id?' a':'')+'" data-act="mpf:'+x.id+'">'+esc(x.remark||x.name)+'</button>').join('')||'<span class="xp-d">先添加好友</span>')+'</div>'
+ +(am?'<div class="mpsr"><input id="mp-q" placeholder="搜索附近：电影院、美术馆、咖啡馆…"><button data-act="mpq">搜索</button></div><div id="mp-am"></div>':'<div class="mpv">'+mpSvg()+(m?'<div class="mpn"><b>'+esc(m.name||'')+'</b>'+esc(m.desc||'')+'</div>':'<div class="mpe"><b>空白地图</b><p>还没有地图。让 AI 根据 TA 的人设和世界书，画出 TA 的世界。</p></div>')+'<div class="mpz"><button data-act="mpz:in">＋</button><button data-act="mpz:out">－</button></div></div>')
+ +'<div class="mpb">'+(am?'<button data-act="mpkw">按 TA 的喜好找</button><button data-act="mpta">TA 约我</button><button data-act="mpk">高德设置</button>':'<button class="y" data-act="mpg">'+(MP.busy?'生成中…':m?'重新生成':'生成地图')+'</button>'+(m?'<button data-act="mpta">TA 约我</button><button data-act="mpx">清空</button>':''))+'</div>';
+ if(am)mpAmap()}
+const amapLoad=()=>new Promise((ok,no)=>{if(window.AMap)return ok();const a=MPD().amap;if(!a.key)return no(Error('请先点「高德设置」填写 Key'));if(a.sec)window._AMapSecurityConfig={securityJsCode:a.sec};const s=document.createElement('script');s.src='https://webapi.amap.com/maps?v=2.0&key='+encodeURIComponent(a.key)+'&plugin=AMap.PlaceSearch,AMap.Geolocation';s.onload=()=>window.AMap?ok():no(Error('高德脚本异常'));s.onerror=()=>no(Error('高德脚本加载失败，检查网络'));document.head.appendChild(s)});
+async function mpAmap(){const el=$('#mp-am');try{await amapLoad()}catch(e){el.innerHTML='<p class="xp-d" style="padding:20px">'+esc(errMsg(e))+'</p>';return}
+ try{MP.am&&MP.am.destroy()}catch(e){}const th=document.documentElement.dataset.theme,dk=th?th=='dark':matchMedia('(prefers-color-scheme:dark)').matches;
+ MP.am=new AMap.Map('mp-am',{zoom:13,resizeEnable:true,mapStyle:'amap://styles/'+(dk?'dark':'whitesmoke')});MP.mk=[];
+ AMap.plugin('AMap.Geolocation',()=>{try{const g=new AMap.Geolocation({timeout:8000});MP.am.addControl(g);g.getCurrentPosition()}catch(e){}})}
+function mpSearch(k,add){if(!MP.am)return;AMap.plugin('AMap.PlaceSearch',()=>{const ps=new AMap.PlaceSearch({pageSize:5}),c=MP.am.getCenter();ps.searchNearBy(k,[c.lng,c.lat],5000,(st,r)=>{if(st!='complete'||!r.poiList)return toast('没有搜到：'+k);if(!add){MP.mk.forEach(x=>MP.am.remove(x));MP.mk=[];MP.last=[]}
+  r.poiList.pois.forEach(p=>{const mk=new AMap.Marker({position:p.location,title:p.name});mk.on('click',()=>mpPlace({n:p.name,t:'',d:(p.type||'')+' · '+(p.address||''),c:p.location.lng.toFixed(5)+', '+p.location.lat.toFixed(5),k:k}));MP.am.add(mk);MP.mk.push(mk);MP.last.push({n:p.name})});MP.am.setFitView(MP.mk)})})}
+const mpKind=p=>({cinema:'电影',museum:'艺术展',live:'演出',food:'餐厅',cafe:'餐厅',park:'散步'}[p.t]||tkKind((p.k||'')+p.n));
+function mpPlace(p){MP.pl=p;ioSh(ioHd('Place / 地点')+'<h3 style="font:600 24px/1.2 var(--ios);margin:4px 0 6px">'+esc(p.n)+'</h3><p class="xp-d" style="margin:0 0 14px">'+esc(p.d||'')+'</p><button class="bt k w" data-act="mpinv">邀请 TA 来这里</button><button class="bt w" data-act="mpsend">把位置发给 TA</button>'+ioX)}
+Object.assign(ACT,{
+ mpm:x=>{MPD().mode=x;save();mpRender()},mpf:x=>{MPD().cur=x;save();mpRender()},
+ mpp:i=>{const f=mpFr(),m=MPD().maps[f.id],p=m.places[+i];MP.sel=+i;mpPlace({n:p.n,t:p.t,d:p.d,c:p.x.toFixed(1)+', '+p.y.toFixed(1)});const s=$('#mp-sv');if(s)s.querySelectorAll('.mpl').forEach((e,k)=>e.classList.toggle('on',k==+i))},
+ mpinv:()=>{const p=MP.pl,k=mpKind(p);ivForm({fid:mpFr().id,kind:k,title:/电影|艺术展|演出/.test(k)?'':p.n,place:p.n})},
+ mpsend:()=>{const f=mpFr(),p=MP.pl,c=D.chats[f.id]=D.chats[f.id]||[];c.push({r:'u',t:'[位置] '+p.n+'（'+p.c+'）',loc:{n:p.n,c:p.c},ts:Date.now()});fresh=c.length-1;save();$('#sheet').className='';toast('已发到和 '+(f.remark||f.name)+' 的聊天');if(!ctl)gen(f)},
+ mpz:x=>{const v=MP.vb,k=x=='in'?.7:1.4,cx=v[0]+v[2]/2,cy=v[1]+v[3]/2,w=Math.max(20,Math.min(160,v[2]*k));MP.vb=[cx-w/2,cy-w/2,w,w];const s=$('#mp-sv');s&&s.setAttribute('viewBox',MP.vb.join(' '))},
+ mpg:()=>ioSh(ioHd('Generate / 生成地图')+'<p class="xp-d" style="margin:0">会读取 TA 的人设、说话风格、背景与绑定的世界书，画出一张属于 TA 的地图。</p>'+fld('额外要求（可选）','<textarea id="mp-x" rows="3" placeholder="如：雨夜港口城市 / 现实中的上海街区 / 魔法学院"></textarea>')+'<button class="bt k w" data-act="mpgo">开始生成</button>'+ioX),
+ mpgo:()=>{const x=$('#mp-x').value.trim();$('#sheet').className='';mpGen(x)},
+ mpx:(a,b,t)=>{if(!ok2(t))return;delete MPD().maps[mpFr().id];save();mpRender()},
+ mpq:()=>{const k=($('#mp-q')||{}).value;k&&k.trim()&&mpSearch(k.trim())},
+ mpk:()=>{const a=MPD().amap;ioSh(ioHd('高德地图 / AMap')+'<p class="xp-d" style="margin:0">在高德开放平台创建「Web 端（JS API）」应用，把 Key 和安全密钥填在这里。</p>'+fld('Key','<input id="am-k" autocapitalize="off" value="'+esc(a.key||'')+'">')+fld('安全密钥 securityJsCode','<input id="am-s" autocapitalize="off" value="'+esc(a.sec||'')+'">')+'<button class="bt k w" data-act="mpks">保存</button>'+ioX)},
+ mpks:()=>{const a=MPD().amap;a.key=$('#am-k').value.trim();a.sec=$('#am-s').value.trim();save();$('#sheet').className='';if(window.AMap)return toast('已保存，刷新页面后生效');mpRender()},
+ mpkw:async()=>{const f=mpFr();if(!f||!MP.am)return;toast('TA 在挑地方…');try{const o=await askS(D.main,'根据角色人设，给出 3 个适合和对方约会的高德地图搜索关键词（如「艺术电影院」「独立书店」「江边步道」）。只输出 JSON 字符串数组。',[{role:'user',content:mpCtx(f)}]);const a=JSON.parse(String(o).match(/\[[\s\S]*\]/)[0]).slice(0,3);MP.mk.forEach(x=>MP.am.remove(x));MP.mk=[];MP.last=[];a.forEach(k=>mpSearch(String(k),1))}catch(e){toast('失败：'+errMsg(e))}},
+ mpta:async()=>{const f=mpFr();if(!f||ctl)return;const m=MPD().maps[f.id],L=MPD().mode=='amap'?MP.last.map(p=>p.n):m?m.places.map(p=>p.n+'（'+p.t+'）'):[];if(!L.length)return toast('地图上还没有地点');toast((f.remark||f.name)+' 在想去哪…');
+  try{const h=(D.chats[f.id]||[]).filter(x=>x.r!='s').slice(-(f.mem||D.cfg.mem)).map(x=>({role:x.r=='u'?'user':'assistant',content:x.t}));
+   const o=await askS(f.temp==null?D.main:Object.assign({},D.main,{temp:f.temp}),sysP(f),h.concat([{role:'user',content:'（系统提示，不要提及）请你以角色身份，从下面地图地点里挑一处，主动约我出门：先用一两句话自然开口，再单独写一条 [邀约:类型|标题|地点|时间|一句话留言]。地点：'+L.slice(0,20).join('、')}]));await deliver(f,o)}catch(e){toast('失败：'+errMsg(e))}}});
+ph.addEventListener('pointerdown',e=>{if(e.target.closest('#mp-sv'))MP.dr={x:e.clientX,y:e.clientY,vb:MP.vb.slice(),mv:0}});
+ph.addEventListener('pointermove',e=>{const d=MP.dr,s=$('#mp-sv');if(!d||!s)return;const r=s.getBoundingClientRect(),k=d.vb[2]/Math.min(r.width,r.height),dx=e.clientX-d.x,dy=e.clientY-d.y;if(Math.abs(dx)+Math.abs(dy)>5)d.mv=1;if(d.mv){MP.vb=[d.vb[0]-dx*k,d.vb[1]-dy*k,d.vb[2],d.vb[3]];s.setAttribute('viewBox',MP.vb.join(' '))}});
+['pointerup','pointercancel'].forEach(t=>ph.addEventListener(t,()=>{if(MP.dr&&MP.dr.mv){MP.nc=1;setTimeout(()=>MP.nc=0,80)}MP.dr=null}));
+ph.addEventListener('click',e=>{if(MP.nc){MP.nc=0;e.stopPropagation()}},true);
+ph.addEventListener('wheel',e=>{if(e.target.closest('#mp-sv')){e.preventDefault();ACT.mpz(e.deltaY<0?'in':'out')}},{passive:false});
+document.getElementById('a-mcp').insertAdjacentHTML('afterend','<section class="app" id="a-map"></section>');
+document.getElementById('sms').parentNode.insertAdjacentHTML('beforeend','<symbol id="mapi" viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14"/></symbol>');
+CON.map={p:[[18,30],[42,22],[60,50],[34,70],[80,66]],e:[[0,1],[1,2],[2,3],[2,4]]};META.map={n:'15',t:'Atlas',ic:'mapi'};APPS.push(['map','地图','Atlas']);PWN.map='地图';
+$('#hg').innerHTML=APPS.map(a=>`<button class="ap" data-act="app:${a[0]}">${appIcon(a[0],52)}<b>${a[1]}</b><em>${a[2]}</em><i class="bd2" id="b-${a[0]}"></i></button>`).join('');
+{const _s=show;show=function(id){const r=_s.apply(this,arguments);if(id=='map')mpRender();return r}}
+{const s=document.createElement('style');s.textContent=`
+#wxo .msgs .m.u.inv{width:min(252px,70vw);max-width:none;padding:0;margin:0 0 3px;border-radius:20px;background:var(--iv-bg);color:var(--iv-fg);border:1px solid var(--iv-ln);box-shadow:none;overflow:hidden;cursor:pointer;display:block;align-self:flex-end;font:400 14px/1.4 var(--ios)}
+#wxo .msgs .m.u.inv .iv-t,#wxo .msgs .m.u.inv .iv-b p{color:inherit}
+.m.inv.st-no,.m.inv.st-cx{opacity:.55}.m.inv.st-no .iv-b b,.m.inv.st-cx .iv-b b{text-decoration:line-through}
+.m.inv.st-pending .iv-f{background:transparent;color:var(--iv-fg);border-top:1px dashed var(--iv-mut)}.m.inv.st-used .iv-f{background:var(--iv-mut)}
+.iv-a{display:flex;gap:8px;padding:10px 14px 14px}.iv-a button{flex:1;padding:9px 0;border-radius:999px;border:1px solid var(--iv-ln);font:600 13px var(--ios);color:var(--iv-fg)}.iv-a button.y{background:var(--iv-ft);color:var(--iv-ftc);border-color:var(--iv-ft)}
+.tkw{position:relative}.tk-stamp{position:absolute;left:36%;top:50%;transform:translate(-50%,-50%) rotate(-12deg);font:700 20px var(--ios);font-style:normal;letter-spacing:.2em;padding:2px 12px;border:3px solid currentColor;border-radius:6px;pointer-events:none;background:rgba(128,128,128,.14)}
+.tkw.w .tk-stamp{color:#000}.tkw.k .tk-stamp{color:#fff}.tkw.st-ok .tk-stamp{opacity:.35}.tkw.st-pending .tk{opacity:.8}.tkw.st-no,.tkw.st-cx{filter:grayscale(1) opacity(.5)}.tkw.st-used .tk{opacity:.6}
+#a-map{--ios:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Noto Sans CJK SC",sans-serif;font-family:var(--ios)}
+#a-map .mpt{display:flex;align-items:center;justify-content:space-between;padding:8px 20px 0}#a-map .rd-home{font:400 16px var(--ios);color:var(--fg)}
+#a-map .mps{display:flex;background:var(--soft);border-radius:999px;padding:3px}#a-map .mps button{padding:5px 16px;border-radius:999px;font:600 12px var(--ios);color:var(--mut)}#a-map .mps button.a{background:var(--fg);color:var(--bg)}
+#a-map .rb{padding:6px 13px;border-radius:999px;background:var(--soft);font:600 12px var(--ios);white-space:nowrap}#a-map .rb.a{background:var(--fg);color:var(--bg)}
+#a-map .mpf{display:flex;gap:8px;overflow-x:auto;padding:10px 20px}#a-map .xp-d{font:400 13px/1.6 var(--ios);color:var(--mut)}
+#a-map .mpv,#mp-am{position:relative;flex:1;min-height:0;margin:0 12px;border-radius:20px;overflow:hidden;background:var(--soft)}
+#mp-sv{width:100%;height:100%;touch-action:none;display:block}#mp-sv .mg{stroke:var(--ln);stroke-width:.15;fill:none}#mp-sv .mr{stroke:var(--mut);stroke-width:.5;fill:none;opacity:.6}
+#mp-sv .md{font:300 7px var(--serif);fill:var(--fg);opacity:.12;letter-spacing:.3em}#mp-sv .mpl{cursor:pointer}#mp-sv .mpl circle:first-child{fill:var(--bg);stroke:var(--fg);stroke-width:.5}#mp-sv .mpl circle.f{fill:var(--fg)}
+#mp-sv .mpl text{font:500 2.6px var(--ios);fill:var(--fg);text-anchor:middle;paint-order:stroke;stroke:var(--soft);stroke-width:.8}#mp-sv .mpl.on circle:first-child{stroke-width:1.3}
+.mpe{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:6px;pointer-events:none;color:var(--mut)}.mpe b{font:300 34px var(--serif);color:var(--fg)}.mpe p{font:400 13px/1.6 var(--ios);max-width:220px}
+.mpn{position:absolute;left:14px;top:12px;pointer-events:none;font:400 11px/1.5 var(--ios);color:var(--mut);max-width:60%}.mpn b{display:block;font:600 15px var(--ios);color:var(--fg)}
+.mpz{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:6px}.mpz button{width:36px;height:36px;border-radius:50%;background:var(--bg);border:1px solid var(--ln);font:400 18px var(--ios)}
+.mpb{display:flex;gap:8px;padding:12px 16px 26px}.mpb button{flex:1;padding:12px 6px;border-radius:14px;background:var(--soft);font:600 13px var(--ios)}.mpb button.y{background:var(--fg);color:var(--bg)}
+.mpsr{display:flex;gap:8px;padding:0 16px 8px}.mpsr input{flex:1;border:0;background:var(--soft);border-radius:12px;padding:10px 12px;font:400 14px var(--ios);outline:0}.mpsr button{padding:0 14px;border-radius:12px;background:var(--fg);color:var(--bg);font:600 13px var(--ios)}`;document.head.appendChild(s)}
+}
+
+/* ---------- v44：外卖 App（App 跳转卡片 + 接口工具卡片 + 内置教程） ---------- */
+{
+const DL=()=>{const d=D.dl=D.dl||{};d.cards=d.cards||[];return d};
+let DLQ='';
+const PF=[{id:'mt',n:'美团外卖',u:'imeituan://',w:'https://h5.waimai.meituan.com/'},{id:'el',n:'饿了么',u:'eleme://',w:'https://h5.ele.me/'},{id:'jd',n:'京东外卖',u:'openapp.jdmobile://',w:'https://h5.waimai.jd.com/'}];
+const sub=(s,a,enc)=>String(s||'').replace(/\{\{(\w+)\}\}/g,(m,k)=>a&&a[k]!=null?(enc?encodeURIComponent(a[k]):a[k]):'');
+const dlRun=async(c,a)=>{const h={};sub(c.hdr,a).split('\n').forEach(l=>{const i=l.indexOf(':');if(i>0)h[l.slice(0,i).trim()]=l.slice(i+1).trim()});const o={method:c.method||'GET',headers:h};
+ if(o.method!='GET'&&c.body){o.body=sub(c.body,a);if(!h['Content-Type'])h['Content-Type']='application/json'}
+ let r;try{r=await fetch(sub(c.url,a,1),o)}catch(e){throw Error('请求失败（地址错误或被跨域 CORS 限制）')}const t=await r.text();return 'HTTP '+r.status+'\n'+t.slice(0,3000)};
+const dlSync=()=>{for(let i=LT.length-1;i>=0;i--)if(LT[i].dl)LT.splice(i,1);DL().cards.forEach(c=>{if(c.tool)LT.push({dl:1,g:'接口卡片',name:'api_'+c.id,description:(c.desc||c.name)+'（自定义接口卡片，参数 q 会替换 URL/请求体里的 {{q}}）',inputSchema:{properties:{q:{type:'string',description:'查询内容，可省略'}}},run:a=>dlRun(c,a||{})})})};
+dlSync();
+const dlRender=()=>{const A=$('#a-dl'),d=DL();
+ A.innerHTML='<div class="scroll xp"><button class="rd-home" data-act="home">‹ 主页</button><div class="hd"><h2>外卖</h2></div><p class="xp-d">选好想吃的，一键复制关键词并打开外卖 App，由你确认并付款；也可以接入自己的下单接口，让 TA 在聊天里调用。</p>'
+ +fld('想吃什么','<input id="dl-q" placeholder="如：热干面 / 轻食沙拉" value="'+esc(DLQ)+'">')+'<div class="dl-g">'+PF.map(p=>'<button class="dl-c" data-act="dlgo:'+p.id+'"><b>'+p.n+'</b><small>复制关键词 · 打开 App</small></button>').join('')+'</div>'
+ +'<button class="rd-imp" data-act="dlpick">让 TA 帮我挑一份</button><div class="rd-l">接口工具卡片</div>'
+ +(d.cards.map(c=>'<div class="xp-s"><div class="xp-sh"><b>'+esc(c.name)+'</b><small>'+esc(c.method||'GET')+(c.tool?' · TA 可调用':'')+'</small></div><div class="xp-u">'+esc(c.url)+'</div><div class="rd-g"><button class="rb" data-act="dltest:'+c.id+'">测试</button><button class="rb'+(c.tool?' a':'')+'" data-act="dltool:'+c.id+'">'+(c.tool?'已给 TA 用':'给 TA 用')+'</button><button class="rb" data-act="dledit:'+c.id+'">编辑</button><button class="rb dng" data-act="dldel:'+c.id+'">删除</button></div></div>').join('')||'<p class="rd-e">还没有卡片。可添加下单、查订单、查配送等接口。</p>')
+ +'<button class="rd-imp" data-act="dlnew">＋ 添加接口卡片</button><button class="rd-imp o" data-act="dltut">内置教程</button></div>'};
+const dlForm=c=>{c=c||{};ioSh(ioHd(c.id?'编辑接口卡片':'添加接口卡片')+fld('名称','<input id="dc-n" maxlength="20" value="'+esc(c.name||'')+'">')+fld('说明（TA 靠它判断何时调用）','<input id="dc-d" maxlength="60" value="'+esc(c.desc||'')+'" placeholder="如：根据关键词搜索附近外卖">')
+ +fld('请求方式','<select id="dc-m">'+['GET','POST'].map(m=>'<option'+(m==c.method?' selected':'')+'>'+m+'</option>').join('')+'</select>')+fld('接口地址（可含 {{q}}）','<input id="dc-u" autocapitalize="off" value="'+esc(c.url||'')+'" placeholder="https://example.com/api?kw={{q}}">')
+ +fld('请求头（每行一个，可选）','<textarea id="dc-h" rows="2" placeholder="Authorization: Bearer xxx">'+esc(c.hdr||'')+'</textarea>')+fld('请求体（POST，可含 {{q}}）','<textarea id="dc-b" rows="3">'+esc(c.body||'')+'</textarea>')
+ +'<button class="bt k w" data-act="dlsave:'+(c.id||'new')+'">保存</button>'+ioX)};
+const TUT=[['外卖是怎么“下单”的','美团、饿了么没有面向个人的公开下单接口，App 内也无法被网页代付。所以这里的“真实下单”分两层：① 跳转：复制关键词并拉起外卖 App，你在 App 里确认并付款（在套壳 App 或手机浏览器里可用，电脑上无效）；② 接口：对接你自己能调用的下单服务，如商家/餐厅自家接口、n8n / Zapier / 自建服务的 Webhook。'],
+['添加接口卡片','点「＋ 添加接口卡片」，填地址、方式、请求头和请求体。地址或请求体里写 {{q}}，调用时会被替换成关键词。保存后先点「测试」，看到 HTTP 200 再打开「给 TA 用」。'],
+['让 TA 在聊天里调用','先在 MCP App 里给角色开启“使用工具”，再把卡片设为「给 TA 用」。TA 会按说明自动调用，并用人设口吻转述结果。涉及花钱的接口，建议让服务端要求你二次确认，不要给 TA 无确认的下单权限。'],
+['跨域（CORS）与密钥','网页直接请求第三方接口需要对方允许跨域；不允许时请自建一个中转服务（Cloudflare Workers、Vercel 等）转发，并把密钥放在中转服务里，不要写在请求头里。'],
+['套壳 App','解压 pocket-shell.zip，按里面 README 上传到 GitHub，Actions 会自动打出 apk。套壳后自定义 scheme 跳转、定位、麦克风都更稳定。']];
+Object.assign(ACT,{
+ dlgo:id=>{const p=PF.find(x=>x.id==id),q=($('#dl-q')||{}).value||'';DLQ=q.trim();try{navigator.clipboard.writeText(DLQ)}catch(e){}toast(DLQ?'已复制「'+DLQ+'」，正在打开 '+p.n:'正在打开 '+p.n);setTimeout(()=>{location.href=p.u;setTimeout(()=>{if(!document.hidden)window.open(p.w,'_blank')},1600)},400)},
+ dlpick:async()=>{const f=(D.friends[cur]&&!D.friends[cur].local&&D.friends[cur])||D.friends.find(x=>!x.local);if(!f)return toast('先添加好友');toast((f.remark||f.name)+' 在想吃什么…');
+  try{const o=await askS(D.main,'你是角色「'+f.name+'」。人设：'+(f.role||'')+'；说话风格：'+(f.style||'')+'；背景：'+(f.world||'')+'。现在是 '+new Date().toLocaleString('zh-CN')+'。请按人设和时间，替对方挑一份外卖。只输出 JSON：{"food":"适合直接搜索的菜名关键词","say":"一两句人设口吻的推荐语"}',[{role:'user',content:'帮我挑一份'+(DLQ?'，倾向：'+DLQ:'')+'外卖'}]);
+   const j=JSON.parse(String(o).match(/\{[\s\S]*\}/)[0]);DLQ=String(j.food||'').slice(0,20);dlRender();ioSh(ioHd('Pick / '+esc(f.remark||f.name)+' 的推荐')+'<h3 style="font:600 24px var(--ios);margin:4px 0 8px">'+esc(DLQ)+'</h3><p class="xp-d" style="margin:0 0 14px">'+esc(j.say||'')+'</p>'+PF.map(p=>'<button class="bt w" data-act="dlgo:'+p.id+'">去 '+p.n+' 搜索</button>').join('')+ioX)}catch(e){toast('失败：'+errMsg(e))}},
+ dlnew:()=>dlForm(),dledit:id=>dlForm(DL().cards.find(c=>c.id==id)),
+ dlsave:id=>{const g=i=>$('#'+i).value.trim(),n=g('dc-n'),u=g('dc-u');if(!n||!/^https?:\/\//i.test(u))return toast('请填写名称和以 http(s):// 开头的地址');const d=DL();let c=d.cards.find(x=>x.id==id);if(!c){c={id:uid(),tool:0};d.cards.push(c)}Object.assign(c,{name:n,desc:g('dc-d'),method:g('dc-m'),url:u,hdr:$('#dc-h').value,body:$('#dc-b').value});dlSync();save();$('#sheet').className='';dlRender()},
+ dltool:id=>{const c=DL().cards.find(x=>x.id==id);c.tool=c.tool?0:1;dlSync();save();dlRender()},
+ dldel:(id,y,t)=>{if(!ok2(t))return;const d=DL();d.cards=d.cards.filter(c=>c.id!=id);dlSync();save();dlRender()},
+ dltest:async id=>{const c=DL().cards.find(x=>x.id==id);ioSh(ioHd('测试 · '+esc(c.name))+'<pre id="dl-o" style="white-space:pre-wrap;word-break:break-all;font:400 13px/1.55 ui-monospace,monospace;max-height:300px;overflow:auto">运行中…</pre>'+ioX);let r;try{r=await dlRun(c,{q:DLQ||'test'})}catch(e){r='错误：'+errMsg(e)}const o=$('#dl-o');if(o)o.textContent=r},
+ dltut:()=>ioSh(ioHd('Guide / 内置教程')+TUT.map((t,i)=>'<div style="margin:0 0 14px"><b style="font:600 15px var(--ios)">'+(i+1)+'. '+t[0]+'</b><p class="xp-d" style="margin:4px 0 0">'+t[1]+'</p></div>').join('')+ioX)});
+document.getElementById('a-map').insertAdjacentHTML('afterend','<section class="app" id="a-dl"></section>');
+document.getElementById('sms').parentNode.insertAdjacentHTML('beforeend','<symbol id="dli" viewBox="0 0 24 24"><path d="M5 9h14l-1.5 10h-11zM8 9a4 4 0 0 1 8 0M12 5V3"/></symbol>');
+CON.dl={p:[[24,36],[46,24],[70,40],[36,68],[66,70]],e:[[0,1],[1,2],[0,3],[3,4],[2,4]]};META.dl={n:'16',t:'Order',ic:'dli'};APPS.push(['dl','外卖','Order']);PWN.dl='外卖';
+$('#hg').innerHTML=APPS.map(a=>`<button class="ap" data-act="app:${a[0]}">${appIcon(a[0],52)}<b>${a[1]}</b><em>${a[2]}</em><i class="bd2" id="b-${a[0]}"></i></button>`).join('');
+{const _s=show;show=function(id){const r=_s.apply(this,arguments);if(id=='dl')dlRender();return r}}
+{const s=document.createElement('style');s.textContent=`#a-dl{--ios:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC",sans-serif;font-family:var(--ios)}
+#a-dl .scroll.xp{padding:52px 24px 120px}#a-dl .hd h2{font:800 34px/1.1 var(--ios);letter-spacing:-.02em}#a-dl .rd-home{font:400 16px var(--ios);color:var(--fg)}
+#a-dl .rd-l{font:600 12px var(--ios);color:var(--mut);margin:18px 0 6px}#a-dl .rd-e{color:var(--mut);font:400 13px/1.6 var(--ios);padding:8px 0}
+#a-dl .rd-imp{display:block;width:100%;text-align:center;padding:14px;border-radius:14px;background:var(--fg);color:var(--bg);font:600 14px var(--ios);margin:12px 0 6px}#a-dl .rd-imp.o{background:var(--soft);color:var(--fg)}
+#a-dl .dl-g{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.dl-c{padding:16px 14px;border-radius:16px;background:var(--soft);text-align:left;display:flex;flex-direction:column;gap:4px}.dl-c b{font:700 16px var(--ios)}.dl-c small{font:400 11px var(--ios);color:var(--mut)}
+#a-dl .rd-g{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 4px}#a-dl .rb{padding:7px 13px;border-radius:999px;background:var(--bg);font:600 12px var(--ios)}#a-dl .rb.a{background:var(--fg);color:var(--bg)}#a-dl .rb.dng{color:#ff3b30}`;document.head.appendChild(s)}
+}
+
+/* ---------- v45：系统级通知（后台时弹系统通知；套壳 App 里用原生本地通知，提醒可在 App 关闭后触发） ---------- */
+{
+AUTO.push(['sysnt','系统级通知','App 切到后台时，用手机系统通知提醒新消息、邀约和提醒。',1]);
+const SN=()=>D.set.sysnt!==0,cap=()=>window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications;let nid=1;
+async function sysNote(t,b,at){const L=cap();try{if(L){let p=await L.checkPermissions();if(p.display!='granted')p=await L.requestPermissions();if(p.display!='granted')return;
+  await L.schedule({notifications:[Object.assign({id:(Date.now()%2e9)+(nid++),title:t,body:b},at?{schedule:{at:new Date(at)}}:{})]});return}
+ if(!('Notification' in window)||Notification.permission!='granted')return;const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();if(reg)reg.showNotification(t,{body:b});else new Notification(t,{body:b})}catch(e){}}
+{const _n=notify;notify=function(o){const r=_n.apply(this,arguments);try{if(SN()&&document.hidden&&o)sysNote(o.title||'POCKET',o.text||'')}catch(e){}return r}}
+{const t=LT.find(x=>x.name=='set_reminder');if(t){const _r=t.run;t.run=async a=>{const r=await _r(a);if(cap())sysNote('提醒',String(a.text||''),Date.now()+Number(a.minutes)*6e4);return r}}}
+document.addEventListener('click',()=>{if(!SN())return;const L=cap();if(L)L.requestPermissions().catch(()=>{});else if('Notification' in window&&Notification.permission=='default')Notification.requestPermission()},{once:true});
+}
+
+/* ---------- v46：聊天外卖订单卡（制作中→配送中→已送达→签收）+ 日程 App ---------- */
+{
+const OL={prep:'制作中',ship:'配送中',done:'已送达',got:'已签收',cx:'已取消'};
+AUTO.push(['fdai','允许 TA 给你点外卖 / 生成订单卡','TA 可能在聊天里给你点一杯奶茶或一份夜宵，并生成可跟踪状态的订单卡。',1]);
+const FD_HINT='\n\n【点外卖】当剧情合适时（对方加班、生病、天气不好、想犒劳或关心对方，且符合你的人设与关系），你可以给对方点一份外卖：在回复中单独写一条 [外卖:菜品|店名|预计送达分钟(10-40)|一句话留言]。不要滥用，绝大多数回复不应包含；对方签收或拒收后请自然接话。';
+{const _as=askS;askS=function(a,sys,ms,sig,cb){if(typeof sys=='string'&&sys.indexOf('你正在扮演微信好友')>-1&&sys.indexOf('[外卖:')<0&&D.set.fdai!==0)sys+=FD_HINT;return _as.call(this,a,sys,ms,sig,cb)}}
+const fo=id=>D.friends.find(x=>x.id==id)||{},frN=id=>{const f=fo(id);return f.remark||f.name||''};
+const odSt=o=>{if(o.st)return o.st;const e=(Date.now()-o.ts)/6e4;return e<o.eta*.35?'prep':e<o.eta?'ship':'done'};
+const odMake=(f,p,from)=>({id:'OD'+String(Date.now()).slice(-7)+(10+(Math.random()*90|0)),fid:f.id,item:(p[0]||'').trim()||'外卖',shop:(p[1]||'').trim()||'附近的店',eta:Math.max(10,Math.min(40,parseInt(p[2])||20)),msg:(p[3]||'').trim(),from,ts:Date.now(),last:'prep'});
+const odPush=(f,o)=>{const c=D.chats[f.id]=D.chats[f.id]||[];D.od=D.od||[];D.od.push(o);c.push({r:o.from=='u'?'u':'a',t:'[外卖订单·'+o.item+' · '+o.shop+' · 状态：制作中]',od:o,ts:Date.now()});fresh=c.length-1};
+function odSet(id,p){D.od=D.od||[];const it=D.od.find(x=>x.id==id);if(it)Object.assign(it,p);const lab=OL[odSt(it||p)];Object.values(D.chats).forEach(c=>c.forEach(m=>{if(m.od&&m.od.id==id){Object.assign(m.od,p);m.t=String(m.t).replace(/ · 状态：[^\]]*\]$/,' · 状态：'+lab+']')}}))}
+const chip=(f,t)=>{const c=D.chats[f.id];c.push({r:'u',t,ivr:1,ts:Date.now()});fresh=c.length-1};
+const after=f=>{save();$('#sheet').className='';redraw(f);refreshBadges();if(!ctl&&!f.local)gen(f)};
+{const _dv=deliver;deliver=async function(f,txt){const re=/\[外卖[:：]\s*([^\]\n]*)\]/g,L=[];const t=String(txt==null?'':txt).replace(re,(s,b)=>{L.push(b.split(/[|｜]/).map(x=>x.trim()));return '\n'}).replace(/\n{2,}/g,'\n').trim();
+  if(!L.length)return _dv.apply(this,arguments);if(t)await _dv.call(this,f,t);if(D.set.fdai===0)return;await sleep(600);const o=odMake(f,L[0],'a');odPush(f,o);
+  const vis=$('#a-wx').classList.contains('on')&&$('#wxo').classList.contains('on')&&D.friends[cur]===f;if(!vis)D.unread[f.id]=(D.unread[f.id]||0)+1;
+  if(!f.mute)notify({app:'wx',title:(f.remark||f.name)+' · 给你点了外卖',text:f.enc?'加密消息':o.item+' · '+o.shop,go:'wx:'+D.friends.indexOf(f)});save();redraw(f);refreshBadges()}}
+function odSkin(){const f=D.friends[cur];if(!f)return;const ms=$('#ms');if(!ms)return;(D.chats[f.id]||[]).forEach((m,i)=>{if(!m.od)return;const el=ms.querySelector('[data-act="mm:'+i+'"]');if(!el)return;
+ const o=(D.od||[]).find(x=>x.id==m.od.id)||m.od,st=odSt(o),mine=o.from=='u',k=['prep','ship','done'].indexOf(st);let a='';
+ if(st=='done'&&!mine)a='<div class="od-a"><button class="y" data-act="odg:'+o.id+'">签收</button></div>';else if((st=='prep'||st=='ship')&&!['cx'].includes(st))a='<div class="od-a"><button data-act="odx:'+o.id+'">'+(mine?'取消订单':'拒收')+'</button></div>';
+ el.className='m '+m.r+' od st-'+st;el.removeAttribute('data-act');
+ el.innerHTML='<div class="od-h"><span>DELIVERY</span><em>'+OL[st]+'</em></div><div class="od-b"><b>'+esc(o.item)+'</b><p>'+esc(o.shop)+(mine?' · 送给 TA':' · TA 给你点的')+'</p>'+(o.msg?'<q>'+esc(o.msg)+'</q>':'')+'</div><div class="od-p">'+[0,1,2].map(j=>'<i class="'+(st!='cx'&&(j<=k||st=='got')?'on':'')+'"></i>').join('')+'</div>'+a})}
+{const _d=drawMsgs;drawMsgs=function(){const r=_d.apply(this,arguments);try{odSkin()}catch(e){console.error(e)}return r}}
+ACT.odg=id=>{const o=(D.od||[]).find(x=>x.id==id);if(!o||odSt(o)!='done')return;odSet(id,{st:'got'});const f=fo(o.fid);chip(f,'[我签收了你点的「'+o.item+'」]');after(f)};
+ACT.odx=id=>{const o=(D.od||[]).find(x=>x.id==id);if(!o)return;const s=odSt(o);if(s!='prep'&&s!='ship')return;odSet(id,{st:'cx'});const f=fo(o.fid);chip(f,o.from=='u'?'[我取消了给你点的「'+o.item+'」]':'[我拒收了你点的「'+o.item+'」]');after(f)};
+ACT.odnew=()=>{const f=D.friends[cur];if(!f||f.local)return;ioSh(ioHd('Delivery / 给 TA 点外卖')+fld('想点什么','<input id="od-i" maxlength="30" placeholder="如：杨枝甘露">')+fld('店名（可选）','<input id="od-s" maxlength="30">')+fld('预计送达（分钟，10-40）','<input id="od-e" inputmode="numeric" value="20">')+fld('留言（可选）','<input id="od-m" maxlength="40">')+'<button class="bt k w" data-act="odgo">下单</button>'+ioX)};
+ACT.odgo=()=>{const g=i=>$('#'+i).value.trim(),f=D.friends[cur];if(!g('od-i'))return toast('请填写想点什么');const o=odMake(f,[g('od-i'),g('od-s'),g('od-e'),g('od-m')],'u');odPush(f,o);toast('已下单，预计 '+o.eta+' 分钟送达');after(f)};
+{const _m=menu;menu=function(){_m.apply(this,arguments);const b=$('#mb'),f=D.friends[cur];if(b&&f&&!f.local)b.insertAdjacentHTML('afterbegin','<button class="dr" data-act="odnew"><b>给 TA 点外卖</b>'+ic('plus')+'</button>')}}
+setInterval(()=>{let ch=0;(D.od||[]).forEach(o=>{const st=odSt(o);if(st==o.last)return;ch=1;const f=fo(o.fid);odSet(o.id,{last:st});
+ if(o.from=='a'&&(st=='ship'||st=='done')&&!f.mute)notify({app:'wx',title:(f.remark||f.name)+' · 外卖',text:o.item+(st=='ship'?' 已出餐，配送中':' 已送达，记得签收'),go:'wx:'+D.friends.indexOf(f)});
+ if(o.from=='u'&&st=='done'){odSet(o.id,{st:'got'});chip(f,'[我给你点的「'+o.item+'」已经送到你那了]');if(!ctl&&!f.local)gen(f)}});if(ch){save();const f=D.friends[cur];f&&redraw(f)}},3e4);
+
+/* ================= 日程 App ================= */
+const pAt=s=>{s=String(s||'');const n=new Date(),T=(k)=>new Date(n.getFullYear(),n.getMonth(),n.getDate()+k);let d=null,m;
+ if(m=s.match(/(\d{4})[-./年](\d{1,2})[-./月](\d{1,2})/))d=new Date(+m[1],m[2]-1,+m[3]);else if(m=s.match(/(\d{1,2})月(\d{1,2})[日号]?/))d=new Date(n.getFullYear(),m[1]-1,+m[2]);
+ else if(/今[天晚日]/.test(s))d=T(0);else if(/明[天晚]/.test(s))d=T(1);else if(/后天/.test(s))d=T(2);
+ else if(m=s.match(/(下)?(?:周|星期)([一二三四五六日天])/)){const w='日一二三四五六'.indexOf(m[2]=='天'?'日':m[2]);d=T((w-n.getDay()+7)%7+(m[1]?7:0))}
+ if(!d)return null;let h=19,mi=0;if(m=s.match(/(\d{1,2})[:：点时](\d{1,2})?/)){h=+m[1];mi=+(m[2]||0);if(/[晚下]/.test(s)&&h<12)h+=12}else if(/[早上午]/.test(s))h=10;d.setHours(h,mi,0,0);return d.getTime()};
+const CD=()=>{const d=D.cal=D.cal||{};d.ev=d.ev||[];d.fired=d.fired||{};d.sch=d.sch||{};return d};
+const calItems=()=>{const o=[];D.tix.forEach(v=>{const st=v.st||'ok';if(st=='no'||st=='cx')return;if(v.at===undefined)v.at=pAt(v.time);o.push({t:v.at,k:'票根',n:v.kind+' · '+v.title,s:frN(v.fid)+' · '+v.place+(st=='pending'?' · 待回应':st=='used'?' · 已赴约':''),id:v.id,tk:1})});
+ (D.od||[]).forEach(x=>{const st=odSt(x);if(st=='cx')return;o.push({t:x.ts+x.eta*6e4,k:'外卖',n:x.item,s:frN(x.fid)+' · '+OL[st],id:x.id})});CD().ev.forEach(e=>o.push({t:e.t,k:'日程',n:e.n,s:e.note||'',eid:e.id}));
+ D.friends.forEach(f=>{try{if(!(f.ann&&f.ann.n))return;const n=chDays(f),now=new Date(),t0=new Date(now.getFullYear(),now.getMonth(),now.getDate()),s0=new Date(t0.getFullYear(),t0.getMonth(),t0.getDate()-n),a=(100-((n+1)%100))%100,d1=new Date(t0.getFullYear(),t0.getMonth(),t0.getDate()+a);
+  let y=new Date(t0.getFullYear(),s0.getMonth(),s0.getDate());if(y<t0)y=new Date(t0.getFullYear()+1,s0.getMonth(),s0.getDate());const yr=y.getFullYear()-s0.getFullYear(),pick=y<d1&&yr>0;
+  o.push({t:(pick?y:d1).setHours(9,0,0,0),k:'纪念日',n:f.ann.n+' · '+(pick?yr+' 周年':'第 '+(n+1+a)+' 天'),s:frN(f.id)+' · 已相伴 '+(n+1)+' 天',id:'ann'+f.id})}catch(e){}});return o};
+window.__calItems=calItems;const dayL=t=>{const d=new Date(t),n=new Date(),k=Math.round((new Date(d.getFullYear(),d.getMonth(),d.getDate())-new Date(n.getFullYear(),n.getMonth(),n.getDate()))/864e5);return (k==0?'今天':k==1?'明天':k==-1?'昨天':'')+' '+(d.getMonth()+1)+'月'+d.getDate()+'日 周'+'日一二三四五六'[d.getDay()]};
+const calRow=i=>'<div class="cl-r"'+(i.tk?' data-act="tko:'+i.id+'"':'')+'><span class="cl-t">'+(i.t?fT(i.t):'待定')+'</span><div><b>'+esc(i.n)+'</b><small>'+esc(i.s)+'</small></div><em>'+i.k+'</em>'+(i.eid?'<button data-act="caldel:'+i.eid+'">删</button>':'')+'</div>';
+const calRender=()=>{const A=$('#a-cal'),now=Date.now(),all=calItems(),up=all.filter(i=>i.t&&i.t>=now-36e5&&i.t<now+5184e6).sort((a,b)=>a.t-b.t),past=all.filter(i=>i.t&&i.t<now-36e5).sort((a,b)=>b.t-a.t).slice(0,5),tbd=all.filter(i=>!i.t&&i.tk);let g='',last='';
+ up.forEach(i=>{const l=dayL(i.t);if(l!=last){g+='<div class="rd-l">'+l+'</div>';last=l}g+=calRow(i)});
+ A.innerHTML='<div class="scroll xp"><button class="rd-home" data-act="home">‹ 主页</button><div class="hd"><h2>日程</h2></div><p class="xp-d">汇总票根、外卖、纪念日和你自己的安排；临近开始会通知，套壳 App 里即使关闭也会响。</p>'+(up[0]?'<div class="cl-n"><small>NEXT</small><b>'+esc(up[0].n)+'</b><span>'+dayL(up[0].t)+' '+fT(up[0].t)+'</span></div>':'')+(g||'<p class="rd-e">未来 60 天没有安排</p>')
+ +(tbd.length?'<div class="rd-l">时间待定</div>'+tbd.map(calRow).join(''):'')+(past.length?'<div class="rd-l">最近已过</div>'+past.map(calRow).join(''):'')+'<button class="rd-imp" data-act="calnew">＋ 添加日程</button><button class="rd-imp o" data-act="calics">导出到系统日历（.ics）</button></div>'};
+Object.assign(ACT,{calnew:()=>{const n=new Date();ioSh(ioHd('Agenda / 添加日程')+fld('标题','<input id="cl-n" maxlength="30">')+fld('日期','<input id="cl-d" type="date" value="'+n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')+'">')+fld('时间','<input id="cl-h" type="time" value="19:00">')+fld('备注（可选）','<input id="cl-o" maxlength="40">')+'<button class="bt k w" data-act="calsave">保存</button>'+ioX)},
+ calsave:()=>{const n=$('#cl-n').value.trim(),t=new Date($('#cl-d').value+'T'+($('#cl-h').value||'19:00')).getTime();if(!n||isNaN(t))return toast('请填写标题和日期');CD().ev.push({id:uid(),n,t,note:$('#cl-o').value.trim()});save();$('#sheet').className='';calRender()},
+ caldel:id=>{const d=CD();d.ev=d.ev.filter(e=>e.id!=id);save();calRender()},
+ calics:()=>{const z=t=>new Date(t).toISOString().replace(/[-:]|\.\d{3}/g,''),l=calItems().filter(i=>i.t).map(i=>'BEGIN:VEVENT\nUID:'+z(i.t)+Math.random().toString(36).slice(2)+'@pocket\nDTSTAMP:'+z(Date.now())+'\nDTSTART:'+z(i.t)+'\nDTEND:'+z(i.t+36e5)+'\nSUMMARY:'+i.k+' '+i.n.replace(/[\n,;]/g,' ')+'\nEND:VEVENT');if(!l.length)return toast('没有可导出的日程');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//POCKET//\n'+l.join('\n')+'\nEND:VCALENDAR'],{type:'text/calendar'}));a.download='pocket.ics';a.click()}});
+const calTick=()=>{const L=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications,d=CD(),now=Date.now();let ch=0;
+ calItems().forEach(it=>{if(!it.t)return;const key=it.k+(it.id||it.eid||'')+it.t,at=it.t-18e5;
+  if(L&&at>now&&at<now+6048e5&&!d.sch[key]){d.sch[key]=1;ch=1;L.schedule({notifications:[{id:Math.floor(Math.random()*2e9),title:'即将开始 · '+it.k,body:it.n,schedule:{at:new Date(at)}}]}).catch(()=>{})}
+  if(at<=now&&it.t>now&&!d.fired[key]){d.fired[key]=1;ch=1;if(!L)notify({app:'sys',title:'即将开始 · '+it.k,text:it.n+'（'+fT(it.t)+'）',force:1})}});if(ch)save()};
+setInterval(calTick,6e4);setTimeout(calTick,5e3);
+document.getElementById('a-dl').insertAdjacentHTML('afterend','<section class="app" id="a-cal"></section>');
+document.getElementById('sms').parentNode.insertAdjacentHTML('beforeend','<symbol id="cali" viewBox="0 0 24 24"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"/></symbol>');
+CON.cal={p:[[22,30],[50,30],[78,30],[36,62],[64,62]],e:[[0,1],[1,2],[3,4],[0,3],[2,4]]};META.cal={n:'17',t:'Agenda',ic:'cali'};APPS.push(['cal','日程','Agenda']);PWN.cal='日程';
+$('#hg').innerHTML=APPS.map(a=>`<button class="ap" data-act="app:${a[0]}">${appIcon(a[0],52)}<b>${a[1]}</b><em>${a[2]}</em><i class="bd2" id="b-${a[0]}"></i></button>`).join('');
+{const _s=show;show=function(id){const r=_s.apply(this,arguments);if(id=='cal')calRender();return r}}
+{const s=document.createElement('style');s.textContent=`
+#wxo .msgs .m.od{width:min(252px,70vw);max-width:none;padding:0;margin:0 0 3px;border-radius:20px;background:var(--iv-bg);color:var(--iv-fg);border:1px solid var(--iv-ln);box-shadow:none;overflow:hidden;display:block;font:400 14px/1.4 var(--ios)}#wxo .msgs .m.od.a{align-self:flex-start}#wxo .msgs .m.od.u{align-self:flex-end}#wxo .msgs .m.od::after,#wxo .msgs .m.od::before{display:none!important}
+.od-h{display:flex;justify-content:space-between;align-items:center;padding:13px 16px 0;font:500 10.5px var(--ios);letter-spacing:.16em;color:var(--iv-mut)}.od-h em{font-style:normal;border:1px solid var(--iv-ln);border-radius:999px;padding:1px 9px;letter-spacing:.04em;font-size:11px;color:var(--iv-fg)}
+.od-b{padding:10px 16px 8px}.od-b b{display:block;font:600 20px/1.2 var(--ios);margin-bottom:4px}.od-b p{margin:0;font:400 12px var(--ios);color:var(--iv-mut)}.od-b q{display:block;margin-top:6px;color:var(--iv-mut);font-style:italic;quotes:none}
+.od-p{display:flex;gap:6px;padding:4px 16px 12px}.od-p i{flex:1;height:4px;border-radius:2px;background:var(--iv-ln)}.od-p i.on{background:var(--iv-fg)}
+.od-a{display:flex;padding:0 14px 14px}.od-a button{flex:1;padding:9px 0;border-radius:999px;border:1px solid var(--iv-ln);font:600 13px var(--ios);color:var(--iv-fg)}.od-a button.y{background:var(--iv-ft);color:var(--iv-ftc);border-color:var(--iv-ft)}
+.m.od.st-cx{opacity:.55}.m.od.st-cx .od-b b{text-decoration:line-through}
+#a-cal{--ios:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC",sans-serif;font-family:var(--ios)}#a-cal .scroll.xp{padding:52px 24px 120px}#a-cal .hd h2{font:800 34px/1.1 var(--ios);letter-spacing:-.02em}#a-cal .rd-home{font:400 16px var(--ios);color:var(--fg)}
+#a-cal .rd-l{font:600 12px var(--ios);color:var(--mut);margin:16px 0 4px}#a-cal .rd-e{color:var(--mut);font:400 13px var(--ios);padding:10px 0}
+#a-cal .rd-imp{display:block;width:100%;text-align:center;padding:14px;border-radius:14px;background:var(--fg);color:var(--bg);font:600 14px var(--ios);margin:12px 0 6px}#a-cal .rd-imp.o{background:var(--soft);color:var(--fg)}
+.cl-n{margin:14px 0 4px;padding:16px;border-radius:18px;background:var(--fg);color:var(--bg)}.cl-n small{font:500 10px var(--ios);letter-spacing:.2em;opacity:.6}.cl-n b{display:block;font:700 20px/1.25 var(--ios);margin:4px 0}.cl-n span{font:400 12px var(--ios);opacity:.7}
+.cl-r{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:.5px solid var(--ln)}.cl-t{flex:none;width:44px;font:600 13px var(--ios)}.cl-r div{flex:1;min-width:0}.cl-r b{display:block;font:600 14px/1.3 var(--ios)}.cl-r small{display:block;font:400 12px var(--ios);color:var(--mut)}.cl-r em{flex:none;font:500 10px var(--ios);font-style:normal;padding:2px 8px;border-radius:999px;background:var(--soft)}.cl-r button{font:600 12px var(--ios);color:#ff3b30}`;document.head.appendChild(s)}
+}
+
+/* ---------- v47：日程月历视图 + 聊天记录备份（导出 / 导入 / 推送云端） ---------- */
+{
+/* ===== 月历 ===== */
+const MG={y:new Date().getFullYear(),m:new Date().getMonth(),sel:null},dk=t=>{const d=new Date(t);return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()};
+const mgRender=()=>{const el=$('#mg');if(!el||!window.__calItems)return;const by={};window.__calItems().filter(i=>i.t).forEach(i=>(by[dk(i.t)]=by[dk(i.t)]||[]).push(i));
+ const off=new Date(MG.y,MG.m,1).getDay(),days=new Date(MG.y,MG.m+1,0).getDate(),td=dk(Date.now());let c='';
+ for(let k=0;k<off;k++)c+='<i></i>';
+ for(let d=1;d<=days;d++){const key=MG.y+'-'+MG.m+'-'+d,L=by[key]||[];c+='<button class="mg-d'+(key==td?' td':'')+(MG.sel==key?' sel':'')+'" data-act="mgd:'+key+'">'+d+'<span>'+L.slice(0,3).map(()=>'<u></u>').join('')+'</span></button>'}
+ const sl=MG.sel?(by[MG.sel]||[]).slice().sort((a,b)=>a.t-b.t):null;
+ el.innerHTML='<div class="mg-h"><button data-act="mgm:-1">‹</button><b>'+MG.y+' 年 '+(MG.m+1)+' 月</b><button data-act="mgm:1">›</button><button class="t" data-act="mgt">今天</button></div><div class="mg-w">'+'日一二三四五六'.split('').map(x=>'<i>'+x+'</i>').join('')+'</div><div class="mg-g">'+c+'</div>'
+ +(sl?'<div class="mg-l">'+(sl.length?sl.map(i=>'<div class="cl-r"'+(i.tk?' data-act="tko:'+i.id+'"':'')+'><span class="cl-t">'+fT(i.t)+'</span><div><b>'+esc(i.n)+'</b><small>'+esc(i.s)+'</small></div><em>'+i.k+'</em></div>').join(''):'<p class="rd-e">这天没有安排</p>')+'</div>':'')};
+const mgInit=()=>{const o=$('#mg');o&&o.remove();const p=document.querySelector('#a-cal .xp-d');if(!p)return;p.insertAdjacentHTML('afterend','<div id="mg"></div>');mgRender()};
+Object.assign(ACT,{mgm:x=>{MG.m+=+x;if(MG.m<0){MG.m=11;MG.y--}if(MG.m>11){MG.m=0;MG.y++}MG.sel=null;mgRender()},mgd:k=>{MG.sel=MG.sel==k?null:k;mgRender()},mgt:()=>{const n=new Date();MG.y=n.getFullYear();MG.m=n.getMonth();MG.sel=dk(n);mgRender()}});
+['calsave','caldel'].forEach(k=>{const o=ACT[k];ACT[k]=function(){const r=o.apply(this,arguments);mgInit();return r}});
+{const _s=show;show=function(id){const r=_s.apply(this,arguments);if(id=='cal')mgInit();return r}}
+
+/* ===== 备份 ===== */
+const bk=()=>{const d=D.bk=D.bk||{};d.method=d.method||'PUT';return d};
+const snap=()=>{const d=bk();return JSON.stringify({v:1,app:'pocket',ts:Date.now(),friends:D.friends,chats:D.chats,tix:D.tix,od:D.od||[],cal:D.cal||{},mem:D.mem,wb:D.wb,nt:D.nt,mo:D.mo},(k,v)=>(!d.img&&k=='img'&&typeof v=='string'&&v.length>200)?undefined:v)};
+const txt=()=>D.friends.map(f=>'===== '+(f.remark||f.name)+' =====\n'+(D.chats[f.id]||[]).filter(m=>m.t).map(m=>'['+(m.ts?new Date(m.ts).toLocaleString('zh-CN',{hour12:false}):'')+'] '+(m.r=='u'?'我':m.r=='a'?(f.remark||f.name):'系统')+'：'+m.t).join('\n')).join('\n\n');
+const saveFile=async(name,text,type)=>{try{const f=new File([text],name,{type});if(/Android|iPhone|iPad/i.test(navigator.userAgent)&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e.name=='AbortError')return}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click()};
+const imp=j=>{if(!j||j.app!='pocket')throw Error('不是 POCKET 备份文件');let n=0;(j.friends||[]).forEach(f=>{if(!D.friends.find(x=>x.id==f.id))D.friends.push(f)});
+ Object.entries(j.chats||{}).forEach(([id,c])=>{const cur=D.chats[id]=D.chats[id]||[],seen=new Set(cur.map(m=>(m.ts||0)+'|'+m.t));let a=0;c.forEach(m=>{const k=(m.ts||0)+'|'+m.t;if(!seen.has(k)){cur.push(m);a++}});
+  if(a){n+=a;let p=0;const arr=cur.map((m,i)=>({m,i,k:(p=m.ts||p)}));arr.sort((x,y)=>x.k-y.k||x.i-y.i);cur.splice(0,cur.length,...arr.map(x=>x.m))}});
+ const mg=(a,b)=>(b||[]).forEach(x=>{if(!a.find(y=>y.id==x.id))a.push(x)});D.tix=D.tix||[];mg(D.tix,j.tix);D.od=D.od||[];mg(D.od,j.od);const c=D.cal=D.cal||{ev:[]};c.ev=c.ev||[];mg(c.ev,(j.cal||{}).ev);save();return n};
+const hdr=(json)=>{const d=bk(),h={};if(json)h['Content-Type']='application/json';if(d.user)h.Authorization='Basic '+btoa(unescape(encodeURIComponent(d.user+':'+(d.pass||''))));String(d.hdr||'').split('\n').forEach(l=>{const i=l.indexOf(':');if(i>0)h[l.slice(0,i).trim()]=l.slice(i+1).trim()});return h};
+async function push(q){const d=bk();if(!d.url)return q||toast('请先在「云端设置」填写地址');try{const r=await fetch(d.url,{method:d.method,headers:hdr(1),body:snap()});if(!r.ok)throw Error('HTTP '+r.status);d.last=Date.now();d.err='';save();q||toast('已推送到云端')}catch(e){d.err=(e.message||'失败')+'（检查地址 / 账号 / CORS）';save();q||toast('推送失败：'+d.err)}bkRender()}
+async function pull(){const d=bk();if(!d.url)return toast('请先在「云端设置」填写地址');toast('拉取中…');try{const r=await fetch(d.url,{headers:hdr(0)});if(!r.ok)throw Error('HTTP '+r.status);const n=imp(await r.json());toast('已合并 '+n+' 条新消息')}catch(e){toast('拉取失败：'+(e.message||'错误'))}bkRender()}
+const auto=()=>{const d=bk();if(d.auto&&d.url&&Date.now()-(d.last||0)>(+d.hrs||12)*36e5)push(1)};setInterval(auto,6e5);document.addEventListener('visibilitychange',()=>{if(document.hidden)auto()});
+function bkRender(){const A=$('#a-bk');if(!A||!A.classList.contains('on'))return;const d=bk(),n=Object.values(D.chats).reduce((a,c)=>a+c.length,0);
+ A.innerHTML='<div class="scroll xp"><button class="rd-home" data-act="home">‹ 主页</button><div class="hd"><h2>备份</h2></div><p class="xp-d">当前 '+D.friends.length+' 位好友、'+n+' 条消息。数据只存在这台设备的浏览器里，换机或清缓存会丢，建议定期备份。备份不含 API Key。</p>'
+ +'<div class="rd-l">本地</div><button class="rd-imp" data-act="bkex">导出备份（JSON）</button><button class="rd-imp o" data-act="bktx">导出聊天记录（文本）</button><button class="rd-imp o" data-act="bkim">导入备份（合并，不覆盖）</button>'
+ +'<div class="rd-l">云端推送</div><p class="xp-d" style="margin:0 0 6px">'+(d.url?esc(d.url):'未设置')+'<br>上次推送：'+(d.last?new Date(d.last).toLocaleString('zh-CN',{hour12:false}):'从未')+(d.err?'<br>⚠ '+esc(d.err):'')+'</p>'
+ +'<button class="rd-imp" data-act="bkpush">立即推送</button><button class="rd-imp o" data-act="bkpull">从云端拉取并合并</button><button class="rd-imp o" data-act="bkset">云端设置</button>'
+ +T('自动推送（每 '+(d.hrs||12)+' 小时，App 开着或切到后台时）',d.auto,'bkauto')+T('备份包含图片（体积会很大）',d.img,'bkimg')+'</div>'}
+Object.assign(ACT,{
+ bkex:()=>{saveFile('pocket-backup-'+new Date().toISOString().slice(0,10)+'.json',snap(),'application/json')},bktx:()=>saveFile('pocket-chats.txt',txt(),'text/plain'),
+ bkim:()=>{const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;f.text().then(x=>{try{const n=imp(JSON.parse(x));toast('已合并 '+n+' 条新消息');bkRender()}catch(e){toast('导入失败：'+(e.message||'文件无效'))}})};i.click()},
+ bkpush:()=>push(),bkpull:()=>pull(),bkauto:()=>{const d=bk();d.auto=d.auto?0:1;save();bkRender()},bkimg:()=>{const d=bk();d.img=d.img?0:1;save();bkRender()},
+ bkset:()=>{const d=bk();ioSh(ioHd('Cloud / 云端设置')+'<p class="xp-d" style="margin:0">WebDAV（坚果云、Nextcloud 等）：地址填到文件，如 https://dav.example.com/pocket/backup.json，方式 PUT，填账号和应用密码。自建 Worker / Webhook：方式 POST。服务器需允许跨域（CORS）。</p>'+fld('地址','<input id="bk-u" autocapitalize="off" value="'+esc(d.url||'')+'">')+fld('方式','<select id="bk-m">'+['PUT','POST'].map(m=>'<option'+(m==d.method?' selected':'')+'>'+m+'</option>').join('')+'</select>')+fld('账号（WebDAV，可选）','<input id="bk-a" autocapitalize="off" value="'+esc(d.user||'')+'">')+fld('密码 / 应用密码（可选）','<input id="bk-p" type="password" value="'+esc(d.pass||'')+'">')+fld('自定义请求头（每行一个，可选）','<textarea id="bk-h" rows="2">'+esc(d.hdr||'')+'</textarea>')+fld('自动推送间隔（小时）','<input id="bk-r" inputmode="numeric" value="'+(d.hrs||12)+'">')+'<button class="bt k w" data-act="bksave">保存</button>'+ioX)},
+ bksave:()=>{const d=bk(),u=$('#bk-u').value.trim();if(u&&!/^https?:\/\//i.test(u))return toast('地址需以 http(s):// 开头');Object.assign(d,{url:u,method:$('#bk-m').value,user:$('#bk-a').value.trim(),pass:$('#bk-p').value,hdr:$('#bk-h').value,hrs:Math.max(1,+$('#bk-r').value||12)});save();$('#sheet').className='';bkRender()}});
+document.getElementById('a-cal').insertAdjacentHTML('afterend','<section class="app" id="a-bk"></section>');
+document.getElementById('sms').parentNode.insertAdjacentHTML('beforeend','<symbol id="bki" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.5-8A5.5 5.5 0 0 1 17 8.5 4.5 4.5 0 0 1 17 18zM12 11v6M9.5 13.5 12 11l2.5 2.5"/></symbol>');
+CON.bk={p:[[50,24],[24,50],[76,50],[50,76],[50,50]],e:[[0,4],[1,4],[2,4],[3,4]]};META.bk={n:'18',t:'Backup',ic:'bki'};APPS.push(['bk','备份','Backup']);PWN.bk='备份';
+$('#hg').innerHTML=APPS.map(a=>`<button class="ap" data-act="app:${a[0]}">${appIcon(a[0],52)}<b>${a[1]}</b><em>${a[2]}</em><i class="bd2" id="b-${a[0]}"></i></button>`).join('');
+{const _s=show;show=function(id){const r=_s.apply(this,arguments);if(id=='bk')bkRender();return r}}
+{const s=document.createElement('style');s.textContent=`
+#mg{margin:14px 0 6px}.mg-h{display:flex;align-items:center;gap:6px}.mg-h b{flex:1;text-align:center;font:700 16px var(--ios)}.mg-h button{padding:6px 12px;border-radius:999px;background:var(--soft);font:600 14px var(--ios)}.mg-h button.t{font-size:12px}
+.mg-w,.mg-g{display:grid;grid-template-columns:repeat(7,1fr);text-align:center}.mg-w{margin:12px 0 4px}.mg-w i{font:500 11px var(--ios);font-style:normal;color:var(--mut)}
+.mg-d{aspect-ratio:1;border-radius:12px;font:500 14px var(--ios);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}.mg-d.td{border:1px solid var(--fg)}.mg-d.sel{background:var(--fg);color:var(--bg)}
+.mg-d span{display:flex;gap:2px;height:4px}.mg-d u{width:4px;height:4px;border-radius:50%;background:var(--fg)}.mg-d.sel u{background:var(--bg)}.mg-l{margin-top:8px;padding:2px 12px;border-radius:14px;background:var(--soft)}
+#a-bk{--ios:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC",sans-serif;font-family:var(--ios)}#a-bk .scroll.xp{padding:52px 24px 120px}#a-bk .hd h2{font:800 34px/1.1 var(--ios);letter-spacing:-.02em}#a-bk .rd-home{font:400 16px var(--ios);color:var(--fg)}
+#a-bk .rd-l{font:600 12px var(--ios);color:var(--mut);margin:18px 0 6px}#a-bk .rd-imp{display:block;width:100%;text-align:center;padding:14px;border-radius:14px;background:var(--fg);color:var(--bg);font:600 14px var(--ios);margin:8px 0}#a-bk .rd-imp.o{background:var(--soft);color:var(--fg)}`;document.head.appendChild(s)}
+}
+
 })().catch(e=>console.error(e));
 </script>
 </body>
