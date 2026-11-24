@@ -2277,18 +2277,19 @@ const _rb20=refreshBadges;refreshBadges=function(){_rb20();try{if(wtab==0&&$('#c
 /* ---- 聊天室 ---- */
 function ioHas(){const i=$('#ci'),p=$('#wxo .inp');if(i&&p)p.classList.toggle('has',!!i.value.trim())}
 setInterval(ioHas,250);
+const ioUn=f=>{let n=0;try{Object.entries(D.unread||{}).forEach(([k,v])=>{if(k!=f.id)n+=+v||0})}catch(e){}return n>999?'999+':n?String(n):''};
 function ioChat(k){
   const f=D.friends[k],o=$('#wxo'),h=o.querySelector('.chh');if(!h)return;
   const nd=document.createElement('div');nd.className='ioch';
-  nd.innerHTML=`<button class="ioc-b" data-act="cb" aria-label="返回">${IOI.chev}</button>${ioAv(f,'ioc-av')}<button class="ioc-name" data-act="vprof">${esc(f.remark||f.name)}<i>›</i></button><div class="ioc-sub">POCKET · ${esc(D.main.model||'未连接模型')}${D.cfg.showTok?' · ≈'+estTok((D.chats[f.id]||[]).map(m=>m.t).join(''))+' tok':''}</div>${f.enc?`<button class="ioc-enc" data-act="enclock">${IOI.lock}Encrypted · 点按锁定</button>`:''}${f.mute?`<div class="ioc-mu">${IOI.moon}has notifications silenced</div>`:''}<button class="ioc-r" data-act="more" aria-label="更多">${ic('more')}</button>`;
-  h.replaceWith(nd);
+  nd.innerHTML=`<button class="ioc-b" data-act="cb" data-n="${ioUn(f)}" aria-label="返回">${IOI.chev}</button>${ioAv(f,'ioc-av')}<button class="ioc-name" data-act="vprof">${esc(f.remark||f.name)}<i>›</i></button><div class="ioc-sub">POCKET · ${esc(D.main.model||'未连接模型')}${D.cfg.showTok?' · ≈'+estTok((D.chats[f.id]||[]).map(m=>m.t).join(''))+' tok':''}</div>${f.enc?`<button class="ioc-enc" data-act="enclock">${IOI.lock}Encrypted · 点按锁定</button>`:''}${f.mute?`<div class="ioc-mu">${IOI.moon}has notifications silenced</div>`:''}<button class="ioc-r" data-act="more" aria-label="更多">${ic('more')}</button>`;
+  h.replaceWith(nd);try{o.style.setProperty('--ca',f.av?'url("'+f.av+'")':'none');o.style.setProperty('--ua',D.me&&D.me.av?'url("'+D.me.av+'")':'none')}catch(e){}
   const inp=o.querySelector('.inp');if(!inp||inp.querySelector('.io-pill'))return;
   const g=a=>inp.querySelector(a),plus=g('[data-act="cplus"]'),ci=g('#ci'),sug=g('[data-act="sug"]'),mic=g('[data-act="mic:ci"]'),snd=g('#snd');
   if(!(plus&&ci&&snd))return;
   const pill=document.createElement('div');pill.className='io-pill';
   [ci,sug,mic,snd].forEach(x=>x&&pill.appendChild(x));
-  plus.className='io-plus';plus.innerHTML=IOI.plus;if(sug)sug.className='io-ic';if(mic){mic.className='io-ic';mic.innerHTML=IOI.wave}
-  ci.placeholder='信息 · 短信';inp.innerHTML='';inp.append(plus,pill);ioHas()}
+  plus.className='io-plus';plus.innerHTML='<span class="plx">+</span>';if(sug)sug.className='io-ic';if(mic){mic.className='io-ic';mic.innerHTML='<svg class="i ioi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'}
+  ci.placeholder='訊息·SMS';inp.innerHTML='';inp.append(plus,pill);ioHas()}
 function encLockUI(k){
   const f=D.friends[k],o=$('#wxo');cur=k;sel=-1;o.className='on';
   o.innerHTML=`<div class="ioch"><button class="ioc-b" data-act="cb" aria-label="返回">${IOI.chev}</button></div><div class="enc-lock">${ioAv(f,'ioc-av big')}<h3>${esc(f.remark||f.name)}</h3><p class="enc-t">${IOI.lock}此聊天已加密</p><p class="enc-d">消息只以密文保存在本机。输入密码后才能查看。</p><input id="encpw" type="password" placeholder="密码" autocomplete="off"><button class="enc-go" data-act="encgo">解锁</button><button class="enc-fg" data-act="encforget">忘记密码</button></div>`;
@@ -2773,10 +2774,11 @@ ACT.mq=x=>{const f=D.friends[cur],m=(D.chats[f.id]||[])[+x];if(!m)return;
   const e=$('#ci');e&&e.focus()};
 ACT.mqx=()=>{Q24=null;const e=$('#qb');e&&e.remove();ioLay()};
 ACT.qgo=x=>{const e=document.getElementById('mg'+x);if(!e){toast('原消息已不在当前记录里');return}e.scrollIntoView({block:'center',behavior:'smooth'});e.classList.remove('qfl');void e.offsetWidth;e.classList.add('qfl')};
+const qrAv=(m,c)=>{const f=D.friends[cur],q=m.q,me=q.i!=null&&c[q.i]?c[q.i].r=='u':m.r=='a',av=me?(D.me&&D.me.av):f.av,nm=String(q.n||(me?'我':(f.remark||f.name))||'?');return '<span class="qr-a">'+(av?'<img src="'+esc(av)+'" alt="">':esc(nm[0]))+'</span>'};
 function qSkin(){const f=D.friends[cur];if(!f)return;const c=D.chats[f.id]||[];
   document.querySelectorAll('#ms .m .qt2').forEach(el=>{const b=el.closest('.m'),mt=b&&/^mg(\d+)$/.exec(b.id||'');if(!mt)return;const m=c[+mt[1]];if(!m||!m.q)return;
     el.className='qt3';if(m.q.i!=null)el.dataset.act='qgo:'+m.q.i;
-    el.innerHTML=(m.q.th?'<img src="'+m.q.th+'" alt="">':'')+'<div><b>'+esc(m.q.n)+'</b><span>'+esc(m.q.x)+'</span></div>'})}
+    el.innerHTML='<span class="qr-l">Reply<i></i></span>'+qrAv(m,c)+'<span class="qr-t">'+esc(m.q.n)+'：'+esc(m.q.x)+'</span>'})}
 {const _ic=ioCtx;ioCtx=function(){try{rpSkin();qSkin()}catch(e){}return _ic.apply(this,arguments)}}
 {const _dm24=drawMsgs;drawMsgs=function(){const r=_dm24.apply(this,arguments);try{qSkin();rplHot()}catch(e){}return r}}
 
@@ -3461,46 +3463,233 @@ Object.assign(ACT,{
  chanx:()=>{delete D.friends[cur].ann;save();$('#sheet').className='';chAnn()},
  crx:x=>ioSh(ioHd('回应')+'<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:6px 0 14px">'+['❤️','👍','😂','😮','😢','🙏','🔥','🥰'].map(e=>`<button style="font-size:30px;padding:6px 8px" data-act="crxs:${x}:${e}">${e}</button>`).join('')+'</div>'+ioX),
  crxs:(x,y)=>{const m=(D.chats[D.friends[cur].id]||[])[+x];if(!m)return;if(m.rx==y)delete m.rx;else m.rx=y;save();$('#sheet').className='';sel=-1;drawMsgs()},
- ctr:async x=>{const m=(D.chats[D.friends[cur].id]||[])[+x];if(!m||!m.t)return;sel=-1;drawMsgs();toast('翻译中…');try{const zh=/[\u4e00-\u9fff]/.test(m.t),a=D.sub&&D.sub.url&&D.sub.url.trim()?D.sub:D.main,o=await askS(a,zh?'You are a translator. Translate the user text into natural English. Output only the translation.':'你是翻译。把用户的文字翻译成自然的中文，只输出译文，不要解释。',[{role:'user',content:m.t}]);ioSh(ioHd(zh?'翻译 · English':'翻译 · 中文')+`<p style="font:400 14px/1.6 var(--ios);color:var(--mut);margin:0 0 10px">${esc(m.t)}</p><p style="font:500 17px/1.7 var(--ios);margin:0 0 6px;white-space:pre-wrap">${esc(String(o).trim())}</p>`+ioX)}catch(e){toast('翻译失败：'+errMsg(e))}}});
+ ctr:async x=>{const m=(D.chats[D.friends[cur].id]||[])[+x];if(!m||!m.t)return;sel=-1;drawMsgs();toast('翻译中…');try{const zh=/[\u4e00-\u9fff]/.test(m.t),a=D.sub&&D.sub.url&&D.sub.url.trim()?D.sub:D.main,o=await askS(a,zh?'You are a translator. Translate the user text into natural English. Output only the translation.':'你是翻译。把用户的文字翻译成自然的中文，只输出译文，不要解释。',[{role:'user',content:m.t}]);m.trx=String(o).trim();save();drawMsgs()}catch(e){toast('翻译失败：'+errMsg(e))}}});
 {const s37=document.createElement('style');s37.textContent=`.crx{display:inline-block;margin-left:6px;padding:0 6px;border-radius:999px;background:rgba(127,127,127,.22);font-size:13px;line-height:1.5;vertical-align:middle}.chan{opacity:.9}`;document.head.appendChild(s37)}
 
 /* ---------- v38：去掉输入框小尾巴 / 消息气泡改液态玻璃（尾巴画在气泡上） ---------- */
 {const s38=document.createElement('style');s38.textContent=`
 #wxo .inp .io-pill::after{content:none!important;display:none!important}
 #wxo .msgs .m.msx-on:where(.a,.u),#wxo .msgs .m.sel:where(.a,.u){box-shadow:var(--bs,none),0 0 0 2px color-mix(in srgb,var(--bl) 55%,transparent)}
-/* ===== iOS 26 短信 1:1（气泡/尾巴/间距/时间线/已送达/输入中，源自 板栗饼 CSS；尾巴 SVG 路径取自原文件） ===== */
+/* ===== iOS 26 短信 1:1 复刻（板栗饼 CSS 移植；绿色改为 iMessage 蓝；尾巴 SVG 路径取自原文件） ===== */
 #wxc,#wxo,#nvw,#iow{--gb:#0a84ff}
+#wxo{background:#feffff!important;background-image:none!important}
+/* 顶栏：渐隐蒙版 + 玻璃按钮 */
+#wxo>.io-tb{height:calc(var(--ioh) + 38px);background:linear-gradient(to bottom,#feffff 25%,rgba(254,255,255,0) 100%);-webkit-backdrop-filter:none;backdrop-filter:none;-webkit-mask-image:none;mask-image:none}
+#wxo>.io-bb{display:none}
+#wxo .ioch .ioc-b,#wxo .ioch .ioc-r,#wxo .ioch .ioc-name,#wxo .inp .io-plus,#wxo .inp .io-pill{background-color:rgba(255,255,255,.15)!important;-webkit-backdrop-filter:blur(5px) saturate(200%)!important;backdrop-filter:blur(5px) saturate(200%)!important;border:0!important;box-shadow:inset 0 1px 1px -.5px rgba(255,255,255,.6),inset 0 -.5px 1px -.5px rgba(255,255,255,.1),0 0 0 .7px rgba(255,255,255,.2),0 2px 6px rgba(0,0,0,.06)!important}
+#wxo .ioch .ioc-b,#wxo .ioch .ioc-r{width:42px;height:42px;top:6px;display:flex;align-items:center;justify-content:center}
+#wxo .ioch .ioc-b{width:auto;min-width:65px;border-radius:30px;padding:0 8px 0 6px;gap:6px}
+#wxo .ioch .ioc-b[data-n=""]{min-width:42px;padding:0}
+#wxo .ioch .ioc-b svg,#wxo .ioch .ioc-r svg{display:none}
+#wxo .ioch .ioc-b::after{content:'';order:1;width:24px;height:24px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'><path d='M15 6 L8.5 12 L15 18'/></svg>") center/28px no-repeat}
+#wxo .ioch .ioc-b::before{content:attr(data-n);order:2;display:flex;align-items:center;justify-content:center;height:24px;min-width:24px;padding:0 7px;box-sizing:border-box;background:#000;color:#fff;border-radius:100px;font:600 13px var(--ios)}
+#wxo .ioch .ioc-b[data-n=""]::before{display:none}
+#wxo .ioch .ioc-r::after{content:'';width:24px;height:24px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polygon points='23 7 16 12 23 17 23 7'></polygon><rect x='1' y='5' width='15' height='14' rx='2' ry='2'></rect></svg>") center/contain no-repeat}
+#wxo .ioch .ioc-av{width:55px;height:55px;border-radius:40%;box-shadow:0 3px 8px rgba(0,0,0,.1)}
+#wxo .ioch .ioc-name{height:32px;margin-top:-4px;padding:4px 28px 4px 19px;border-radius:20px;font:600 18px var(--ios);color:#000;white-space:nowrap;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b3b3b6' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'><path d='M11 5 L15 12 L11 19'/></svg>")!important;background-repeat:no-repeat!important;background-position:right 6px center!important;background-size:20px!important}
+#wxo .ioch .ioc-name i{display:none}
+#wxo .ioch .ioc-sub{display:none}
+/* 底栏：玻璃输入框 + 加号 + 訊息·SMS + 麦克风 + 垃圾讯息警告面板 */
+#wxo .inp{background:transparent;border:0;padding:10px 15px calc(5px + env(safe-area-inset-bottom,0px));position:relative}
+#wxo.spam .inp::after{content:'';position:absolute;bottom:100%;left:0;right:0;height:120px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 375 120' preserveAspectRatio='xMidYMax slice'%3E%3Crect width='100%25' height='100%25' fill='%23feffff' /%3E%3Ctext x='50%25' y='30' font-family='-apple-system, Helvetica, Arial, sans-serif' font-size='13' font-weight='500' fill='%238e8e93' text-anchor='middle'%3E若未預期收到來自未知寄件人的此訊息，其可%3C/text%3E%3Ctext x='50%25' y='50' font-family='-apple-system, Helvetica, Arial, sans-serif' font-size='13' font-weight='500' fill='%238e8e93' text-anchor='middle'%3E能為垃圾訊息。%3C/text%3E%3Crect x='4%25' y='70' width='44%25' height='38' rx='19' fill='%23f2f2f7' /%3E%3Ctext x='26%25' y='94' font-family='-apple-system, Helvetica, Arial, sans-serif' font-size='15' font-weight='600' fill='%23ff3b30' text-anchor='middle'%3E刪除%3C/text%3E%3Crect x='52%25' y='70' width='44%25' height='38' rx='19' fill='%23f2f2f7' /%3E%3Ctext x='74%25' y='94' font-family='-apple-system, Helvetica, Arial, sans-serif' font-size='15' font-weight='600' fill='%23007aff' text-anchor='middle'%3E標示為已知%3C/text%3E%3C/svg%3E");background-size:100% 100%;pointer-events:none;z-index:50}
+#wxo.spam>#ms{padding-bottom:calc(var(--iof) + 130px)}
+#wxo .inp .io-plus{width:39px;height:39px;color:#000}
+#wxo .inp .io-plus .plx{font:300 28px/0 var(--ios);margin-top:-3px}
+#wxo .inp .io-pill{min-height:42px;height:42px;border-radius:25px;padding:0 7px 0 16px}
+#wxo .inp .io-pill input{font:400 16px var(--ios);color:#000;padding:0}
+#wxo .inp .io-pill input::placeholder{color:#999;opacity:1}
+#wxo .inp .io-ic{color:#8e8e93}
+#wxo .inp .io-ic svg{width:20px;height:20px}
+#wxo .inp .io-ic[data-act^="mic"] svg{fill:none!important;stroke:currentColor!important;stroke-width:1.8px!important}
+/* 气泡 */
 #wxo .msgs{gap:0;padding-top:6px}
-#wxo .msgs .m.a:where(:not(.rp,.mim,.mcd)),#wxo .msgs .m.u:where(:not(.rp,.mim,.mcd,.ty)),#wxo .msgs .m.ty{
-  position:relative;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;
-  border-radius:22px;padding:8px 12px;font:400 16px/1.5 var(--ios);max-width:77%;background:var(--bc);margin:0 0 3px;z-index:1}
-#wxo .msgs .m.a:where(:not(.rp,.mim,.mcd)),#wxo .msgs .m.ty{--bc:#f2f3f3;color:#000;align-self:flex-start}
+#wxo .msgs .m.a:where(:not(.rp,.mim,.mcd)),#wxo .msgs .m.u:where(:not(.rp,.mim,.mcd,.ty)){position:relative;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;border-radius:22px;padding:8px 12px;font:400 16px/1.5 var(--ios);max-width:77%;background:var(--bc);margin:0 0 3px;z-index:1}
+#wxo .msgs .m.a:where(:not(.rp,.mim,.mcd)){--bc:#f2f3f3;color:#000;align-self:flex-start}
 #wxo .msgs .m.u:where(:not(.rp,.mim,.mcd,.ty)){--bc:var(--gb);color:#fff;align-self:flex-end}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #wxo .msgs .m.a:where(:not(.rp,.mim,.mcd)),:root:not([data-theme="light"]) #wxo .msgs .m.ty{--bc:var(--sms);color:var(--fg)}}
-:root[data-theme="dark"] #wxo .msgs .m.a:where(:not(.rp,.mim,.mcd)),:root[data-theme="dark"] #wxo .msgs .m.ty{--bc:var(--sms);color:var(--fg)}
-/* 换人说话：35px（原文件注明不要改） */
 #wxo .msgs .m.a+.m.u,#wxo .msgs .m.u+.m.a{margin-top:35px}
-/* 小尾巴：原 SVG 路径做遮罩，颜色跟随气泡；只给每组最后一条 */
-#wxo .msgs .m.a:where(:not(.rp,.mim,.mcd)):not(:has(+ .m.a)):after,
-#wxo .msgs .m.u:where(:not(.rp,.mim,.mcd,.ty)):not(:has(+ .m.u)):after{
-  content:"";position:absolute;width:15px;height:15px;background:var(--bc);pointer-events:none;
-  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M14.385 165.341h723.828s-102.718 111.789 136.16 498.070c199.609 111.789 29.591 144.852-58.757 137.075-97.893-15.633-301.441-20.846-861.266-208.137z'/%3E%3C/svg%3E") center/contain no-repeat;
-          mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M14.385 165.341h723.828s-102.718 111.789 136.16 498.070c199.609 111.789 29.591 144.852-58.757 137.075-97.893-15.633-301.441-20.846-861.266-208.137z'/%3E%3C/svg%3E") center/contain no-repeat}
-#wxo .msgs .m.a:where(:not(.rp,.mim,.mcd)):not(:has(+ .m.a)):after{left:-7px;bottom:-10px;transform-origin:bottom right;transform:rotate(-16deg) scaleX(-1)}
-#wxo .msgs .m.u:where(:not(.rp,.mim,.mcd,.ty)):not(:has(+ .m.u)):after{right:7px;bottom:-5px;transform-origin:bottom left;transform:rotate(16deg)}
-/* 时间线：訊息·SMS + 时间 */
+/* 小尾巴（原 SVG 路径做遮罩，颜色跟随气泡，只给每组最后一条） */
+#wxo .msgs .m.a:where(:not(.rp,.mim,.mcd)):not(:has(+ .m.a)):after,#wxo .msgs .m.u:where(:not(.rp,.mim,.mcd,.ty)):not(:has(+ .m.u)):after{content:"";position:absolute;width:15px;height:15px;background:var(--bc);pointer-events:none;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M14.385 165.341h723.828s-102.718 111.789 136.16 498.070c199.609 111.789 29.591 144.852-58.757 137.075-97.893-15.633-301.441-20.846-861.266-208.137z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath d='M14.385 165.341h723.828s-102.718 111.789 136.16 498.070c199.609 111.789 29.591 144.852-58.757 137.075-97.893-15.633-301.441-20.846-861.266-208.137z'/%3E%3C/svg%3E") center/contain no-repeat}
+#wxo .msgs .m.a:where(:not(.rp,.mim,.mcd)):not(:has(+ .m.a)):after{left:-7px;bottom:-8px;transform-origin:bottom right;transform:rotate(-16deg) scaleX(-1)}
+#wxo .msgs .m.u:where(:not(.rp,.mim,.mcd,.ty)):not(:has(+ .m.u)):after{right:7px;bottom:-3px;transform-origin:bottom left;transform:rotate(16deg)}
+/* 时间线 訊息·SMS + 时间 */
 #wxo .msgs .tsl{display:flex;flex-direction:column;align-items:center;font:400 11px var(--ios);color:#8e8e93;margin:10px 0 5px;letter-spacing:0}
 #wxo .msgs .tsl::before{content:'訊息·SMS';font-size:12px;color:#8e8e93;margin-bottom:-1px;letter-spacing:.2px}
-/* 已送达：只给整段对话最后一条、且是我发的 */
-#wxo .msgs .m.u:where(:not(.rp,.mim,.mcd,.ty)):not(:has(~ .m))::before{content:"已送达";position:absolute;bottom:-19px;right:15px;font:500 11px var(--ios);color:#8e8e93;white-space:nowrap}
+/* 最后一条我发的：时间 + 已送达 */
+#wxo .msgs .m.u:where(:not(.rp,.mim,.mcd,.ty)):not(:has(~ .m))::before{content:attr(data-t) " 已送达";position:absolute;bottom:-19px;right:15px;font:500 11px var(--ios);color:#8e8e93;white-space:nowrap}
 #wxo .msgs .m.u:where(:not(.rp,.mim,.mcd,.ty)):not(:has(~ .m)){margin-bottom:22px}
-/* 对方正在输入：灰色长条 + 左下角两颗小圆 */
-#wxo .msgs .m.ty{display:flex;align-items:center;justify-content:center;gap:4px;width:60px;height:36px;padding:0;margin:8px 0 25px 10px;border-radius:20px}
-#wxo .msgs .m.ty i{width:10px;height:10px;background:#8e8e93}
-#wxo .msgs .m.ty::before{content:"";position:absolute;left:-4px;bottom:-2px;width:14px;height:14px;border-radius:50%;background:var(--bc);box-shadow:-8px 6px 0 -4px var(--bc)}
-/* 顶栏头像：原文件为 40% 圆角 */
-.ioc-av{border-radius:40%}
+/* 正在输入：iMessage 原生动画 */
+#wxo .msgs .m.ty{position:relative;display:block;align-self:flex-start;width:80px;height:30px;padding:0;margin:8px 0 25px 12px;background:transparent;border:0;box-shadow:none;--bc:#f2f3f3}
+#wxo .msgs .m.ty i{display:none}
+#wxo .msgs .m.ty::before{content:'';position:absolute;left:4px;bottom:2px;width:14px;height:14px;background:var(--bc);border-radius:50%;box-shadow:-8px 6px 0 -4px var(--bc);z-index:1}
+#wxo .msgs .m.ty::after{content:'';position:absolute;left:10px;bottom:0;width:60px;height:36px;background-color:var(--bc);border-radius:20px;background-image:radial-gradient(circle,rgba(142,142,147,1) 50%,transparent 55%),radial-gradient(circle,rgba(142,142,147,.3) 50%,transparent 55%),radial-gradient(circle,rgba(142,142,147,.3) 50%,transparent 55%);background-size:10px 10px;background-repeat:no-repeat;background-position:14px 14px,26px 14px,38px 14px;animation:iMessageTypingDots 1s infinite linear;z-index:2}
+@keyframes iMessageTypingDots{0%,100%{background-image:radial-gradient(circle,rgba(142,142,147,1) 50%,transparent 55%),radial-gradient(circle,rgba(142,142,147,.3) 50%,transparent 55%),radial-gradient(circle,rgba(142,142,147,.3) 50%,transparent 55%)}33%{background-image:radial-gradient(circle,rgba(142,142,147,.3) 50%,transparent 55%),radial-gradient(circle,rgba(142,142,147,1) 50%,transparent 55%),radial-gradient(circle,rgba(142,142,147,.3) 50%,transparent 55%)}66%{background-image:radial-gradient(circle,rgba(142,142,147,.3) 50%,transparent 55%),radial-gradient(circle,rgba(142,142,147,.3) 50%,transparent 55%),radial-gradient(circle,rgba(142,142,147,1) 50%,transparent 55%)}}
+@keyframes iMessageTypingDotsDark{0%,100%{background-image:radial-gradient(circle,rgba(255,255,255,.4) 50%,transparent 55%),radial-gradient(circle,rgba(255,255,255,.15) 50%,transparent 55%),radial-gradient(circle,rgba(255,255,255,.15) 50%,transparent 55%)}33%{background-image:radial-gradient(circle,rgba(255,255,255,.15) 50%,transparent 55%),radial-gradient(circle,rgba(255,255,255,.4) 50%,transparent 55%),radial-gradient(circle,rgba(255,255,255,.15) 50%,transparent 55%)}66%{background-image:radial-gradient(circle,rgba(255,255,255,.15) 50%,transparent 55%),radial-gradient(circle,rgba(255,255,255,.15) 50%,transparent 55%),radial-gradient(circle,rgba(255,255,255,.4) 50%,transparent 55%)}}
+@media (prefers-color-scheme:dark){
+:root:not([data-theme="light"]) #wxo{background:#000!important}
+:root:not([data-theme="light"]) #wxo>.io-tb{background:linear-gradient(to bottom,#000 45%,rgba(0,0,0,0) 100%)}
+:root:not([data-theme="light"]) #wxo .ioch .ioc-b,:root:not([data-theme="light"]) #wxo .ioch .ioc-r,:root:not([data-theme="light"]) #wxo .ioch .ioc-name,:root:not([data-theme="light"]) #wxo .inp .io-plus,:root:not([data-theme="light"]) #wxo .inp .io-pill{background-color:rgba(50,50,52,.6)!important;box-shadow:inset 0 1px 1px -.5px rgba(255,255,255,.15),inset 0 -.5px 1px -.5px rgba(255,255,255,.05),0 0 0 .5px rgba(255,255,255,.08),0 2px 6px rgba(0,0,0,.3)!important}
+:root:not([data-theme="light"]) #wxo .ioch .ioc-av{box-shadow:0 3px 8px rgba(0,0,0,.3)}
+:root:not([data-theme="light"]) #wxo .ioch .ioc-b::after{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'><path d='M15 6 L8.5 12 L15 18'/></svg>")}
+:root:not([data-theme="light"]) #wxo .ioch .ioc-r::after{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polygon points='23 7 16 12 23 17 23 7'></polygon><rect x='1' y='5' width='15' height='14' rx='2' ry='2'></rect></svg>")}
+:root:not([data-theme="light"]) #wxo .ioch .ioc-b::before{background:#fff;color:#000}
+:root:not([data-theme="light"]) #wxo .ioch .ioc-name{color:#fff;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2398989f' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'><path d='M11 5 L15 12 L11 19'/></svg>")!important}
+:root:not([data-theme="light"]) #wxo .inp .io-plus{color:#fff}
+:root:not([data-theme="light"]) #wxo .inp .io-pill input{color:#fff}
+:root:not([data-theme="light"]) #wxo .inp .io-pill input::placeholder{color:#666}
+:root:not([data-theme="light"]) #wxo .inp .io-ic{color:#98989f}
+:root:not([data-theme="light"]) #wxo.spam .inp::after{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 375 120' preserveAspectRatio='xMidYMax slice'%3E%3Crect width='100%25' height='100%25' fill='%23black' /%3E%3Ctext x='50%25' y='30' font-family='-apple-system, Helvetica, Arial, sans-serif' font-size='13' font-weight='500' fill='%2398989f' text-anchor='middle'%3E若未預期收到來自未知寄件人的此訊息，其可%3C/text%3E%3Ctext x='50%25' y='50' font-family='-apple-system, Helvetica, Arial, sans-serif' font-size='13' font-weight='500' fill='%2398989f' text-anchor='middle'%3E能為垃圾訊息。%3C/text%3E%3Crect x='4%25' y='70' width='44%25' height='38' rx='19' fill='%232c2c2e' /%3E%3Ctext x='26%25' y='94' font-family='-apple-system, Helvetica, Arial, sans-serif' font-size='15' font-weight='600' fill='%23ff453a' text-anchor='middle'%3E刪除%3C/text%3E%3Crect x='52%25' y='70' width='44%25' height='38' rx='19' fill='%232c2c2e' /%3E%3Ctext x='74%25' y='94' font-family='-apple-system, Helvetica, Arial, sans-serif' font-size='15' font-weight='600' fill='%230a84ff' text-anchor='middle'%3E標示為已知%3C/text%3E%3C/svg%3E")}
+:root:not([data-theme="light"]) #wxo .msgs .m.a:where(:not(.rp,:root:not([data-theme="light"]) .mim,:root:not([data-theme="light"]) .mcd)){--bc:#262628;color:#fff}
+:root:not([data-theme="light"]) #wxo .msgs .tsl,:root:not([data-theme="light"]) #wxo .msgs .tsl::before{color:#98989f}
+:root:not([data-theme="light"]) #wxo .msgs .m.u:where(:not(.rp,:root:not([data-theme="light"]) .mim,:root:not([data-theme="light"]) .mcd,:root:not([data-theme="light"]) .ty)):not(:has(~ .m))::before{color:#8e8e93}
+:root:not([data-theme="light"]) #wxo .msgs .m.ty{--bc:#262628}
+:root:not([data-theme="light"]) #wxo .msgs .m.ty::after{animation-name:iMessageTypingDotsDark;background-image:radial-gradient(circle,rgba(255,255,255,.4) 50%,transparent 55%),radial-gradient(circle,rgba(255,255,255,.15) 50%,transparent 55%),radial-gradient(circle,rgba(255,255,255,.15) 50%,transparent 55%)}
+}
+:root[data-theme="dark"] #wxo{background:#000!important}
+:root[data-theme="dark"] #wxo>.io-tb{background:linear-gradient(to bottom,#000 45%,rgba(0,0,0,0) 100%)}
+:root[data-theme="dark"] #wxo .ioch .ioc-b,:root[data-theme="dark"] #wxo .ioch .ioc-r,:root[data-theme="dark"] #wxo .ioch .ioc-name,:root[data-theme="dark"] #wxo .inp .io-plus,:root[data-theme="dark"] #wxo .inp .io-pill{background-color:rgba(50,50,52,.6)!important;box-shadow:inset 0 1px 1px -.5px rgba(255,255,255,.15),inset 0 -.5px 1px -.5px rgba(255,255,255,.05),0 0 0 .5px rgba(255,255,255,.08),0 2px 6px rgba(0,0,0,.3)!important}
+:root[data-theme="dark"] #wxo .ioch .ioc-av{box-shadow:0 3px 8px rgba(0,0,0,.3)}
+:root[data-theme="dark"] #wxo .ioch .ioc-b::after{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'><path d='M15 6 L8.5 12 L15 18'/></svg>")}
+:root[data-theme="dark"] #wxo .ioch .ioc-r::after{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polygon points='23 7 16 12 23 17 23 7'></polygon><rect x='1' y='5' width='15' height='14' rx='2' ry='2'></rect></svg>")}
+:root[data-theme="dark"] #wxo .ioch .ioc-b::before{background:#fff;color:#000}
+:root[data-theme="dark"] #wxo .ioch .ioc-name{color:#fff;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2398989f' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'><path d='M11 5 L15 12 L11 19'/></svg>")!important}
+:root[data-theme="dark"] #wxo .inp .io-plus{color:#fff}
+:root[data-theme="dark"] #wxo .inp .io-pill input{color:#fff}
+:root[data-theme="dark"] #wxo .inp .io-pill input::placeholder{color:#666}
+:root[data-theme="dark"] #wxo .inp .io-ic{color:#98989f}
+:root[data-theme="dark"] #wxo.spam .inp::after{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 375 120' preserveAspectRatio='xMidYMax slice'%3E%3Crect width='100%25' height='100%25' fill='%23black' /%3E%3Ctext x='50%25' y='30' font-family='-apple-system, Helvetica, Arial, sans-serif' font-size='13' font-weight='500' fill='%2398989f' text-anchor='middle'%3E若未預期收到來自未知寄件人的此訊息，其可%3C/text%3E%3Ctext x='50%25' y='50' font-family='-apple-system, Helvetica, Arial, sans-serif' font-size='13' font-weight='500' fill='%2398989f' text-anchor='middle'%3E能為垃圾訊息。%3C/text%3E%3Crect x='4%25' y='70' width='44%25' height='38' rx='19' fill='%232c2c2e' /%3E%3Ctext x='26%25' y='94' font-family='-apple-system, Helvetica, Arial, sans-serif' font-size='15' font-weight='600' fill='%23ff453a' text-anchor='middle'%3E刪除%3C/text%3E%3Crect x='52%25' y='70' width='44%25' height='38' rx='19' fill='%232c2c2e' /%3E%3Ctext x='74%25' y='94' font-family='-apple-system, Helvetica, Arial, sans-serif' font-size='15' font-weight='600' fill='%230a84ff' text-anchor='middle'%3E標示為已知%3C/text%3E%3C/svg%3E")}
+:root[data-theme="dark"] #wxo .msgs .m.a:where(:not(.rp,:root[data-theme="dark"] .mim,:root[data-theme="dark"] .mcd)){--bc:#262628;color:#fff}
+:root[data-theme="dark"] #wxo .msgs .tsl,:root[data-theme="dark"] #wxo .msgs .tsl::before{color:#98989f}
+:root[data-theme="dark"] #wxo .msgs .m.u:where(:not(.rp,:root[data-theme="dark"] .mim,:root[data-theme="dark"] .mcd,:root[data-theme="dark"] .ty)):not(:has(~ .m))::before{color:#8e8e93}
+:root[data-theme="dark"] #wxo .msgs .m.ty{--bc:#262628}
+:root[data-theme="dark"] #wxo .msgs .m.ty::after{animation-name:iMessageTypingDotsDark;background-image:radial-gradient(circle,rgba(255,255,255,.4) 50%,transparent 55%),radial-gradient(circle,rgba(255,255,255,.15) 50%,transparent 55%),radial-gradient(circle,rgba(255,255,255,.15) 50%,transparent 55%)}
+
+#wxo .inp .spb{display:none}
+#wxo.spam .inp .spb{display:flex;position:absolute;left:0;right:0;bottom:100%;height:120px;box-sizing:border-box;padding:70px 4% 12px;gap:4%;z-index:51}
+#wxo .inp .spb button{flex:1;background:transparent;border:0;border-radius:19px}
+body .gpn{gap:10px 2px;padding:14px 6px 10px;border-radius:26px}
+body .gb{gap:4px;font-size:10.5px}
+body .gb i{width:42px;height:42px}
+body .gb i svg{width:19px;height:19px}
+/* 引用回复：Reply ↗ + 头像 + 「名字：内容」 */
+#wxo .msgs .m:has(>.qt3){margin-top:36px}
+#wxo .msgs .m.a+.m.u:has(>.qt3),#wxo .msgs .m.u+.m.a:has(>.qt3){margin-top:64px}
+#wxo .msgs .m .qt3{position:absolute;top:-33px;z-index:0;display:flex;align-items:center;gap:8px;height:26px;width:max-content;max-width:min(320px,calc(100vw - 32px));margin:0;padding:0;border:0;border-radius:0;background:transparent;font:400 15px var(--ios);color:#8e8e93;cursor:pointer;opacity:1;text-align:left;box-shadow:none}
+#wxo .msgs .m.a .qt3{left:-8px;right:auto;background:transparent;border:0;color:#8e8e93}
+#wxo .msgs .m.u .qt3{right:-8px;left:auto;background:transparent;border:0;color:#8e8e93}
+#wxo .msgs .m .qt3 .qr-l{flex:none;display:flex;align-items:center;gap:6px;font:500 17px var(--ios);color:#000}
+#wxo .msgs .m .qt3 .qr-l i{width:20px;height:20px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='15 17 20 12 15 7'/><path d='M4 18v-2a4 4 0 0 1 4-4h12'/></svg>") center/contain no-repeat}
+#wxo .msgs .m .qt3 .qr-a{flex:none;width:26px;height:26px;border-radius:50%;overflow:hidden;background:#d1d1d6;display:grid;place-items:center;color:#fff;font:600 13px var(--ios)}
+#wxo .msgs .m .qt3 .qr-a img{width:100%;height:100%;object-fit:cover;display:block}
+#wxo .msgs .m .qt3 .qr-t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Cash 风格转账 / 红包卡片 */
+#wxo .msgs .m.rp.rp2{width:min(236px,68vw);max-width:none;padding:0;margin:0 0 3px;border-radius:20px;background:#fff;color:#000;border:1px solid #e5e5ea;box-shadow:none}
+#wxo .msgs .m.a.rp.rp2{align-self:flex-start}#wxo .msgs .m.u.rp.rp2{align-self:flex-end}
+#wxo .msgs .m.rp.rp2.tr{background:#fff;box-shadow:none}
+#wxo .msgs .m.rp.rp2.done{filter:none}#wxo .msgs .m.rp.rp2.done .rpc-t{opacity:.55}
+#wxo .msgs .m.rp.rp2 .rpc-t{display:block;padding:14px 16px 12px}
+#wxo .msgs .m.rp.rp2 .rpc-t::before{content:'Cash';display:block;font:500 12px var(--ios);letter-spacing:.5px;color:#000;margin-bottom:8px}
+#wxo .msgs .m.rp.rp2 .rpc-i{display:none}
+#wxo .msgs .m.rp.rp2 .rpc-x b{font:600 30px/1.1 var(--ios);letter-spacing:-.02em;color:#000}
+#wxo .msgs .m.rp.rp2 .rpc-x small{font:400 13px/1.3 var(--ios);color:#8e8e93;opacity:1;margin-top:6px}
+#wxo .msgs .m.rp.rp2 .rpc-f{background:#000;padding:9px 16px}
+#wxo .msgs .m.rp.rp2 .rpc-f span,#wxo .msgs .m.rp.rp2 .rpc-f em{color:#fff}
+/* 翻译：贴在气泡边上的黑色小标签 */
+#wxo .msgs .trx{position:relative;z-index:5;width:max-content;max-width:85%;margin:-8px 0 3px;padding:3px 8px;background:#111;color:#fff;border-radius:0;font:500 13px/1.3 var(--ios);white-space:pre-wrap;cursor:pointer}
+#wxo .msgs .trx.a{align-self:flex-start;margin-left:14px}#wxo .msgs .trx.u{align-self:flex-end;margin-right:14px}
+#wxo .msgs .trx.a+.m.u,#wxo .msgs .trx.u+.m.a{margin-top:35px}
+@media (prefers-color-scheme:dark){
+:root:not([data-theme="light"]) #wxo .msgs .m .qt3 .qr-l{color:#fff}
+:root:not([data-theme="light"]) #wxo .msgs .m .qt3 .qr-l i{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='15 17 20 12 15 7'/><path d='M4 18v-2a4 4 0 0 1 4-4h12'/></svg>")}
+:root:not([data-theme="light"]) #wxo .msgs .m .qt3 .qr-a{background:#3a3a3c}
+:root:not([data-theme="light"]) #wxo .msgs .m.rp.rp2,:root:not([data-theme="light"]) #wxo .msgs .m.rp.rp2.tr{background:#1c1c1e;border-color:#3a3a3c;color:#fff}
+:root:not([data-theme="light"]) #wxo .msgs .m.rp.rp2 .rpc-t::before,:root:not([data-theme="light"]) #wxo .msgs .m.rp.rp2 .rpc-x b{color:#fff}
+:root:not([data-theme="light"]) #wxo .msgs .m.rp.rp2 .rpc-x small{color:#98989f}
+:root:not([data-theme="light"]) #wxo .msgs .m.rp.rp2 .rpc-f{background:#2c2c2e}
+:root:not([data-theme="light"]) #wxo .msgs .trx{background:#dcdcdc;color:#000}
+}
+:root[data-theme="dark"] #wxo .msgs .m .qt3 .qr-l{color:#fff}
+:root[data-theme="dark"] #wxo .msgs .m .qt3 .qr-l i{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='15 17 20 12 15 7'/><path d='M4 18v-2a4 4 0 0 1 4-4h12'/></svg>")}
+:root[data-theme="dark"] #wxo .msgs .m .qt3 .qr-a{background:#3a3a3c}
+:root[data-theme="dark"] #wxo .msgs .m.rp.rp2,:root[data-theme="dark"] #wxo .msgs .m.rp.rp2.tr{background:#1c1c1e;border-color:#3a3a3c;color:#fff}
+:root[data-theme="dark"] #wxo .msgs .m.rp.rp2 .rpc-t::before,:root[data-theme="dark"] #wxo .msgs .m.rp.rp2 .rpc-x b{color:#fff}
+:root[data-theme="dark"] #wxo .msgs .m.rp.rp2 .rpc-x small{color:#98989f}
+:root[data-theme="dark"] #wxo .msgs .m.rp.rp2 .rpc-f{background:#2c2c2e}
+:root[data-theme="dark"] #wxo .msgs .trx{background:#dcdcdc;color:#000}
 `;document.head.appendChild(s38)}
+
+/* v41：最后一条我发的消息写入发送时间（配合「时间 已送达」） */
+{const _d=drawMsgs;drawMsgs=function(){const r=_d.apply(this,arguments);try{const f=D.friends[cur],c=D.chats[f.id]||[],l=[...document.querySelectorAll('#ms .m.u')].pop();if(l){const mt=/^mg(\d+)$/.exec(l.id||''),m=mt&&c[+mt[1]];if(m&&m.ts)l.dataset.t=fT(m.ts)}}catch(e){}return r}}
+
+/* v41b：拉黑角色 → 角色再发消息时出现「垃圾訊息」警告面板 */
+const spamSync=()=>{try{const o=$('#wxo'),f=D.friends[cur];if(!o||!f)return;const on=!!f.blk&&(D.chats[f.id]||[]).some(m=>m.r=='a'&&(m.ts||0)>=(f.blkAt||0));const was=o.classList.contains('spam');o.classList.toggle('spam',on);if(on&&!was){const ms=o.querySelector('#ms');if(ms)requestAnimationFrame(()=>{ms.scrollTop=ms.scrollHeight})}const inp=o.querySelector('.inp');if(inp&&!inp.querySelector('.spb'))inp.insertAdjacentHTML('beforeend','<div class="spb"><button data-act="spdel" aria-label="刪除"></button><button data-act="spkn" aria-label="標示為已知"></button></div>')}catch(e){}};
+{const _dm=drawMsgs;drawMsgs=function(){const r=_dm.apply(this,arguments);spamSync();return r}}
+{const _ic=ioChat;ioChat=function(){const r=_ic.apply(this,arguments);spamSync();return r}}
+{const _m=menu;menu=function(){_m.apply(this,arguments);const f=D.friends[cur],b=$('#mb');if(b&&f)b.insertAdjacentHTML('afterbegin',`<button class="dr" data-act="blkm"><b>${f.blk?'取消拉黑':'拉黑 TA'}</b>${ic('x')}</button>`)}}
+Object.assign(ACT,{blkm:()=>{const f=D.friends[cur];if(!f)return;f.blk=f.blk?0:1;f.blkAt=f.blk?Date.now():0;save();try{$('#sheet').className=''}catch(e){}toast(f.blk?'已拉黑，TA 之后发来的消息会提示为垃圾訊息':'已取消拉黑');spamSync()},spkn:()=>{const f=D.friends[cur];if(!f)return;f.blk=0;f.blkAt=0;save();spamSync();toast('已标示为已知')},spdel:()=>{const f=D.friends[cur];if(!f||!confirm('删除与「'+(f.remark||f.name)+'」的聊天记录？'))return;D.chats[f.id]=[];f.blk=0;f.blkAt=0;save();try{drawMsgs()}catch(e){}spamSync()}});
+
+/* v41c：翻译小标签（行内显示，点按收起） */
+{const _dt=drawMsgs;drawMsgs=function(){const r=_dt.apply(this,arguments);try{const c=D.chats[D.friends[cur].id]||[],ms=document.querySelector('#ms'),nb=ms&&ms.scrollHeight-ms.scrollTop-ms.clientHeight<90;c.forEach((m,i)=>{if(!m.trx)return;const e=document.querySelector('#ms [data-act="mm:'+i+'"]');if(e&&!(e.nextElementSibling&&e.nextElementSibling.classList.contains('trx')))e.insertAdjacentHTML('afterend','<div class="trx '+(m.r=='u'?'u':'a')+'" data-act="trxd:'+i+'">'+esc(m.trx)+'</div>')});if(nb&&ms)ms.scrollTop=1e9}catch(e){}return r}}
+ACT.trxd=x=>{const m=(D.chats[D.friends[cur].id]||[])[+x];if(m){delete m.trx;save();drawMsgs()}};
+
+/* ---------- v42：约会邀请 + 两人专属票根 + 系统通知（黑白灰） ---------- */
+D.tix=D.tix||[];
+AUTO.push(['invai','允许 TA 发约会邀请 / 生成票根','TA 可能邀请你看电影、逛艺术展、听演出，并为你们生成两张专属票根。',1]);
+const INV_HINT='\n\n【约会邀请与票根】当剧情确实合适时（想约对方看电影、逛艺术展、听演出、吃饭、散步等，且符合你的人设与当前关系），你可以主动发出邀请：在回复中单独写一条 [邀约:类型|标题|地点|时间|一句话留言]，类型可选 电影 / 艺术展 / 演出 / 音乐会 / 餐厅 / 散步 / 其他；标题写片名或展名，地点写影院、美术馆或餐厅，时间写具体的日期和钟点。系统会自动为你们两人各生成一张专属票根。不要滥用，绝大多数回复不应包含；对方回应邀请时请自然地接话。';
+{const _as=askS;askS=function(a,sys,ms,sig,cb){if(typeof sys=='string'&&sys.indexOf('你正在扮演微信好友')>-1&&sys.indexOf('[邀约:')<0&&D.set.invai!==0)sys+=INV_HINT;return _as.call(this,a,sys,ms,sig,cb)}}
+const TK_K={电影:['FILM','SEAT'],艺术展:['EXHIBITION','ENTRY'],演出:['LIVE','SEAT'],音乐会:['CONCERT','SEAT'],餐厅:['DINNER','TABLE'],散步:['WALK','No.'],其他:['DATE','No.']};
+const tkKind=k=>{k=String(k||'').trim();for(const n of Object.keys(TK_K))if(k.includes(n))return n;if(/展|馆/.test(k))return '艺术展';if(/餐|饭|咖啡|吃/.test(k))return '餐厅';if(/影/.test(k))return '电影';return '其他'};
+const tkMake=(f,p)=>{const kind=tkKind(p[0]),[en,lab]=TK_K[kind],r=Math.random,dg=()=>String(r()).slice(2,10).padEnd(8,'0');let su,sc;
+  if(lab=='SEAT'){const row=String.fromCharCode(65+(r()*12|0)),n=1+(r()*16|0);su=row+String(n).padStart(2,'0');sc=row+String(n+1).padStart(2,'0')}
+  else if(lab=='TABLE'){const t='T'+String(1+(r()*18|0)).padStart(2,'0');su=t+'·1';sc=t+'·2'}else{su='01';sc='02'}
+  return {id:'TK'+String(Date.now()).slice(-6)+(10+(r()*90|0)),fid:f.id,kind,en,lab,title:(p[1]||'').trim()||'一起去',place:(p[2]||'').trim()||'待定',time:(p[3]||'').trim()||'待定',msg:(p[4]||'').trim(),su,sc,nu:dg(),nc:dg(),ts:Date.now()}};
+{const _dv=deliver;deliver=async function(f,txt){const re=/\[邀约[:：]\s*([^\]\n]*)\]/g,iv=[];
+  const t=String(txt==null?'':txt).replace(re,(s,b)=>{iv.push(b.split(/[|｜]/).map(x=>x.trim()));return '\n'}).replace(/\n{2,}/g,'\n').trim();
+  if(!iv.length)return _dv.apply(this,arguments);if(t)await _dv.call(this,f,t);if(D.set.invai===0)return;
+  const c=D.chats[f.id];if(!c)return;const p=iv[0];await sleep(600);const v=tkMake(f,p);D.tix.push(v);
+  c.push({r:'a',t:'[约会邀请·'+v.kind+'：'+v.title+' · '+v.place+' · '+v.time+']',inv:v,ts:Date.now()});fresh=c.length-1;
+  const vis=$('#a-wx').classList.contains('on')&&$('#wxo').classList.contains('on')&&D.friends[cur]===f;if(!vis)D.unread[f.id]=(D.unread[f.id]||0)+1;
+  if(!f.mute)notify({app:'wx',title:(f.remark||f.name)+' · 约会邀请',text:f.enc?'加密消息':'邀请你「'+v.kind+'」：'+v.title+'，已生成两张票根',go:'wx:'+D.friends.indexOf(f)});
+  save();redraw(f);refreshBadges()}}
+const tkBar=s=>{let y=0,p='';for(const ch of String(s)){const n=ch.charCodeAt(0);[(n%3)+1,((n>>1)%2)+1,((n>>2)%3)+1,((n>>3)%2)+1].forEach((w,i)=>{if(i%2==0)p+='M0 '+y+'h40v'+w+'h-40z';y+=w});y+=1}return '<svg class="tk-bc" viewBox="0 0 40 '+y+'" preserveAspectRatio="none"><path d="'+p+'" fill="currentColor"/></svg>'};
+const tkHTML=(v,who,seat,no,cls)=>`<div class="tkw ${cls}"><div class="tk"><div class="tk-m"><span class="tk-k">${esc(v.en)} · ADMIT ONE</span><b class="tk-t">${esc(v.title)}</b><div class="tk-g"><p><i>TIME</i>${esc(v.time)}</p><p><i>VENUE</i>${esc(v.place)}</p></div><div class="tk-n"><i>GUEST</i>${esc(who)}</div></div><div class="tk-s"><i>${esc(v.lab)}</i><b>${esc(seat)}</b>${tkBar(no)}<small>NO.${esc(no)}</small></div></div></div>`;
+const invHTML=v=>`<div class="iv-h"><span>INVITATION</span><em>${esc(v.kind)}</em></div><div class="iv-b"><b>${esc(v.title)}</b><p><i>VENUE</i>${esc(v.place)}</p><p><i>TIME</i>${esc(v.time)}</p>${v.msg?'<q>'+esc(v.msg)+'</q>':''}</div><div class="iv-s"><span class="iv-t"><i>YOU</i>${esc(v.su)}</span><span class="iv-t"><i>TA</i>${esc(v.sc)}</span></div><div class="iv-f"><span>2 TICKETS</span><em>查看票根 ›</em></div>`;
+const invSkin=()=>{const f=D.friends[cur];if(!f)return;const ms=$('#ms');if(!ms)return;const c=D.chats[f.id]||[],nb=ms.scrollHeight-ms.scrollTop-ms.clientHeight<90;let n=0;
+  c.forEach((m,i)=>{if(!m.inv)return;const el=ms.querySelector('[data-act="mm:'+i+'"]');if(!el)return;n++;el.classList.add('inv');el.dataset.act='tko:'+m.inv.id;el.innerHTML=invHTML(m.inv);
+    el.insertAdjacentHTML('beforebegin','<div class="nsys">系统通知 · '+esc(f.remark||f.name)+' 发来约会邀请，已生成 2 张票根</div>')});
+  if(n&&nb)ms.scrollTop=1e9};
+{const _di=drawMsgs;drawMsgs=function(){const r=_di.apply(this,arguments);try{invSkin()}catch(e){console.error(e)}return r}}
+ACT.tko=id=>{const v=D.tix.find(x=>x.id==id);if(!v)return;const f=D.friends.find(x=>x.id==v.fid)||{},me=(D.me&&D.me.name)||'我',ta=f.remark||f.name||'TA';
+  ioSh(ioHd('Tickets / 票根 · '+esc(v.kind))+'<div class="tkl">'+tkHTML(v,me,v.su,v.nu,'w')+'<p class="tk-c">'+esc(me)+' 的票根</p>'+tkHTML(v,ta,v.sc,v.nc,'k')+'<p class="tk-c">'+esc(ta)+' 的票根</p></div><button class="bt w" data-act="sx">关闭</button>')};
+ACT.tkl=()=>{const f=D.friends[cur];if(!f)return;const l=D.tix.filter(x=>x.fid==f.id).reverse();
+  ioSh(ioHd('Tickets / 票根夹')+(l.length?l.map(v=>'<button class="dr" data-act="tko:'+v.id+'"><b>'+esc(v.kind)+' · '+esc(v.title)+'</b><span class="mono">'+esc(v.time)+'</span></button>').join(''):'<p class="mono" style="padding:14px 0;text-align:center">还没有票根</p>')+ioX)};
+{const _mt=menu;menu=function(){_mt.apply(this,arguments);const f=D.friends[cur],b=$('#mb');if(b&&f)b.insertAdjacentHTML('afterbegin','<button class="dr" data-act="tkl"><b>票根夹</b>'+ic('star')+'</button>')}}
+{const s=document.createElement('style');s.textContent=`
+:root{--iv-bg:#fff;--iv-fg:#000;--iv-mut:#8e8e93;--iv-ln:#e5e5ea;--iv-ft:#000;--iv-ftc:#fff;--iv-chip:#f2f3f3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--iv-bg:#1c1c1e;--iv-fg:#fff;--iv-mut:#98989f;--iv-ln:#3a3a3c;--iv-ft:#2c2c2e;--iv-chip:#1c1c1e}}
+:root[data-theme="dark"]{--iv-bg:#1c1c1e;--iv-fg:#fff;--iv-mut:#98989f;--iv-ln:#3a3a3c;--iv-ft:#2c2c2e;--iv-chip:#1c1c1e}
+#wxo .msgs .nsys{align-self:center;max-width:88%;margin:16px 0 10px;padding:6px 13px;border-radius:999px;background:var(--iv-chip);color:var(--iv-mut);font:500 12px/1.4 var(--ios);text-align:center}
+#wxo .msgs .m.a.inv{width:min(252px,70vw);max-width:none;padding:0;margin:0 0 3px;border-radius:20px;background:var(--iv-bg);color:var(--iv-fg);border:1px solid var(--iv-ln);box-shadow:none;overflow:hidden;cursor:pointer;display:block;align-self:flex-start;font:400 14px/1.4 var(--ios)}
+#wxo .msgs .m.inv::after,#wxo .msgs .m.inv::before{display:none!important}
+.iv-h{display:flex;justify-content:space-between;align-items:center;padding:13px 16px 0;font:500 10.5px var(--ios);letter-spacing:.16em;color:var(--iv-mut)}
+.iv-h em{font-style:normal;border:1px solid var(--iv-ln);border-radius:999px;padding:1px 9px;letter-spacing:.04em;font-size:11px;color:var(--iv-fg)}
+.iv-b{padding:10px 16px 12px}.iv-b b{display:block;font:600 22px/1.2 var(--ios);letter-spacing:-.01em;margin-bottom:8px;word-break:break-all}
+.iv-b p{margin:3px 0;display:flex;gap:10px;font:400 13px/1.4 var(--ios)}.iv-b p i{flex:none;width:42px;font:500 9.5px/1.9 var(--ios);letter-spacing:.1em;color:var(--iv-mut);font-style:normal}
+.iv-b q{display:block;margin-top:8px;color:var(--iv-mut);font-style:italic;quotes:none}
+.iv-s{display:flex;gap:8px;padding:0 16px 13px}.iv-t{flex:1;border:1px dashed var(--iv-mut);border-radius:10px;padding:6px 10px;font:600 15px var(--ios);display:flex;flex-direction:column;text-align:left}
+.iv-t i{font:500 9px var(--ios);letter-spacing:.14em;color:var(--iv-mut);font-style:normal}
+.iv-f{display:flex;justify-content:space-between;padding:9px 16px;background:var(--iv-ft);color:var(--iv-ftc);font:500 11.5px var(--ios)}.iv-f em{font-style:normal}
+.tkl{display:flex;flex-direction:column;gap:4px}
+.tkw{filter:drop-shadow(0 6px 10px rgba(0,0,0,.16)) drop-shadow(0 0 .6px rgba(0,0,0,.5))}
+.tkw.k{filter:drop-shadow(0 6px 10px rgba(0,0,0,.3)) drop-shadow(0 0 .6px rgba(255,255,255,.55))}
+.tk{--s:71%;display:grid;grid-template-columns:1fr 29%;min-height:150px;border-radius:14px;-webkit-mask:radial-gradient(circle 9px at var(--s) 0,#0000 98%,#000) top/100% 51% no-repeat,radial-gradient(circle 9px at var(--s) 100%,#0000 98%,#000) bottom/100% 51% no-repeat;mask:radial-gradient(circle 9px at var(--s) 0,#0000 98%,#000) top/100% 51% no-repeat,radial-gradient(circle 9px at var(--s) 100%,#0000 98%,#000) bottom/100% 51% no-repeat}
+.tkw.w .tk{background:#fff;color:#000}.tkw.k .tk{background:#000;color:#fff}
+.tk i{display:block;font:500 9.5px/1.6 var(--ios);letter-spacing:.14em;font-style:normal;color:#8e8e93}
+.tk-m{padding:16px 14px 14px 18px;display:flex;flex-direction:column;gap:8px;min-width:0}.tk-k{font:600 10px var(--ios);letter-spacing:.18em;color:#8e8e93}
+.tk-t{font:600 22px/1.15 var(--ios);letter-spacing:-.01em;word-break:break-all}.tk-g{display:flex;flex-direction:column;gap:5px;font:500 13px/1.3 var(--ios)}.tk-g p{margin:0}
+.tk-n{margin-top:auto;font:600 14px var(--ios)}
+.tk-s{border-left:1.5px dashed #8e8e93;padding:16px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:0}
+.tk-s b{font:700 24px/1 var(--ios);letter-spacing:-.02em}.tk-bc{width:100%;height:46px;flex:none;color:inherit}.tk-s small{font:500 8px var(--mono);letter-spacing:.04em;color:#8e8e93}
+.tk-c{text-align:center;font:400 11px var(--ios);color:var(--mut);margin:2px 0 14px}`;document.head.appendChild(s)}
 
 /* ---------- v39：MCP 工具（本机工具 + 自定义 MCP 服务器 / TA 在聊天里自动调用）+ 修复回应·纪念日注入 ---------- */
 const MCP={id:0,rt:{}};
