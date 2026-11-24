@@ -2970,7 +2970,6 @@ $('#hg').innerHTML=APPS.map(a=>`<button class="ap" data-act="app:${a[0]}">${appI
 /* 液态玻璃：聊天室 / 短信按钮 */
 #wxo .inp .io-plus,#wxo .inp .io-pill,#wxo .ioch .ioc-b,#wxo .ioch .ioc-r,#wxo .ioch .ioc-name{background:var(--gl);-webkit-backdrop-filter:blur(20px) saturate(1.8);backdrop-filter:blur(20px) saturate(1.8);border:.5px solid var(--glb);box-shadow:var(--glh)}
 #wxo .inp .io-pill{position:relative;overflow:visible}
-#wxo .inp .io-pill::after{content:"";position:absolute;right:24px;bottom:-7px;width:15px;height:9px;background:var(--gl);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);clip-path:polygon(0 0,100% 0,100% 100%)}
 #wxo .inp .io-pill #snd{background:var(--fg);color:var(--bg);box-shadow:0 6px 16px -8px rgba(0,0,0,.45)}
 /* 加号面板 */
 .gpn,#cpl .emg,.gem{position:relative}
@@ -3358,6 +3357,214 @@ setInterval(()=>{const b=$('#mmini'),T=MU.t(),h=$('#a-home');if(!b)return;const 
 #mmini .mm-t{min-width:0}#mmini b{display:block;font:600 14px/1.25 -apple-system,"PingFang SC",sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#mmini small{display:block;font:400 11px -apple-system,"PingFang SC",sans-serif;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #mmini .mm-b{width:36px;height:36px;flex:none;border-radius:50%;display:grid;place-items:center}#mmini .mm-b .gi{width:20px;height:20px;fill:currentColor;stroke:currentColor}
 `;document.head.appendChild(s34)}
+
+/* ---------- v35：音乐再增强（下一首播放队列 / A-B 循环 / 点歌词跳转 / 渐入 / 音量 / 自定义封面 / 排序 / 听歌周报 / TA 点歌与点评） ---------- */
+MU.qu=[];MU.cvu={};MU.ab=[null,null];
+const MSORT=['添加顺序','歌名','播放最多','喜欢优先'],dk=d=>d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+function muQNext(){while(MU.qu.length){const id=MU.qu.shift(),i=muD().tracks.findIndex(x=>x.id==id);if(i>=0){muPlay(i);return true}}return false}
+{const _e=muEnd;muEnd=function(){if(!MU.sleepEnd&&muQNext())return;return _e.apply(this,arguments)}}
+{const _n=ACT.munx;ACT.munx=()=>{if(!muQNext())_n()}}
+function muPlus2(){const A=$('#a-mu'),sc=A&&A.classList.contains('on')&&A.querySelector('.scroll.mu');if(!sc)return;const d=muD();
+ if(MU.tab==0){const xs=sc.querySelectorAll('.mu-x'),last=xs[xs.length-1],t=MU.t(),ab=MU.ab,vol=d.vol==null?1:d.vol;if(!last)return;
+  last.insertAdjacentHTML('afterend',`<div class="mu-x"><button class="gl sm${ab[0]!=null?' a':''}" data-act="muab:a">${ab[0]!=null?'A '+muFmt(ab[0]):'设 A 点'}</button><button class="gl sm${ab[1]!=null?' a':''}" data-act="muab:b">${ab[1]!=null?'B '+muFmt(ab[1]):'设 B 点'}</button><button class="gl sm" data-act="muab:x">清除 A-B</button><button class="gl sm${d.fade?' a':''}" data-act="mufade">渐入</button><button class="gl sm" data-act="muai">🎧 TA 点歌 / 点评</button></div><div class="mu-x" style="margin-top:-6px"><span style="font:500 12px var(--ios);color:var(--mut)">音量</span><input type="range" id="mu-vol" min="0" max="1" step="0.05" value="${vol}" style="width:60%"></div>`);
+  if(t&&t.cv)(async()=>{try{const b=await IDBK.get('blob:mucv'+t.id);if(!b)return;const u=MU.cvu[t.id]||(MU.cvu[t.id]=URL.createObjectURL(b)),c=$('#a-mu .mu-cv');if(c&&MU.t()==t){c.style.background='url('+u+') center/cover';const g=c.querySelector('.gi');if(g)g.style.display='none'}}catch(e){}})()}
+ else if(MU.tab==1){const b=sc.querySelector('[data-act="muexp"]');if(b)b.parentNode.insertAdjacentHTML('beforeend',`<button class="gl sm" data-act="musort">排序：${MSORT[MU.sort||0]}</button>`);
+  const rows=[...sc.querySelectorAll('.mu-r[data-i]')],tk=d.tracks,k=MU.sort||0;if(k&&rows.length){const f=[0,(a,b)=>tk[a.dataset.i].t.localeCompare(tk[b.dataset.i].t,'zh'),(a,b)=>(d.plays[tk[b.dataset.i].id]||0)-(d.plays[tk[a.dataset.i].id]||0),(a,b)=>(tk[b.dataset.i].fav||0)-(tk[a.dataset.i].fav||0)][k];rows.sort(f).forEach(r=>r.parentNode.appendChild(r))}}
+ else if(MU.tab==2){const st=sc.querySelector('.mu-st');if(!st)return;const dl=d.daily||{},days=[...Array(7)].map((_,i)=>{const x=new Date();x.setDate(x.getDate()-6+i);return [x,dl[dk(x)]||0]}),mx=Math.max(60,...days.map(v=>v[1]));let sk=0;for(let i=0;;i++){const x=new Date();x.setDate(x.getDate()-i);if(dl[dk(x)]>0)sk++;else if(i>0||true)break}
+  st.insertAdjacentHTML('afterend',`<div class="mono" style="margin:22px 0 8px">本周听歌 · 连续打卡 ${sk} 天 · 共 ${Math.round(days.reduce((a,v)=>a+v[1],0)/60)} 分钟</div><div class="mu-bars">${days.map(([x,s])=>`<div><i style="height:${Math.max(3,s/mx*100)}%"></i><small>${Math.round(s/60)}</small><em>${'日一二三四五六'[x.getDay()]}</em></div>`).join('')}</div>`)}}
+{const _r=renderMu;renderMu=function(){const r=_r.apply(this,arguments);try{muPlus2()}catch(e){console.error(e)}return r}}
+setInterval(()=>{const a=MU.au;if(a.paused||a.ended)return;const d=muD(),k=dk(new Date());d.daily=d.daily||{};d.daily[k]=(d.daily[k]||0)+1;if(++MU.dt%30==0)save()},1000);MU.dt=0;
+MU.au.addEventListener('timeupdate',()=>{const a=MU.au,ab=MU.ab;if(ab[0]!=null&&ab[1]!=null&&a.currentTime>=ab[1])a.currentTime=ab[0]});
+MU.au.addEventListener('playing',()=>{const d=muD(),a=MU.au;clearInterval(MU.fv);const vol=d.vol==null?1:d.vol;if(!d.fade){a.volume=vol;return}let v=0;a.volume=0;MU.fv=setInterval(()=>{v+=.1;a.volume=Math.min(v,1)*vol;if(v>=1)clearInterval(MU.fv)},120)});
+{const _p=muPlay;muPlay=async function(){MU.ab=[null,null];return _p.apply(this,arguments)}}
+ph.addEventListener('click',e=>{const p=e.target.closest&&e.target.closest('#mu-ly p');if(!p)return;const l=MU.lr[[...p.parentNode.children].indexOf(p)];if(l&&l.s!=null){MU.au.currentTime=Math.max(0,l.s-((MU.t()||{}).off||0));if(MU.au.paused)MU.au.play().catch(()=>{})}});
+ph.addEventListener('input',e=>{if(e.target.id=='mu-vol'){const d=muD();d.vol=+e.target.value;MU.au.volume=d.vol}});
+ph.addEventListener('change',async e=>{const t=e.target;if(t.id=='mu-vol')save();
+ else if(t.id=='mu-cvf'&&t.files[0]){const tr=muD().tracks[+t.dataset.i];if(!tr)return;try{await IDBK.set('blob:mucv'+tr.id,t.files[0]);if(MU.cvu[tr.id])URL.revokeObjectURL(MU.cvu[tr.id]);delete MU.cvu[tr.id];tr.cv=1;save();$('#sheet').className='';renderMu();toast('封面已设置')}catch(x){toast('封面保存失败')}}});
+const muFr=()=>D.friends.find(v=>v.id==MU.pick)||D.friends[cur]||D.friends[0]||null;
+async function muAI(kind){const f=muFr(),d=muD(),T=MU.t();if(!f)return toast('先添加好友');if(MU.aib)return toast('TA 还在想');if(eLocked(f))return toast('此聊天已加密，请先解锁');let sys=sysP(f),u;
+ if(kind==1){if(!d.tracks.length)return toast('曲库还是空的');sys+='\n\n【场景：用户在手机音乐 App 里，请你从你们共同的曲库中，为此刻挑一首最合适的歌。】\n曲库：\n'+d.tracks.slice(0,80).map((x,i)=>(i+1)+'. '+x.t+(x.a?' - '+x.a:'')+(x.fav?' ♥':'')+'（播放'+(d.plays[x.id]||0)+'次）').join('\n')+'\n回复格式：第一行只写歌曲编号（纯数字），然后另起一行，用你的口吻说选这首的理由，不超过 80 字。';u='现在是 '+new Date().toLocaleString('zh-CN')+'，帮我选一首适合现在听的歌。'}
+ else{if(!T)return toast('先放一首歌');const ly=(T.lrc||'').replace(/\[[^\]]*\]/g,'').replace(/\n+/g,' / ').slice(0,700);sys+=`\n\n【场景：你正在和用户在手机上一起听《${T.t}》${T.a?'—'+T.a:''}。】${ly?'\n歌词节选：'+ly:''}\n用你的口吻聊聊这首歌给你的感受或点评，不超过 120 字，不要编造你不确定的歌曲背景。`;u='说说你对这首歌的感受吧。'}
+ MU.aib=1;toast((f.remark||f.name)+' 在想…');try{const o=await askS(f.temp==null?D.main:Object.assign({},D.main,{temp:f.temp}),sys,[{role:'user',content:u}]);D.stat.calls++;let tx=String(o).trim(),extra='';
+  if(kind==1){const n=parseInt(tx.split('\n')[0].replace(/\D/g,''))-1,x=d.tracks[n];if(!x)throw Error('TA 没选出有效的歌');tx=tx.split('\n').slice(1).join('\n').trim()||'就这首吧。';MU.tab=0;muPlay(n);extra='<div class="mono" style="margin-top:4px">已为你播放《'+esc(x.t)+'》</div>'}
+  ioSh(ioHd((kind==1?'TA 点的歌 · ':'TA 的点评 · ')+esc(f.remark||f.name))+`<p style="font:400 16px/1.7 var(--ios);margin:6px 0 10px;white-space:pre-wrap">${esc(tx)}</p>${extra}`+ioX)}catch(e){D.stat.fails++;toast('请求失败：'+errMsg(e))}MU.aib=0;save()}
+Object.assign(ACT,{
+ muab:x=>{const a=MU.au;if(x=='a')MU.ab=[a.currentTime,null];else if(x=='b'){if(MU.ab[0]==null)return toast('先设 A 点');if(a.currentTime<=MU.ab[0]+.5)return toast('B 点要在 A 点之后');MU.ab[1]=a.currentTime}else MU.ab=[null,null];renderMu()},
+ mufade:()=>{const d=muD();d.fade=d.fade?0:1;save();toast(d.fade?'已开启渐入':'已关闭渐入');renderMu()},
+ musort:()=>{MU.sort=((MU.sort||0)+1)%4;renderMu()},
+ muq:x=>{const t=muD().tracks[+x];if(!t)return;MU.qu.push(t.id);$('#sheet').className='';toast('已加入队列，当前之后播放（队列 '+MU.qu.length+' 首）')},
+ muai:()=>{const f=muFr();ioSh(ioHd('和 TA 听歌')+`<p style="font:400 14px/1.6 var(--ios);color:var(--mut);margin:0 0 6px">对象：${f?esc(f.remark||f.name):'（先添加好友）'}（可在播放页下方的「一起听」里换人）</p><button class="bt k w" style="border-radius:14px" data-act="muai1">让 TA 从曲库里点一首</button><button class="bt w" style="margin-top:10px;border-radius:14px" data-act="muai2">听 TA 点评当前这首</button><button class="bt w" style="margin-top:10px;border-radius:14px" data-act="musend">把这首发给 TA（一起听卡片）</button>`+ioX)},
+ muai1:()=>{$('#sheet').className='';muAI(1)},muai2:()=>{$('#sheet').className='';muAI(2)},
+ muedit:x=>{const t=muD().tracks[+x];if(!t)return;ioSh(ioHd('歌曲选项')+fld('标题',`<input id="mu-et" value="${esc(t.t)}">`)+fld('歌手',`<input id="mu-ea" value="${esc(t.a||'')}">`)+`<button class="bt k w" data-act="muesv:${x}">保存</button><button class="bt w" style="margin-top:10px;border-radius:14px" data-act="muq:${x}">下一首播放</button><label class="bt w" style="display:block;text-align:center;margin-top:10px;border-radius:14px;cursor:pointer">${t.cv?'更换封面':'设置封面'}<input type="file" accept="image/*" id="mu-cvf" data-i="${x}" hidden></label>`+ioX)}});
+{const s35=document.createElement('style');s35.textContent=`
+#a-mu .mu-bars{display:flex;gap:8px;align-items:flex-end;height:120px;padding:0 2px}
+#a-mu .mu-bars>div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px}
+#a-mu .mu-bars i{display:block;width:100%;border-radius:6px;background:var(--fg);min-height:3px}
+#a-mu .mu-bars small{font:600 11px var(--ios);color:var(--fg)}#a-mu .mu-bars em{font:400 11px var(--ios);font-style:normal;color:var(--mut)}
+`;document.head.appendChild(s35)}
+
+/* ---------- v36：自定义歌单（新建 / 加歌 / 按歌单播放）+ 把歌发给 TA ---------- */
+const muPl=()=>{const d=muD();d.pls=d.pls||[];return d.pls},muPo=id=>muPl().find(p=>p.id==id);
+function muScope(){const d=muD(),p=MU.pl&&muPo(MU.pl);if(!p)return d.tracks.map((_,i)=>i);return p.ids.map(id=>d.tracks.findIndex(x=>x.id==id)).filter(i=>i>=0)}
+function muStep(n){const L=muScope();if(!L.length)return;let j;if(muD().mode==1&&L.length>1){do{j=L[Math.floor(Math.random()*L.length)]}while(j==MU.i)}else{const p=L.indexOf(MU.i);j=L[p<0?(n>0?0:L.length-1):(p+n+L.length)%L.length]}muPlay(j)}
+{const _e=muEnd;muEnd=function(){if(!MU.pl||MU.sleepEnd)return _e.apply(this,arguments);if(muQNext())return;if(muD().mode==2&&MU.i>=0)return muPlay(MU.i);muStep(1)}}
+{const _n=ACT.munx,_p=ACT.mupv;ACT.munx=()=>{if(!MU.pl)return _n();if(!muQNext())muStep(1)};ACT.mupv=()=>MU.pl?muStep(-1):_p()}
+try{navigator.mediaSession.setActionHandler('previoustrack',()=>ACT.mupv())}catch(e){}
+{const _f=muFilter;muFilter=function(){_f();const v=MU.plv&&muPo(MU.plv);if(!v)return;const d=muD();document.querySelectorAll('#a-mu .mu-r[data-i]').forEach(r=>{if(!v.ids.includes(d.tracks[+r.dataset.i].id))r.style.display='none'})}}
+function muPlus3(){const A=$('#a-mu'),sc=A&&A.classList.contains('on')&&A.querySelector('.scroll.mu');if(!sc)return;const d=muD(),pls=muPl();
+ if(MU.tab==0){const a=sc.querySelector('.mu-a'),p=MU.pl&&muPo(MU.pl);if(a&&p&&MU.t())a.textContent+=' · 歌单「'+p.n+'」'}
+ else if(MU.tab==1){if(MU.plv&&!muPo(MU.plv))MU.plv=null;const fb=sc.querySelector('.mu-fb');if(!fb)return;const v=MU.plv&&muPo(MU.plv);
+  fb.insertAdjacentHTML('beforebegin',`<div class="mu-pls"><button class="gl sm${v?'':' a'}" data-act="muplv:0">全部</button>${pls.map(p=>`<button class="gl sm${MU.plv==p.id?' a':''}" data-act="muplv:${p.id}">${esc(p.n)} · ${p.ids.length}</button>`).join('')}<button class="gl sm" data-act="munew:-1">＋ 新歌单</button></div>`+(v?`<div class="mu-pls"><button class="gl sm a" data-act="mupla">▶ 播放歌单</button><button class="gl sm" data-act="muprn">重命名</button><button class="gl sm dng" data-act="mupdel">删除歌单</button></div>`:''));
+  if(v){const rows=[...sc.querySelectorAll('.mu-r[data-i]')],tk=d.tracks;rows.sort((a,b)=>v.ids.indexOf(tk[a.dataset.i].id)-v.ids.indexOf(tk[b.dataset.i].id)).forEach(r=>r.parentNode.appendChild(r));muFilter()}}}
+{const _r=renderMu;renderMu=function(){const r=_r.apply(this,arguments);try{muPlus3()}catch(e){console.error(e)}return r}}
+Object.assign(ACT,{
+ muplv:x=>{MU.plv=x=='0'?null:x;renderMu()},
+ muplay:x=>{MU.pl=MU.plv||null;MU.tab=0;muPlay(+x)},
+ mupla:()=>{const p=muPo(MU.plv);if(!p)return;MU.pl=p.id;const L=muScope();if(!L.length)return toast('歌单是空的，到歌曲旁的「改」里加歌');MU.tab=0;muPlay(muD().mode==1?L[Math.floor(Math.random()*L.length)]:L[0])},
+ munew:x=>ioSh(ioHd('新建歌单')+fld('歌单名','<input id="mu-pn" maxlength="20">')+`<button class="bt k w" data-act="munews:${x}">创建</button>`+ioX),
+ munews:x=>{const n=($('#mu-pn').value||'').trim();if(!n)return toast('请输入歌单名');const p={id:'p'+Date.now(),n,ids:[]},t=muD().tracks[+x];muPl().push(p);if(+x>=0&&t)p.ids.push(t.id);save();$('#sheet').className='';MU.plv=p.id;MU.tab=1;renderMu()},
+ muprn:()=>{const p=muPo(MU.plv);if(!p)return;ioSh(ioHd('重命名歌单')+fld('歌单名',`<input id="mu-pn" maxlength="20" value="${esc(p.n)}">`)+'<button class="bt k w" data-act="muprns">保存</button>'+ioX)},
+ muprns:()=>{const p=muPo(MU.plv),n=($('#mu-pn').value||'').trim();if(!p||!n)return;p.n=n;save();$('#sheet').className='';renderMu()},
+ mupdel:(x,y,t)=>{if(!ok2(t))return;const id=MU.plv;muD().pls=muPl().filter(p=>p.id!=id);if(MU.pl==id)MU.pl=null;MU.plv=null;save();renderMu()},
+ muplt:(x,y)=>{const p=muPo(x),t=muD().tracks[+y];if(!p||!t)return;const k=p.ids.indexOf(t.id);k>=0?p.ids.splice(k,1):p.ids.push(t.id);save();ACT.muedit(y)},
+ musend:()=>{const f=muFr();$('#sheet').className='';if(!f)return toast('先添加好友');if(!MU.t())return toast('先放一首歌');muSendCard(f);toast('已发到和 '+(f.remark||f.name)+' 的聊天')},
+ muedit:x=>{const t=muD().tracks[+x];if(!t)return;ioSh(ioHd('歌曲选项')+fld('标题',`<input id="mu-et" value="${esc(t.t)}">`)+fld('歌手',`<input id="mu-ea" value="${esc(t.a||'')}">`)+`<button class="bt k w" data-act="muesv:${x}">保存</button><button class="bt w" style="margin-top:10px;border-radius:14px" data-act="muq:${x}">下一首播放</button><label class="bt w" style="display:block;text-align:center;margin-top:10px;border-radius:14px;cursor:pointer">${t.cv?'更换封面':'设置封面'}<input type="file" accept="image/*" id="mu-cvf" data-i="${x}" hidden></label><div class="mono" style="margin:18px 0 8px">加入歌单</div><div style="display:flex;flex-wrap:wrap;gap:8px">${muPl().map(p=>`<button class="mu-sb${p.ids.includes(t.id)?' a':''}" data-act="muplt:${p.id}:${x}">${p.ids.includes(t.id)?'✓ ':''}${esc(p.n)}</button>`).join('')}<button class="mu-sb" data-act="munew:${x}">＋ 新歌单</button></div>`+ioX)}});
+{const s36=document.createElement('style');s36.textContent=`
+#a-mu .mu-pls{display:flex;gap:8px;overflow-x:auto;margin:10px 0 2px;padding-bottom:2px}#a-mu .mu-pls .gl{flex:none;white-space:nowrap}
+.mu-sb{padding:8px 14px;border-radius:999px;background:var(--soft);color:var(--fg);font:500 13px -apple-system,"PingFang SC",sans-serif}.mu-sb.a{background:var(--fg);color:var(--bg)}
+`;document.head.appendChild(s36)}
+
+/* ---------- v37：聊天室新功能（小游戏 / 一起读书 / 纪念日 / 消息回应 / 翻译） ---------- */
+GI.dice=gI('<rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="15" r="1" fill="currentColor"/>');
+GI.book=gI('<path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5c-.8 0-1.5-.7-1.5-1.5zM20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5-.7 1.5-1.5z"/>');
+GI.cal=gI('<rect x="4" y="5" width="16" height="15" rx="3.5"/><path d="M8 3v4M16 3v4M4 10h16"/>');
+const chSay=(f,t)=>{(D.chats[f.id]=D.chats[f.id]||[]).push({r:'u',t,ts:Date.now()});sel=-1;save();redraw(f);gen(f)};
+const chOk=()=>{const f=D.friends[cur];if(!f)return null;if(ctl){toast('TA 还在回复，稍等一下');return null}return f};
+const chB=(a,t)=>`<button class="bt w" style="margin-top:10px;border-radius:14px" data-act="${a}">${t}</button>`;
+const chDays=f=>Math.floor((new Date(new Date().toDateString())-new Date(f.ann.d+'T00:00:00'))/864e5);
+function chAnn(){const f=D.friends[cur],h=$('#wxo .chh .mono');if(!f||!h)return;h.querySelectorAll('.chan').forEach(x=>x.remove());if(!f.ann)return;const n=chDays(f);h.insertAdjacentHTML('beforeend',`<span class="chan"> · ${esc(f.ann.n)}${n>=0?' 第 '+(n+1)+' 天':' 还有 '+(-n)+' 天'}</span>`)}
+{const _o=openChat;openChat=function(){const r=_o.apply(this,arguments);try{chAnn()}catch(e){}return r}}
+{const _c=ACT.cplus;ACT.cplus=function(){_c.apply(this,arguments);const g=$('#cpl .gpn');if(g)g.insertAdjacentHTML('beforeend',[['dice','小游戏','cgm','#5e5ce6'],['book','一起读书','cbook','#ff6482'],['cal','纪念日','chann','#32ade6']].map(([k,t,a,tn])=>`<button class="gb" style="--tn:${tn}" data-act="${a}"><i>${GI[k]}</i><span>${t}</span></button>`).join(''))}}
+CTXO.splice(CTXO.indexOf('md'),0,'crx','ctr');
+{const _i=ioCtx;ioCtx=function(){try{const ma=$('#ms .ma');if(ma&&sel>=0&&!ma.querySelector('[data-act^="crx:"]')){const m=(D.chats[D.friends[cur].id]||[])[sel];if(m&&m.r!='s'&&!m.rp)ma.insertAdjacentHTML('beforeend',`<button data-act="crx:${sel}">${ic('spark')}回应</button>`+(m.t&&!m.img?`<button data-act="ctr:${sel}">${ic('chat')}翻译</button>`:''))}}catch(e){}return _i.apply(this,arguments)}}
+{const _d=drawMsgs;drawMsgs=function(){const r=_d.apply(this,arguments);try{(D.chats[D.friends[cur].id]||[]).forEach((m,i)=>{if(!m.rx)return;const e=$('#ms [data-act="mm:'+i+'"]');if(e&&!e.querySelector('.crx'))e.insertAdjacentHTML('beforeend','<span class="crx">'+m.rx+'</span>')})}catch(e){}return r}}
+try{const _s0=sysP0;sysP0=function(f){let s=_s0.apply(this,arguments);try{const ex=[];(D.chats[f.id]||[]).slice(-40).forEach(m=>{if(m.rx&&m.t)ex.push('用户对'+(m.r=='u'?'自己':'你')+'的消息「'+m.t.slice(0,24)+'」做了 '+m.rx+' 回应')});if(ex.length)s+='\n\n【消息回应】'+ex.slice(-3).join('；')+'（可自然地提及，不要刻意）';if(f.ann){const n=chDays(f);s+='\n\n【纪念日】'+f.ann.n+'：'+(n>=0?'已经第 '+(n+1)+' 天':'还有 '+(-n)+' 天')+'。遇到特殊日子（整百天、周年等）可以自然地提起。'}}catch(e){}return s}}catch(e){}
+Object.assign(ACT,{
+ cgm:()=>{if(!chOk())return;$('#cpl').innerHTML='';ioSh(ioHd('小游戏')+[['cdice','🎲 比骰子'],['cjk:0','✊ 猜拳 · 出石头'],['cjk:1','✌️ 猜拳 · 出剪刀'],['cjk:2','✋ 猜拳 · 出布'],['ctod:0','💬 真心话 · 让 TA 问我'],['ctod:1','🔥 大冒险 · 让 TA 出题'],['ctod:2','❓ 真心话 · 我来问 TA']].map(([a,t])=>chB(a,t)).join('')+ioX)},
+ cdice:()=>{const f=chOk();if(!f)return;$('#sheet').className='';const a=1+Math.random()*6|0,b=1+Math.random()*6|0;chSay(f,`🎲 比骰子：我 ${a} 点，你 ${b} 点 —— ${a>b?'我赢了':a<b?'你赢了':'平局'}！`)},
+ cjk:x=>{const f=chOk();if(!f)return;$('#sheet').className='';const E=['✊','✌️','✋'],N=['石头','剪刀','布'],a=+x,b=Math.random()*3|0,r=(a-b+3)%3;chSay(f,`${E[a]} 猜拳：我出${N[a]}，你出${N[b]} ${E[b]} —— ${r==2?'我赢了':r==1?'你赢了':'平局'}！`)},
+ ctod:x=>{const f=chOk();if(!f)return;$('#sheet').className='';if(x=='2'){const i=$('#ci');i.value='真心话：';i.focus();return}chSay(f,x=='0'?'我们来玩真心话吧：你问我一个问题，我会认真回答。':'我们来玩大冒险吧：你给我出一个在手机上就能完成的小任务。')},
+ cbook:()=>{if(!chOk())return;$('#cpl').innerHTML='';const bs=rdD().books;if(!bs.length)return toast('书库是空的，先到「阅读」里导入一本书');ioSh(ioHd('选一本一起读')+bs.slice(0,8).map(b=>chB('cbk:'+b.id,'《'+esc(b.title.slice(0,18))+'》· 我读到 '+rdPct(b.pos,b.n)+'%')).join('')+ioX)},
+ cbk:x=>{const f=chOk(),b=rdD().books.find(v=>v.id==x);if(!f||!b)return;$('#sheet').className='';rdD().fid=f.id;chSay(f,`📖 我在读《${b.title}》，已经读到 ${rdPct(b.pos,b.n)}% 了，你要不要也一起读？读完我们聊聊剧情。`);toast('已发送，也可以到「阅读」App 里一起读')},
+ chann:()=>{const f=D.friends[cur];$('#cpl').innerHTML='';const a=f.ann||{};ioSh(ioHd('纪念日 · '+esc(f.remark||f.name))+fld('名称','<input id="an-n" maxlength="10" placeholder="在一起 / 认识" value="'+esc(a.n||'')+'">')+fld('日期','<input id="an-d" type="date" value="'+(a.d||'')+'">')+'<button class="bt k w" data-act="chans">保存</button>'+(a.d?chB('chanx','清除纪念日'):'')+ioX)},
+ chans:()=>{const f=D.friends[cur],n=$('#an-n').value.trim(),d=$('#an-d').value;if(!d)return toast('请选择日期');f.ann={n:n||'纪念日',d};save();$('#sheet').className='';chAnn()},
+ chanx:()=>{delete D.friends[cur].ann;save();$('#sheet').className='';chAnn()},
+ crx:x=>ioSh(ioHd('回应')+'<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:6px 0 14px">'+['❤️','👍','😂','😮','😢','🙏','🔥','🥰'].map(e=>`<button style="font-size:30px;padding:6px 8px" data-act="crxs:${x}:${e}">${e}</button>`).join('')+'</div>'+ioX),
+ crxs:(x,y)=>{const m=(D.chats[D.friends[cur].id]||[])[+x];if(!m)return;if(m.rx==y)delete m.rx;else m.rx=y;save();$('#sheet').className='';sel=-1;drawMsgs()},
+ ctr:async x=>{const m=(D.chats[D.friends[cur].id]||[])[+x];if(!m||!m.t)return;sel=-1;drawMsgs();toast('翻译中…');try{const zh=/[\u4e00-\u9fff]/.test(m.t),a=D.sub&&D.sub.url&&D.sub.url.trim()?D.sub:D.main,o=await askS(a,zh?'You are a translator. Translate the user text into natural English. Output only the translation.':'你是翻译。把用户的文字翻译成自然的中文，只输出译文，不要解释。',[{role:'user',content:m.t}]);ioSh(ioHd(zh?'翻译 · English':'翻译 · 中文')+`<p style="font:400 14px/1.6 var(--ios);color:var(--mut);margin:0 0 10px">${esc(m.t)}</p><p style="font:500 17px/1.7 var(--ios);margin:0 0 6px;white-space:pre-wrap">${esc(String(o).trim())}</p>`+ioX)}catch(e){toast('翻译失败：'+errMsg(e))}}});
+{const s37=document.createElement('style');s37.textContent=`.crx{display:inline-block;margin-left:6px;padding:0 6px;border-radius:999px;background:rgba(127,127,127,.22);font-size:13px;line-height:1.5;vertical-align:middle}.chan{opacity:.9}`;document.head.appendChild(s37)}
+
+/* ---------- v38：去掉输入框小尾巴 / 消息气泡改液态玻璃（尾巴画在气泡上） ---------- */
+{const s38=document.createElement('style');s38.textContent=`
+#wxo .inp .io-pill::after{content:none!important;display:none!important}
+#wxo .msgs .m.a:where(:not(.rp,.mim,.mcd,.ty)),#wxo .msgs .m.u:where(:not(.rp,.mim,.mcd,.ty)){--bs:inset 0 1px 0 rgba(255,255,255,.75),inset 0 -1px 0 rgba(255,255,255,.14),0 8px 20px -12px rgba(0,0,0,.4);border:.5px solid var(--glb);box-shadow:var(--bs);-webkit-backdrop-filter:blur(14px) saturate(1.7);backdrop-filter:blur(14px) saturate(1.7)}
+#wxo .msgs .m.a:where(:not(.rp,.mim,.mcd,.ty)){background:linear-gradient(rgba(255,255,255,.3),rgba(255,255,255,0) 46%),linear-gradient(145deg,color-mix(in srgb,var(--fg) 13%,transparent),color-mix(in srgb,var(--fg) 6%,transparent));color:var(--fg);--tl:color-mix(in srgb,var(--fg) 9.5%,transparent)}
+#wxo .msgs .m.u:where(:not(.rp,.mim,.mcd,.ty)){background:linear-gradient(rgba(255,255,255,.3),rgba(255,255,255,0) 46%),linear-gradient(145deg,color-mix(in srgb,var(--gb) 92%,transparent),color-mix(in srgb,var(--gb) 66%,transparent));color:#fff;border-color:rgba(255,255,255,.4);--tl:color-mix(in srgb,var(--gb) 79%,transparent)}
+#wxo .msgs .m.msx-on:where(.a,.u),#wxo .msgs .m.sel:where(.a,.u){box-shadow:var(--bs,none),0 0 0 2px color-mix(in srgb,var(--bl) 55%,transparent)}
+#wxo .msgs .m.a:where(:not(.rp,.mim,.mcd,.ty)):not(:has(+ .m.a)){border-bottom-left-radius:6px}
+#wxo .msgs .m.u:where(:not(.rp,.mim,.mcd,.ty)):not(:has(+ .m.u)){border-bottom-right-radius:6px}
+#wxo .msgs .m.a:where(:not(.rp,.mim,.mcd,.ty)):not(:has(+ .m.a))::after,#wxo .msgs .m.u:where(:not(.rp,.mim,.mcd,.ty)):not(:has(+ .m.u))::after{content:"";position:absolute;bottom:-.5px;width:12px;height:12px;background:var(--tl);-webkit-backdrop-filter:blur(14px) saturate(1.7);backdrop-filter:blur(14px) saturate(1.7);pointer-events:none}
+#wxo .msgs .m.a:where(:not(.rp,.mim,.mcd,.ty)):not(:has(+ .m.a))::after{left:-11.5px;clip-path:path('M12 0C12 6 8.5 10 0 12H12Z')}
+#wxo .msgs .m.u:where(:not(.rp,.mim,.mcd,.ty)):not(:has(+ .m.u))::after{right:-11.5px;clip-path:path('M0 0C0 6 3.5 10 12 12H0Z')}
+`;document.head.appendChild(s38)}
+
+/* ---------- v39：MCP 工具（本机工具 + 自定义 MCP 服务器 / TA 在聊天里自动调用）+ 修复回应·纪念日注入 ---------- */
+const MCP={id:0,rt:{}};
+const mcpD=()=>{const d=D.mcp=D.mcp||{};d.servers=d.servers||[];d.loff=d.loff||[];d.log=d.log||[];return d};
+const WXC={0:'晴',1:'大致晴朗',2:'多云',3:'阴',45:'雾',48:'雾凇',51:'小毛毛雨',53:'毛毛雨',55:'大毛毛雨',61:'小雨',63:'中雨',65:'大雨',71:'小雪',73:'中雪',75:'大雪',80:'阵雨',81:'强阵雨',82:'暴雨',95:'雷暴',96:'雷暴伴冰雹',99:'强雷暴伴冰雹'};
+const LT=[
+ {name:'get_time',description:'获取用户当前的日期、星期和时间',inputSchema:{properties:{}},run:async()=>new Date().toLocaleString('zh-CN',{hour12:false,weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'})+'（'+Intl.DateTimeFormat().resolvedOptions().timeZone+'）'},
+ {name:'calculate',description:'计算数学表达式，支持 + - * / ( ) % 和 ^（乘方）',inputSchema:{properties:{expression:{type:'string',description:'表达式，如 (3+4)*5'}},required:['expression']},run:async a=>{const e=String(a.expression||'').replace(/\^/g,'**');if(!/^[0-9+\-*/().%\s,eE]+$/.test(e))throw Error('表达式含有不支持的字符');return e+' = '+Function('"use strict";return ('+e+')')()}},
+ {name:'get_weather',description:'查询城市当前天气和未来三天预报（Open-Meteo）',inputSchema:{properties:{city:{type:'string',description:'城市名，如 上海'}},required:['city']},run:async a=>{const g=await (await fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&language=zh&name='+encodeURIComponent(a.city||''))).json(),p=g.results&&g.results[0];if(!p)return '找不到城市：'+a.city;const w=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.latitude}&longitude=${p.longitude}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=3`)).json(),c=w.current,d=w.daily;return `${p.name}（${p.country||''}）现在${WXC[c.weather_code]||'未知'}，${c.temperature_2m}°C，体感 ${c.apparent_temperature}°C，湿度 ${c.relative_humidity_2m}%，风速 ${c.wind_speed_10m} km/h。未来三天：`+d.time.map((t,i)=>`${t} ${WXC[d.weather_code[i]]||''} ${d.temperature_2m_min[i]}~${d.temperature_2m_max[i]}°C 降水概率${d.precipitation_probability_max[i]}%`).join('；')}},
+ {name:'fetch_url',description:'读取一个网页的文字内容（受浏览器跨域限制，很多网站会失败）',inputSchema:{properties:{url:{type:'string'}},required:['url']},run:async a=>{const r=await fetch(a.url),t=await r.text();return (/html/i.test(r.headers.get('content-type')||'')?rdHtml(t):t).replace(/\n{2,}/g,'\n').slice(0,4000)}},
+ {name:'music_now',description:'查看音乐 App 当前正在播放什么',inputSchema:{properties:{}},run:async()=>{const T=MU.t();return T?`《${T.t}》${T.a||''}，${MU.au.paused?'已暂停':'正在播放'}，进度 ${muFmt(MU.au.currentTime)}`:'当前没有播放歌曲'}},
+ {name:'music_list',description:'列出用户音乐曲库里的歌曲（前 40 首）',inputSchema:{properties:{}},run:async()=>muD().tracks.slice(0,40).map((x,i)=>(i+1)+'. '+x.t+(x.a?' - '+x.a:'')+(x.fav?' ♥':'')).join('\n')||'曲库是空的'},
+ {name:'music_play',description:'在用户的曲库里按歌名或歌手搜索并播放一首歌',inputSchema:{properties:{query:{type:'string',description:'歌名或歌手关键词'}},required:['query']},run:async a=>{const q=String(a.query||'').toLowerCase(),i=muD().tracks.findIndex(x=>(x.t+' '+(x.a||'')).toLowerCase().includes(q));if(i<0)return '曲库里没有找到：'+a.query;MU.pl=null;muPlay(i);return '已开始播放《'+muD().tracks[i].t+'》'}},
+ {name:'music_control',description:'控制音乐播放',inputSchema:{properties:{action:{type:'string',enum:['play','pause','next','prev'],description:'play / pause / next / prev'}},required:['action']},run:async a=>{const A=MU.au;if(a.action=='pause')A.pause();else if(a.action=='play')await A.play();else if(a.action=='next')ACT.munx();else if(a.action=='prev')(ACT.mupv||(()=>muNext(-1)))();else throw Error('未知操作');return '已执行：'+a.action}},
+ {name:'reading_status',description:'查看用户书库和阅读进度',inputSchema:{properties:{}},run:async()=>rdD().books.map(b=>`《${b.title}》读到 ${rdPct(b.pos,b.n)}%`).join('\n')||'书库是空的'}];
+/* ---- MCP 客户端（Streamable HTTP） ---- */
+const mcpHdr=s=>{const h={};String(s.hdr||'').split('\n').forEach(l=>{const i=l.indexOf(':');if(i>0)h[l.slice(0,i).trim()]=l.slice(i+1).trim()});return h};
+async function mcpRpc(s,method,params,notify){const rt=MCP.rt[s.id]=MCP.rt[s.id]||{},body={jsonrpc:'2.0',method,params:params||{}};if(!notify)body.id=++MCP.id;
+ const h=Object.assign({'Content-Type':'application/json','Accept':'application/json, text/event-stream'},mcpHdr(s));if(rt.sid)h['Mcp-Session-Id']=rt.sid;if(rt.pv)h['MCP-Protocol-Version']=rt.pv;
+ let r;try{r=await fetch(s.url,{method:'POST',headers:h,body:JSON.stringify(body)})}catch(e){throw Error('无法连接（地址错误、被跨域限制，或 https 页面访问了 http 服务）')}
+ const sid=r.headers.get('Mcp-Session-Id');if(sid)rt.sid=sid;if(notify)return null;if(!r.ok)throw Error('HTTP '+r.status);
+ const tx=await r.text();let msg;if((r.headers.get('content-type')||'').includes('event-stream')){for(const b of tx.split(/\r?\n\r?\n/)){const d=b.split(/\r?\n/).filter(l=>l.startsWith('data:')).map(l=>l.slice(5).trim()).join('');if(!d)continue;try{const j=JSON.parse(d);if(j.id===body.id){msg=j;break}}catch(e){}}}else{try{msg=JSON.parse(tx)}catch(e){throw Error('服务器返回的不是 JSON')}}
+ if(!msg)throw Error('服务器没有返回结果');if(msg.error)throw Error(msg.error.message||'MCP 错误');return msg.result}
+async function mcpConnect(s){MCP.rt[s.id]={};const r=await mcpRpc(s,'initialize',{protocolVersion:'2025-03-26',capabilities:{},clientInfo:{name:'pocket',version:'1.0'}});MCP.rt[s.id].pv=r.protocolVersion;await mcpRpc(s,'notifications/initialized',{},true);
+ let tools=[],cur;for(let i=0;i<5;i++){const l=await mcpRpc(s,'tools/list',cur?{cursor:cur}:{});tools=tools.concat(l.tools||[]);if(!l.nextCursor)break;cur=l.nextCursor}
+ s.tools=tools.map(t=>({name:t.name,description:t.description||'',inputSchema:t.inputSchema||{}}));s.err='';s.ts=Date.now();MCP.rt[s.id].ok=1;save()}
+async function mcpCall(s,name,args){const go=async()=>{if(!(MCP.rt[s.id]||{}).ok)await mcpConnect(s);const r=await mcpRpc(s,'tools/call',{name,arguments:args}),tx=(r.content||[]).map(c=>c.type=='text'?c.text:c.type=='image'?'[图片]':c.type=='resource'?(c.resource&&c.resource.text)||'[资源]':JSON.stringify(c)).join('\n');return (r.isError?'（工具报错）':'')+(tx||JSON.stringify(r.structuredContent||r))};
+ try{return await go()}catch(e){if(/HTTP 404|session/i.test(e.message)){MCP.rt[s.id]={};return go()}throw e}}
+async function mcpExec(q){const t0=Date.now();let out,ok=1;try{const a=q.a&&typeof q.a=='object'?q.a:{};
+ if(q.s=='本机'||q.s=='local'){const t=LT.find(x=>x.name==q.n);if(!t)throw Error('本机没有工具 '+q.n);out=await Promise.race([t.run(a),new Promise((_,no)=>setTimeout(()=>no(Error('超时')),20000))])}
+ else{const s=mcpD().servers.find(x=>x.id==q.s||x.name==q.s);if(!s)throw Error('没有名为 '+q.s+' 的服务器');out=await mcpCall(s,q.n,a)}}catch(e){ok=0;out='错误：'+errMsg(e)}
+ const d=mcpD();d.log.unshift({t:Date.now(),s:q.s=='local'?'本机':(d.servers.find(x=>x.id==q.s)||{name:q.s}).name,n:q.n,ok,ms:Date.now()-t0});d.log.length=Math.min(d.log.length,20);save();out=String(out);return out.length>3000?out.slice(0,3000)+'…（已截断）':out}
+/* ---- 工具清单 / 提示词 / 调用循环 ---- */
+function mcpTools(f){if(!f||!f.mcp)return[];const d=mcpD(),o=[];LT.forEach(t=>{if(!d.loff.includes(t.name))o.push({s:'本机',n:t.name,d:t.description,i:t.inputSchema})});d.servers.forEach(s=>{if(s.on===0)return;(s.tools||[]).forEach(t=>{if(!(s.off||[]).includes(t.name))o.push({s:s.name,n:t.name,d:t.description,i:t.inputSchema})})});return o.slice(0,40)}
+const mcpSig=i=>{const p=(i&&i.properties)||{},r=(i&&i.required)||[];return Object.entries(p).map(([k,v])=>k+(r.includes(k)?'*':'')+':'+((v&&v.type)||'any')).join('，')||'无参数'};
+function mcpPrompt(f){const T=mcpTools(f);if(!T.length)return '';return '\n\n【可用工具（MCP）】你可以调用下列工具来获取真实信息或执行操作。需要调用时，这一轮只输出一行 <tool>{"s":"服务器名","n":"工具名","a":{参数}}</tool>，不要输出别的文字；系统会把【工具结果】发回给你，之后再用你的人设口吻回复用户。不需要时不要调用，也不要编造工具结果。\n'+T.map(t=>`- ${t.s}/${t.n}：${String(t.d||'').slice(0,100)}｜参数：${mcpSig(t.i)}`).join('\n')}
+const mcpParse=t=>{const o=[];String(t||'').replace(/<tool>([\s\S]*?)<\/tool>/g,(m,j)=>{try{const q=JSON.parse(j.replace(/^\s*```(json)?|```\s*$/g,'').trim());if(q&&q.n)o.push({s:q.s||'本机',n:q.n,a:q.a||{}})}catch(e){}return m});return o};
+const mcpStrip=t=>String(t||'').replace(/<tool>[\s\S]*?<\/tool>/g,'').trim();
+function chExtra(f){let x='';const ex=[];(D.chats[f.id]||[]).slice(-40).forEach(m=>{if(m.rx&&m.t)ex.push('用户对'+(m.r=='u'?'自己':'你')+'的消息「'+m.t.slice(0,24)+'」做了 '+m.rx+' 回应')});if(ex.length)x+='\n\n【消息回应】'+ex.slice(-3).join('；')+'（可自然地提及，不要刻意）';if(f.ann&&f.ann.d){const n=chDays(f);x+='\n\n【纪念日】'+f.ann.n+'：'+(n>=0?'已经第 '+(n+1)+' 天':'还有 '+(-n)+' 天')+'。遇到特殊日子（整百天、周年等）可以自然地提起。'}return x}
+{const _m=memRun;memRun=function(f,o){const r=_m.apply(this,arguments);if(o!==undefined||!f)return r;let x='';try{x+=chExtra(f)}catch(e){}try{if(ctl&&!RD.ctl)x+=mcpPrompt(f)}catch(e){}return (r||'')+x}}
+{const _dl=deliver;deliver=async function(f,txt){if(!f.mcp||!mcpParse(txt).length)return _dl.apply(this,arguments);let cur=txt,k=0;const ex=[],c=D.chats[f.id],H=()=>(D.chats[f.id]||[]).filter(m=>m.r!='s').slice(-(f.mem||D.cfg.mem)).map(m=>({role:m.r=='u'?'user':'assistant',content:m.t}));
+ try{while(k++<4){const cs=mcpParse(cur);if(!cs.length)break;const rs=[];for(const q of cs.slice(0,3)){c.push({r:'s',t:'🔧 '+(f.remark||f.name)+' 调用了 '+q.s+' / '+q.n,ts:Date.now()});redraw(f,true);rs.push(await mcpExec(q))}
+   ex.push({role:'assistant',content:cur},{role:'user',content:'【工具结果】\n'+rs.map((r,i)=>(i+1)+'. '+cs[i].n+'：'+r).join('\n')+'\n请根据结果用你的人设口吻回复用户；如无需再调用工具，不要再输出 <tool>。'});
+   cur=await askS(f.temp==null?D.main:Object.assign({},D.main,{temp:f.temp}),sysP(f),H().concat(ex),ctl&&ctl.signal);D.stat.calls++}}catch(e){if(e.name=='AbortError')return;toast('工具调用失败：'+errMsg(e));cur=mcpStrip(cur)}
+ save();return _dl(f,mcpStrip(cur)||'…')}}
+{const _d=drawMsgs;drawMsgs=function(){const r=_d.apply(this,arguments);try{document.querySelectorAll('#ms .m.a').forEach(e=>{if(e.textContent.includes('<tool>'))e.textContent='🔧 正在调用工具…'})}catch(e){}return r}}
+/* ---- 界面 ---- */
+function renderMcp(){const A=$('#a-mcp');if(!A)return;const d=mcpD(),st=s=>s.err?'⚠ '+s.err:s.tools?'已连接 · '+s.tools.length+' 个工具':'未连接';
+ const row=(sid,t,off)=>`<div class="xp-t"><button class="${off?'':'a'}" data-act="mpctool:${sid}:${t.name}">${esc(t.name)}</button><span>${esc((t.description||'').slice(0,70))}</span><button class="rb" data-act="mpctest:${sid}:${t.name}">测试</button></div>`;
+ A.innerHTML=`<div class="scroll xp"><button class="rd-home" data-act="home">‹ 主页</button><div class="hd"><h2>MCP</h2></div><p class="xp-d">让 TA 在聊天里调用工具：查天气、控制音乐、读取你自己的 MCP 服务器……</p><div class="rd-l">谁可以使用工具</div><div class="rd-g">${D.friends.map(f=>`<button class="rb${f.mcp?' a':''}" data-act="mpcfr:${f.id}">${esc(f.remark||f.name)}</button>`).join('')||'<span class="rd-e">先添加好友</span>'}</div>
+ <div class="rd-l">本机工具（点名称启用 / 停用）</div>${LT.map(t=>row('local',t,d.loff.includes(t.name))).join('')}
+ <div class="rd-l">MCP 服务器</div>${d.servers.map(s=>`<div class="xp-s"><div class="xp-sh"><b>${esc(s.name)}</b><small>${esc(st(s))}</small></div><div class="xp-u">${esc(s.url)}</div><div class="rd-g"><button class="rb" data-act="mpcconn:${s.id}">${s.tools?'刷新':'连接'}</button><button class="rb${s.on===0?'':' a'}" data-act="mpcon:${s.id}">${s.on===0?'已停用':'已启用'}</button><button class="rb" data-act="mpcedit:${s.id}">编辑</button><button class="rb dng" data-act="mpcdel:${s.id}">删除</button></div>${(s.tools||[]).map(t=>row(s.id,t,(s.off||[]).includes(t.name))).join('')}</div>`).join('')||'<p class="rd-e">还没有服务器。需要支持 Streamable HTTP，并允许跨域（CORS）。</p>'}
+ <button class="rd-imp" data-act="mpcadd">＋ 添加 MCP 服务器</button><div class="rd-l">最近调用</div>${d.log.slice(0,10).map(l=>`<div class="xp-l"><span>${l.ok?'✓':'✗'} ${esc(l.s)} / ${esc(l.n)}</span><small>${fT(l.t)} · ${l.ms}ms</small></div>`).join('')||'<p class="rd-e">暂无记录</p>'}</div>`}
+const mcpForm=s=>ioSh(ioHd(s?'编辑服务器':'添加 MCP 服务器')+fld('名称（TA 调用时会用到，建议英文）','<input id="mpc-n" maxlength="20" value="'+esc(s?s.name:'')+'">')+fld('服务器地址（Streamable HTTP）','<input id="mpc-u" autocapitalize="off" placeholder="https://example.com/mcp" value="'+esc(s?s.url:'')+'">')+fld('请求头（可选，每行一个）','<textarea id="mpc-h" rows="3" placeholder="Authorization: Bearer xxx">'+esc(s?s.hdr||'':'')+'</textarea>')+'<button class="bt k w" data-act="mpcsave:'+(s?s.id:'new')+'">保存并连接</button>'+ioX);
+const mcpFind=(sid,n)=>sid=='local'?LT.find(t=>t.name==n):((mcpD().servers.find(s=>s.id==sid)||{}).tools||[]).find(t=>t.name==n);
+Object.assign(ACT,{
+ mpcfr:x=>{const f=D.friends.find(v=>v.id==x);if(f){f.mcp=f.mcp?0:1;save();renderMcp()}},
+ mpctool:(x,y)=>{const d=mcpD(),L=x=='local'?d.loff:((d.servers.find(s=>s.id==x)||{}).off=(d.servers.find(s=>s.id==x)||{}).off||[]),i=L.indexOf(y);i>=0?L.splice(i,1):L.push(y);save();renderMcp()},
+ mpcadd:()=>mcpForm(null),mpcedit:x=>mcpForm(mcpD().servers.find(s=>s.id==x)),
+ mpcsave:async x=>{const n=$('#mpc-n').value.trim(),u=$('#mpc-u').value.trim(),h=$('#mpc-h').value;if(!n||!/^https?:\/\//i.test(u))return toast('请填写名称和以 http(s):// 开头的地址');const d=mcpD();let s=d.servers.find(v=>v.id==x);if(!s){s={id:'s'+Date.now(),on:1};d.servers.push(s)}Object.assign(s,{name:n,url:u,hdr:h});s.tools=null;save();$('#sheet').className='';renderMcp();ACT.mpcconn(s.id)},
+ mpcconn:async x=>{const s=mcpD().servers.find(v=>v.id==x);if(!s)return;toast('连接中…');try{await mcpConnect(s);toast('已连接，发现 '+s.tools.length+' 个工具')}catch(e){s.err=errMsg(e);save();toast('连接失败：'+s.err)}renderMcp()},
+ mpcon:x=>{const s=mcpD().servers.find(v=>v.id==x);if(s){s.on=s.on===0?1:0;save();renderMcp()}},
+ mpcdel:(x,y,t)=>{if(!ok2(t))return;const d=mcpD();d.servers=d.servers.filter(s=>s.id!=x);delete MCP.rt[x];save();renderMcp()},
+ mpctest:(x,y)=>{const t=mcpFind(x,y);if(!t)return;MCP.test={s:x,n:y};const p=(t.inputSchema&&t.inputSchema.properties)||{},ex={};Object.entries(p).forEach(([k,v])=>{ex[k]=v&&v.type=='number'?0:v&&v.type=='boolean'?false:(v&&v.enum&&v.enum[0])||''});ioSh(ioHd('测试 · '+esc(y))+`<p style="font:400 13px/1.6 var(--ios);color:var(--mut);margin:0 0 6px">${esc(t.description||'')}</p>`+fld('参数 JSON','<textarea id="mpc-a" rows="4">'+esc(JSON.stringify(ex))+'</textarea>')+'<button class="bt k w" data-act="mpcrun">运行</button><pre id="mpc-o" style="margin:12px 0 0;white-space:pre-wrap;word-break:break-all;font:400 13px/1.55 ui-monospace,monospace;max-height:220px;overflow:auto"></pre>'+ioX)},
+ mpcrun:async()=>{const o=$('#mpc-o'),T=MCP.test;let a;try{a=JSON.parse($('#mpc-a').value||'{}')}catch(e){return toast('参数不是合法的 JSON')}o.textContent='运行中…';o.textContent=await mcpExec({s:T.s,n:T.n,a});renderMcp()},
+ mcpf:()=>{const f=D.friends[cur];f.mcp=f.mcp?0:1;save();$('#sheet').className='';toast(f.mcp?'已允许 '+(f.remark||f.name)+' 使用 MCP 工具':'已关闭 MCP 工具')}});
+{const _m=menu;menu=function(){_m.apply(this,arguments);const b=$('#mb'),f=D.friends[cur];if(b&&f)b.insertAdjacentHTML('afterbegin',`<button class="dr" data-act="mcpf"><b>MCP 工具</b><span class="mono">${f.mcp?'开':'关'}</span></button>`)}}
+document.getElementById('a-rd').insertAdjacentHTML('afterend','<section class="app" id="a-mcp"></section>');
+document.getElementById('sms').parentNode.insertAdjacentHTML('beforeend','<symbol id="mcp" viewBox="0 0 24 24"><path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/></symbol>');
+CON.mcp={p:[[20,50],[40,30],[50,56],[64,34],[82,52]],e:[[0,1],[1,2],[2,3],[3,4],[1,3]]};META.mcp={n:'14',t:'MCP',ic:'mcp'};APPS.push(['mcp','工具','MCP']);PWN.mcp='工具';
+$('#hg').innerHTML=APPS.map(a=>`<button class="ap" data-act="app:${a[0]}">${appIcon(a[0],52)}<b>${a[1]}</b><em>${a[2]}</em><i class="bd2" id="b-${a[0]}"></i></button>`).join('');
+{const _s=show;show=function(id){const r=_s.apply(this,arguments);if(id=='mcp')renderMcp();return r}}
+{const s39=document.createElement('style');s39.textContent=`
+#a-mcp{--ios:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Noto Sans CJK SC",sans-serif;font-family:var(--ios)}
+#a-mcp .scroll.xp{padding:52px 24px 120px}#a-mcp .hd h2{font:800 34px/1.1 var(--ios);letter-spacing:-.02em}
+#a-mcp .rd-home{font:400 16px var(--ios);padding:6px 0 2px;color:var(--fg)}
+#a-mcp .rd-l{font:600 12px var(--ios);color:var(--mut);margin:16px 0 6px}
+#a-mcp .rd-e{display:block;color:var(--mut);font:400 13px/1.6 var(--ios);padding:10px 0}
+#a-mcp .rd-g{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 8px}
+#a-mcp .rd-imp{display:block;width:100%;text-align:center;padding:14px;border-radius:14px;background:var(--fg);color:var(--bg);font:600 14px var(--ios);margin:14px 0 6px}
+#a-mcp .rb{padding:7px 13px;border-radius:999px;background:var(--soft);color:var(--fg);font:600 12px var(--ios)}#a-mcp .rb.a{background:var(--fg);color:var(--bg)}#a-mcp .rb.dng{color:#ff3b30}
+.xp-d{font:400 13px/1.6 var(--ios);color:var(--mut);margin:6px 0 0}
+.xp-t{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:.5px solid var(--ln)}.xp-t>button:first-child{flex:none;max-width:42%;padding:5px 11px;border-radius:999px;background:var(--soft);color:var(--mut);font:600 12px ui-monospace,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:line-through}.xp-t>button.a{background:var(--fg);color:var(--bg);text-decoration:none}
+.xp-t span{flex:1;min-width:0;font:400 12px/1.4 var(--ios);color:var(--mut);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.xp-s{margin:8px 0 14px;padding:14px;border-radius:18px;background:var(--soft)}.xp-sh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.xp-sh b{font:700 16px var(--ios)}.xp-sh small{font:400 11px var(--ios);color:var(--mut);text-align:right}
+.xp-u{font:400 11px ui-monospace,monospace;color:var(--mut);margin:4px 0 10px;word-break:break-all}
+.xp-l{display:flex;justify-content:space-between;gap:8px;padding:6px 0;font:400 13px var(--ios)}.xp-l small{color:var(--mut)}
+`;document.head.appendChild(s39)}
 })().catch(e=>console.error(e));
 </script>
 </body>
