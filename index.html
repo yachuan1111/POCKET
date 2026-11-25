@@ -4093,7 +4093,12 @@ const mgRender=()=>{const el=$('#mg');if(!el||!window.__calItems)return;const by
  for(let d=1;d<=days;d++){const key=MG.y+'-'+MG.m+'-'+d,L=by[key]||[];c+='<button class="mg-d'+(key==td?' td':'')+(MG.sel==key?' sel':'')+'" data-act="mgd:'+key+'">'+d+'<span>'+L.slice(0,3).map(()=>'<u></u>').join('')+'</span></button>'}
  const sl=MG.sel?(by[MG.sel]||[]).slice().sort((a,b)=>a.t-b.t):null;
  el.innerHTML='<div class="mg-h"><button data-act="mgm:-1">‹</button><b>'+MG.y+' 年 '+(MG.m+1)+' 月</b><button data-act="mgm:1">›</button><button class="t" data-act="mgt">今天</button></div><div class="mg-w">'+'日一二三四五六'.split('').map(x=>'<i>'+x+'</i>').join('')+'</div><div class="mg-g">'+c+'</div>'
- +(sl?'<div class="mg-l">'+(sl.length?sl.map(i=>'<div class="cl-r"'+(i.tk?' data-act="tko:'+i.id+'"':'')+'><span class="cl-t">'+fT(i.t)+'</span><div><b>'+esc(i.n)+'</b><small>'+esc(i.s)+'</small></div><em>'+i.k+'</em></div>').join(''):'<p class="rd-e">这天没有安排</p>')+'</div>':'')};
+ +(sl?'<div class="mg-l"><div class="mg-t">'+mgLab(MG.sel)+'</div>'+(sl.length?sl.map(i=>'<div class="cl-r"'+(i.tk?' data-act="tko:'+i.id+'"':'')+'><span class="cl-t">'+fT(i.t)+'</span><div><b>'+esc(i.n)+'</b><small>'+esc(i.s)+'</small></div><em>'+i.k+'</em>'+(i.eid?'<button data-act="caldel:'+i.eid+'">删</button>':'')+'</div>').join(''):'<p class="rd-e">这天没有安排</p>')+'<div class="mg-q"><input id="mg-n" maxlength="30" placeholder="＋ 添加日程"><input id="mg-h" type="time" value="19:00"><button data-act="mgadd">添加</button></div></div>':'')};
+const mgLab=k=>{const [y,m,d]=k.split('-').map(Number);return (m+1)+'月'+d+'日 周'+'日一二三四五六'[new Date(y,m,d).getDay()]};
+Object.assign(ACT,{mgadd:()=>{if(!MG.sel)return;const n=($('#mg-n').value||'').trim();if(!n)return toast('先写个标题');
+ const [y,m,d]=MG.sel.split('-').map(Number),[hh,mm]=($('#mg-h').value||'19:00').split(':').map(Number),t=new Date(y,m,d,hh,mm).getTime();if(isNaN(t))return toast('时间无效');
+ const c=D.cal=D.cal||{};c.ev=c.ev||[];c.ev.push({id:uid(),n,t,note:''});save();const sc=document.querySelector('#a-cal .scroll'),y0=sc?sc.scrollTop:0;show('cal');const s2=document.querySelector('#a-cal .scroll');if(s2)s2.scrollTop=y0;toast('已添加：'+n)}});
+document.addEventListener('keydown',e=>{if(e.target.id=='mg-n'&&e.key=='Enter'){e.preventDefault();ACT.mgadd()}});
 const mgInit=()=>{const o=$('#mg');o&&o.remove();const p=document.querySelector('#a-cal .xp-d');if(!p)return;p.insertAdjacentHTML('afterend','<div id="mg"></div>');mgRender()};
 Object.assign(ACT,{mgm:x=>{MG.m+=+x;if(MG.m<0){MG.m=11;MG.y--}if(MG.m>11){MG.m=0;MG.y++}MG.sel=null;mgRender()},mgd:k=>{MG.sel=MG.sel==k?null:k;mgRender()},mgt:()=>{const n=new Date();MG.y=n.getFullYear();MG.m=n.getMonth();MG.sel=dk(n);mgRender()}});
 ['calsave','caldel'].forEach(k=>{const o=ACT[k];ACT[k]=function(){const r=o.apply(this,arguments);mgInit();return r}});
@@ -4109,21 +4114,157 @@ const imp=j=>{if(!j||j.app!='pocket')throw Error('不是 POCKET 备份文件');l
   if(a){n+=a;let p=0;const arr=cur.map((m,i)=>({m,i,k:(p=m.ts||p)}));arr.sort((x,y)=>x.k-y.k||x.i-y.i);cur.splice(0,cur.length,...arr.map(x=>x.m))}});
  const mg=(a,b)=>(b||[]).forEach(x=>{if(!a.find(y=>y.id==x.id))a.push(x)});D.tix=D.tix||[];mg(D.tix,j.tix);D.od=D.od||[];mg(D.od,j.od);const c=D.cal=D.cal||{ev:[]};c.ev=c.ev||[];mg(c.ev,(j.cal||{}).ev);save();return n};
 const hdr=(json)=>{const d=bk(),h={};if(json)h['Content-Type']='application/json';if(d.user)h.Authorization='Basic '+btoa(unescape(encodeURIComponent(d.user+':'+(d.pass||''))));String(d.hdr||'').split('\n').forEach(l=>{const i=l.indexOf(':');if(i>0)h[l.slice(0,i).trim()]=l.slice(i+1).trim()});return h};
-async function push(q){const d=bk();if(!d.url)return q||toast('请先在「云端设置」填写地址');try{const r=await fetch(d.url,{method:d.method,headers:hdr(1),body:snap()});if(!r.ok)throw Error('HTTP '+r.status);d.last=Date.now();d.err='';save();q||toast('已推送到云端')}catch(e){d.err=(e.message||'失败')+'（检查地址 / 账号 / CORS）';save();q||toast('推送失败：'+d.err)}bkRender()}
-async function pull(){const d=bk();if(!d.url)return toast('请先在「云端设置」填写地址');toast('拉取中…');try{const r=await fetch(d.url,{headers:hdr(0)});if(!r.ok)throw Error('HTTP '+r.status);const n=imp(await r.json());toast('已合并 '+n+' 条新消息')}catch(e){toast('拉取失败：'+(e.message||'错误'))}bkRender()}
+async function push(q){const d=bk();if(!d.url)return q||toast('请先在「云端设置」填写地址');try{const r=await fetch(d.url,{method:d.method,headers:hdr(1),body:await bkBody()});if(!r.ok)throw Error('HTTP '+r.status);d.last=Date.now();d.err='';save();q||toast('已推送到云端')}catch(e){d.err=(e.message||'失败')+'（检查地址 / 账号 / CORS）';save();q||toast('推送失败：'+d.err)}bkRender()}
+async function pull(){const d=bk();if(!d.url)return toast('请先在「云端设置」填写地址');toast('拉取中…');try{const r=await fetch(d.url,{headers:hdr(0)});if(!r.ok)throw Error('HTTP '+r.status);const n=await impAny(await r.json());toast('已合并 '+n+' 条新消息')}catch(e){toast('拉取失败：'+(e.message||'错误'))}bkRender()}
 const auto=()=>{const d=bk();if(d.auto&&d.url&&Date.now()-(d.last||0)>(+d.hrs||12)*36e5)push(1)};setInterval(auto,6e5);document.addEventListener('visibilitychange',()=>{if(document.hidden)auto()});
-function bkRender(){const A=$('#a-bk');if(!A||!A.classList.contains('on'))return;const d=bk(),n=Object.values(D.chats).reduce((a,c)=>a+c.length,0);
+function bkRender(){const A=$('#a-bk');if(!A||!A.classList.contains('on'))return;const d=bk(),n=Object.values(D.chats).reduce((a,c)=>a+c.length,0);if(BKV!='main'){A.innerHTML=bkWiz();return}
  A.innerHTML='<div class="scroll xp"><button class="rd-home" data-act="home">‹ 主页</button><div class="hd"><h2>备份</h2></div><p class="xp-d">当前 '+D.friends.length+' 位好友、'+n+' 条消息。数据只存在这台设备的浏览器里，换机或清缓存会丢，建议定期备份。备份不含 API Key。</p>'
  +'<div class="rd-l">本地</div><button class="rd-imp" data-act="bkex">导出备份（JSON）</button><button class="rd-imp o" data-act="bktx">导出聊天记录（文本）</button><button class="rd-imp o" data-act="bkim">导入备份（合并，不覆盖）</button>'
  +'<div class="rd-l">云端推送</div><p class="xp-d" style="margin:0 0 6px">'+(d.url?esc(d.url):'未设置')+'<br>上次推送：'+(d.last?new Date(d.last).toLocaleString('zh-CN',{hour12:false}):'从未')+(d.err?'<br>⚠ '+esc(d.err):'')+'</p>'
  +'<button class="rd-imp" data-act="bkpush">立即推送</button><button class="rd-imp o" data-act="bkpull">从云端拉取并合并</button><button class="rd-imp o" data-act="bkset">云端设置</button>'
- +T('自动推送（每 '+(d.hrs||12)+' 小时，App 开着或切到后台时）',d.auto,'bkauto')+T('备份包含图片（体积会很大）',d.img,'bkimg')+'</div>'}
+ +T('自动推送（每 '+(d.hrs||12)+' 小时，App 开着或切到后台时）',d.auto,'bkauto')+T('备份包含图片（体积会很大）',d.img,'bkimg')+bkExtra(d)+'</div>'}
 Object.assign(ACT,{
  bkex:()=>{saveFile('pocket-backup-'+new Date().toISOString().slice(0,10)+'.json',snap(),'application/json')},bktx:()=>saveFile('pocket-chats.txt',txt(),'text/plain'),
- bkim:()=>{const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;f.text().then(x=>{try{const n=imp(JSON.parse(x));toast('已合并 '+n+' 条新消息');bkRender()}catch(e){toast('导入失败：'+(e.message||'文件无效'))}})};i.click()},
+ bkim:()=>{const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;f.text().then(async x=>{try{const n=await impAny(JSON.parse(x));toast('已合并 '+n+' 条新消息');bkRender()}catch(e){toast('导入失败：'+(e.message||'文件无效'))}})};i.click()},
  bkpush:()=>push(),bkpull:()=>pull(),bkauto:()=>{const d=bk();d.auto=d.auto?0:1;save();bkRender()},bkimg:()=>{const d=bk();d.img=d.img?0:1;save();bkRender()},
  bkset:()=>{const d=bk();ioSh(ioHd('Cloud / 云端设置')+'<p class="xp-d" style="margin:0">WebDAV（坚果云、Nextcloud 等）：地址填到文件，如 https://dav.example.com/pocket/backup.json，方式 PUT，填账号和应用密码。自建 Worker / Webhook：方式 POST。服务器需允许跨域（CORS）。</p>'+fld('地址','<input id="bk-u" autocapitalize="off" value="'+esc(d.url||'')+'">')+fld('方式','<select id="bk-m">'+['PUT','POST'].map(m=>'<option'+(m==d.method?' selected':'')+'>'+m+'</option>').join('')+'</select>')+fld('账号（WebDAV，可选）','<input id="bk-a" autocapitalize="off" value="'+esc(d.user||'')+'">')+fld('密码 / 应用密码（可选）','<input id="bk-p" type="password" value="'+esc(d.pass||'')+'">')+fld('自定义请求头（每行一个，可选）','<textarea id="bk-h" rows="2">'+esc(d.hdr||'')+'</textarea>')+fld('自动推送间隔（小时）','<input id="bk-r" inputmode="numeric" value="'+(d.hrs||12)+'">')+'<button class="bt k w" data-act="bksave">保存</button>'+ioX)},
  bksave:()=>{const d=bk(),u=$('#bk-u').value.trim();if(u&&!/^https?:\/\//i.test(u))return toast('地址需以 http(s):// 开头');Object.assign(d,{url:u,method:$('#bk-m').value,user:$('#bk-a').value.trim(),pass:$('#bk-p').value,hdr:$('#bk-h').value,hrs:Math.max(1,+$('#bk-r').value||12)});save();$('#sheet').className='';bkRender()}});
+const WORKER_SRC="// POCKET 定时消息 · Cloudflare Worker\n// 部署：1) 新建 Worker 并粘贴本脚本  2) 创建 KV 命名空间，绑定变量名 KV\n//       3) 设置环境变量 SECRET（访问令牌）  4) 触发器里添加 Cron：* * * * *\n// 然后把 Worker 地址和 SECRET 填进 App「备份 → 服务器与推送设置」。\nconst CORS = {\n  'Access-Control-Allow-Origin': '*',\n  'Access-Control-Allow-Headers': 'Authorization, Content-Type',\n  'Access-Control-Allow-Methods': 'GET, PUT, POST, OPTIONS'\n};\nconst J = (o, s) => new Response(JSON.stringify(o), { status: s || 200, headers: Object.assign({ 'Content-Type': 'application/json' }, CORS) });\nconst kget = async (env, k, d) => { const v = await env.KV.get(k); return v ? JSON.parse(v) : d; };\nconst kput = (env, k, v) => env.KV.put(k, JSON.stringify(v));\n\nasync function sendPush(ch, title, body) {\n  const c = ch || {};\n  if (c.type === 'ntfy' && c.a) {\n    const base = (c.b || 'https://ntfy.sh').replace(/\\/+$/, '');\n    await fetch(base, { method: 'POST', body: JSON.stringify({ topic: c.a, title: title, message: body }) });\n  } else if (c.type === 'bark' && c.a) {\n    const base = (c.b || 'https://api.day.app').replace(/\\/+$/, '');\n    await fetch(base + '/push', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ device_key: c.a, title: title, body: body }) });\n  } else if (c.type === 'hook' && c.a) {\n    await fetch(c.a, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: title, body: body }) });\n  }\n}\n\nasync function tick(env) {\n  const now = Date.now();\n  const jobs = await kget(env, 'jobs', []);\n  const cfg = await kget(env, 'cfg', {});\n  let inbox = await kget(env, 'inbox', []);\n  let dirty = false;\n  for (const j of jobs) {\n    if (!j.on || j.done || j.at > now) continue;\n    const texts = j.texts && j.texts.length ? j.texts : ['…'];\n    const t = texts[(j.n || 0) % texts.length];\n    inbox.push({ id: j.id + '_' + j.at, jid: j.id, fid: j.fid, t: t, ts: now });\n    try { await sendPush(cfg.ch, j.name || 'POCKET', t); } catch (e) {}\n    j.n = (j.n || 0) + 1;\n    if (j.rep === 'daily') { while (j.at <= now) j.at += 864e5; }\n    else if (j.rep === 'weekly') { while (j.at <= now) j.at += 6048e5; }\n    else j.done = 1;\n    dirty = true;\n  }\n  if (dirty) {\n    inbox = inbox.filter(m => now - m.ts < 6048e5).slice(-300);\n    await kput(env, 'jobs', jobs);\n    await kput(env, 'inbox', inbox);\n  }\n}\n\nexport default {\n  async fetch(req, env) {\n    if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });\n    if (!env.SECRET || req.headers.get('Authorization') !== 'Bearer ' + env.SECRET) return J({ error: 'unauthorized' }, 401);\n    const p = new URL(req.url).pathname.replace(/\\/+$/, '');\n    const since = +(new URL(req.url).searchParams.get('since') || 0);\n    if (p === '/ping') return J({ ok: 1, now: Date.now() });\n    if (p === '/jobs' && req.method === 'PUT') {\n      const b = await req.json();\n      const old = await kget(env, 'jobs', []);\n      const jobs = (b.jobs || []).slice(0, 100).map(j => {\n        const o = old.find(x => x.id === String(j.id));\n        const same = o && o.at0 === +j.at0;\n        return {\n          id: String(j.id), fid: String(j.fid), name: String(j.name || ''), rep: j.rep === 'daily' || j.rep === 'weekly' ? j.rep : 'once',\n          texts: (j.texts || []).slice(0, 30).map(String), on: j.on ? 1 : 0, at0: +j.at0,\n          at: same ? o.at : +j.at0, n: same ? o.n : 0, done: same ? o.done : 0\n        };\n      });\n      await kput(env, 'jobs', jobs);\n      if (b.cfg) await kput(env, 'cfg', b.cfg);\n      return J({ ok: 1, count: jobs.length });\n    }\n    if (p === '/inbox') {\n      const inbox = await kget(env, 'inbox', []);\n      const jobs = await kget(env, 'jobs', []);\n      return J({ now: Date.now(), msgs: inbox.filter(m => m.ts > since), jobs: jobs.map(j => ({ id: j.id, at: j.at, done: j.done, n: j.n })) });\n    }\n    if (p === '/test' && req.method === 'POST') {\n      const cfg = await kget(env, 'cfg', {});\n      await sendPush(cfg.ch, 'POCKET', '测试推送成功');\n      return J({ ok: 1 });\n    }\n    return J({ error: 'not found' }, 404);\n  },\n  async scheduled(ev, env, ctx) { ctx.waitUntil(tick(env)); }\n};\n";
+
+/* ===== v48：备份加密 · 数据迁移向导 · 服务器定时消息 ===== */
+const fdt=t=>new Date(t).toLocaleString('zh-CN',{hour12:false});
+const bxS=u=>{let s='';for(let i=0;i<u.length;i+=32768)s+=String.fromCharCode.apply(null,u.subarray(i,i+32768));return btoa(s)};
+const bxB=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const bxKey=async(pw,salt,it)=>{if(!(window.crypto&&crypto.subtle))throw Error('当前环境不支持加密（需要 https 或本地打开）');
+  const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:it,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])};
+const bxEnc=async(text,pw)=>{const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),it=200000,key=await bxKey(pw,salt,it);
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(text)));
+  return JSON.stringify({app:'pocket-enc',v:1,kdf:'PBKDF2-SHA256',it,salt:bxS(salt),iv:bxS(iv),ct:bxS(ct)})};
+const bxDec=async(o,pw)=>{const key=await bxKey(pw,bxB(o.salt),o.it||200000);
+  try{return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:bxB(o.iv)},key,bxB(o.ct)))}catch(e){throw Error('密码不对，或文件已损坏')}};
+let BKPW='',BKV='main',PWR=null;
+const bxPw=()=>BKPW||bk().epw||'';
+const bkBody=async()=>{const d=bk(),t=snap();if(!d.enc)return t;const pw=bxPw();if(!pw)throw Error('已开启加密，请先设置备份密码');return bxEnc(t,pw)};
+const askPw=msg=>new Promise(res=>{PWR=res;ioSh(ioHd('Password / 密码')+'<p class="xp-d" style="margin:0">'+esc(msg)+'</p>'+fld('密码','<input id="bk-pw" type="password" autocomplete="off">')+'<button class="bt k w" data-act="bkpwok">确定</button>'+ioX)});
+const impAny=async j=>{if(j&&j.app=='pocket-enc'){const pw=await askPw('这份备份已加密，请输入密码');if(!pw)throw Error('已取消');const t=await bxDec(j,pw);BKPW=BKPW||pw;j=JSON.parse(t)}return imp(j)};
+const bkKeep=fn=>{const s=document.querySelector('#a-bk .scroll'),y=s?s.scrollTop:0;fn();const s2=document.querySelector('#a-bk .scroll');if(s2)s2.scrollTop=y};
+const cntMsg=c=>Object.values(c||{}).reduce((a,x)=>a+x.length,0);
+
+/* ---- 服务器定时消息 ---- */
+const sv=()=>{const d=bk();d.sv=d.sv||{url:'',token:'',ch:{type:'none',a:'',b:''}};d.sv.ch=d.sv.ch||{type:'none',a:'',b:''};d.jobs=d.jobs||[];d.seen=d.seen||[];return d.sv};
+const svOn=()=>{const s=sv();return !!(s.url&&s.token)};
+const svf=(path,o)=>{const s=sv();return fetch(s.url.replace(/\/+$/,'')+path,Object.assign({headers:{'Authorization':'Bearer '+s.token,'Content-Type':'application/json'}},o))};
+async function svSync(q){const d=bk(),s=sv();if(!svOn())return q||toast('请先填写服务器地址和令牌');
+  try{const r=await svf('/jobs',{method:'PUT',body:JSON.stringify({jobs:d.jobs.map(j=>({id:j.id,fid:j.fid,name:j.name,at0:j.at0,rep:j.rep,texts:j.texts,on:j.on})),cfg:{ch:s.ch}})});
+    if(!r.ok)throw Error('HTTP '+r.status+(r.status==401?'（令牌不对）':''));d.svLast=Date.now();d.svErr='';save();q||toast('已同步 '+d.jobs.length+' 条定时消息')}
+  catch(e){d.svErr=(e.message||'失败')+'（检查地址 / 令牌 / CORS）';save();q||toast('同步失败：'+d.svErr)}bkRender()}
+async function svPull(q){const d=bk();sv();if(!svOn())return q||toast('请先设置服务器');
+  try{const r=await svf('/inbox?since='+(d.since||0));if(!r.ok)throw Error('HTTP '+r.status);const j=await r.json();let n=0;
+    (j.msgs||[]).forEach(m=>{if(d.seen.includes(m.id))return;d.seen.push(m.id);d.since=Math.max(d.since||0,m.ts);const f=D.friends.find(x=>x.id==m.fid);if(!f)return;
+      (D.chats[f.id]=D.chats[f.id]||[]).push({r:'a',t:m.t,ts:m.ts});n++;try{notify({app:'wx',title:f.remark||f.name,text:m.t,go:'wx:'})}catch(e){}});
+    d.seen=d.seen.slice(-500);(j.jobs||[]).forEach(u=>{const o=d.jobs.find(x=>x.id==u.id);if(o){o.at=u.at;o.done=u.done;o.n=u.n}});d.svErr='';save();q||toast(n?'收到 '+n+' 条消息':'没有新消息')}
+  catch(e){d.svErr=(e.message||'失败')+'（检查地址 / 令牌 / CORS）';save();q||toast('收取失败：'+d.svErr)}bkRender()}
+setInterval(()=>{if(!document.hidden&&svOn())svPull(1)},3e5);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&svOn())svPull(1)});
+setTimeout(()=>{if(svOn())svPull(1)},6000);
+const REP={once:'一次',daily:'每天',weekly:'每周'};
+const svHTML=d=>{const s=sv(),on=svOn(),J=d.jobs;
+  return '<div class="rd-l">服务器定时消息</div><p class="xp-d" style="margin:0 0 6px">'+(on?esc(s.url)+'<br>推送：'+({none:'仅投递到聊天',ntfy:'ntfy',bark:'Bark',hook:'Webhook'})[s.ch.type||'none']+' · 上次同步：'+(d.svLast?fdt(d.svLast):'从未'):'让角色在指定时间主动发消息，网页关着也能推送到手机。需要先部署一个 Cloudflare Worker（见「复制服务器脚本」）。')+(d.svErr?'<br>⚠ '+esc(d.svErr):'')+'</p>'
+   +J.map(j=>'<div class="bk-job"><div><b>'+esc(j.name)+' · '+REP[j.rep]+'</b><small>'+(j.done?'已发送':'下次 '+fdt(j.at))+' · '+j.texts.length+' 条文案 · 已发 '+(j.n||0)+' 次</small></div>'+(j.done?'':'<button data-act="svtog:'+j.id+'">'+(j.on?'开':'关')+'</button>')+'<button class="d" data-act="svdel:'+j.id+'">删</button></div>').join('')
+   +'<button class="rd-imp" data-act="svnew">＋ 新建定时消息</button><button class="rd-imp o" data-act="svsync">立即同步到服务器</button><button class="rd-imp o" data-act="svpull">收取已送达的消息</button><button class="rd-imp o" data-act="svset">服务器与推送设置</button><button class="rd-imp o" data-act="svcode">复制服务器脚本（Worker）</button>'};
+const bkExtra=d=>'<div class="rd-l">备份加密</div>'+T('加密备份（AES-256，导出和云端推送都加密）',d.enc,'bkenc')
+  +(d.enc?'<button class="rd-imp o" data-act="bkpw">修改备份密码</button>'+T('在本机记住密码（自动推送需要，密码会明文存在本机）',d.keep,'bkkeep'):'')
+  +'<div class="rd-l">迁移</div><button class="rd-imp" data-act="mig">数据迁移向导</button>'+svHTML(d);
+
+/* ---- 迁移向导 ---- */
+const W={opt:{cal:1,mem:1,nt:1,cfg:1,img:0,api:0},pw:'',out:null,raw:'',j:null,encd:null,mode:'merge',icfg:0,iapi:0,res:''};
+const today=()=>new Date().toISOString().slice(0,10);
+function mxHTML(){const o=W.opt,u=W.out;
+  return '<div class="rd-l">1 · 选择内容</div><p class="xp-d" style="margin:0 0 4px">聊天与好友（固定包含）</p>'
+   +T('日程、票根与外卖',o.cal,'wo:cal')+T('记忆库与世界书',o.mem,'wo:mem')+T('备忘录',o.nt,'wo:nt')+T('全局设置与提示词（称呼、系统提示词、记忆条目）',o.cfg,'wo:cfg')+T('聊天里的图片（体积会很大）',o.img,'wo:img')+T('API 配置（含密钥，必须设置密码）',o.api,'wo:api')
+   +'<div class="rd-l">2 · 迁移密码</div>'+fld('密码（推荐；包含 API 配置时必填）','<input id="wx-pw" type="password" autocomplete="new-password" value="'+esc(W.pw)+'">')
+   +'<div class="rd-l">3 · 生成</div><button class="rd-imp" data-act="mxgo">生成迁移文件</button>'
+   +(u?'<p class="xp-d">已生成：'+u.kb+' KB · '+u.nf+' 位好友 · '+u.nm+' 条消息 · '+(u.enc?'已加密':'未加密')+'</p><button class="rd-imp" data-act="mxsave">保存文件</button><button class="rd-imp o" data-act="mxcopy">复制到剪贴板</button><p class="xp-d">在新设备打开本页：备份 → 数据迁移向导 → 我在新设备 · 导入。</p>':'')}
+function miHTML(){const j=W.j;
+  let h='<div class="rd-l">1 · 选择迁移文件</div><button class="rd-imp" data-act="mifile">选择文件</button>'+fld('或粘贴文件内容','<textarea id="wi-t" rows="3"></textarea>')+'<button class="rd-imp o" data-act="miread">读取粘贴的内容</button>';
+  if(W.encd&&!j)h+='<div class="rd-l">2 · 输入密码</div><p class="xp-d" style="margin:0">这份文件已加密。</p>'+fld('迁移密码','<input id="wi-pw" type="password" autocomplete="off">')+'<button class="rd-imp" data-act="midec">解密</button>';
+  if(j){const L=[['好友',(j.friends||[]).length],['消息',cntMsg(j.chats)],['日程',((j.cal||{}).ev||[]).length],['票根',(j.tix||[]).length],['记忆',((j.mem||{}).items||[]).length],['世界书',((j.wb||{}).books||[]).length],['备忘录',(j.nt||[]).length]].filter(x=>x[1]);
+    h+='<div class="rd-l">预览</div><p class="xp-d" style="margin:0 0 6px">'+L.map(x=>x[0]+' '+x[1]).join(' · ')+(j.cfg?' · 含设置':'')+(j.api?' · 含 API 配置':'')+'<br>导出时间：'+fdt(j.ts||Date.now())+'</p>'
+     +T('覆盖模式：用文件替换当前数据（会先下载一份当前数据的备份）',W.mode=='over','mimode')
+     +(j.cfg?T('同时导入全局设置与提示词',W.icfg,'miopt:icfg'):'')+(j.api?T('同时导入 API 配置',W.iapi,'miopt:iapi'):'')
+     +'<p class="xp-d" style="margin:6px 0">'+(W.mode=='over'?'覆盖：当前的好友、聊天等会被文件内容替换。':'合并：只添加当前没有的内容，不会覆盖已有数据。')+'</p><button class="rd-imp" data-act="migo">开始迁移</button>'}
+  if(W.res)h+='<div class="rd-l">完成</div><p class="xp-d" style="margin:0">'+esc(W.res)+'</p><button class="rd-imp" data-act="mireload">重新载入 App</button>';
+  return h}
+function bkWiz(){const m=BKV=='mig';
+  const head='<div class="scroll xp"><button class="rd-home" data-act="'+(m?'bkb':'mig')+'">‹ '+(m?'备份':'迁移向导')+'</button><div class="hd"><h2>迁移向导</h2></div>';
+  if(m)return head+'<p class="xp-d">把数据从一台设备搬到另一台：旧设备导出一个文件，新设备导入即可。建议设置密码，文件里就是密文。</p><button class="rd-imp" data-act="mx">我在旧设备 · 导出</button><button class="rd-imp o" data-act="mi">我在新设备 · 导入</button></div>';
+  return head+(BKV=='mx'?mxHTML():miHTML())+'</div>'}
+const miParse=t=>{let o;try{o=JSON.parse(t)}catch(e){throw Error('内容不是有效的迁移文件')}
+  W.j=null;W.encd=null;W.res='';if(o&&o.app=='pocket-enc')W.encd=o;else if(o&&o.app=='pocket')W.j=o;else throw Error('不是 POCKET 的备份 / 迁移文件')};
+const mgKey=x=>x.id!=null?x.id:(x.t||JSON.stringify(x));
+function miDo(over){const j=W.j;let n=0;
+  if(over){try{saveFile('pocket-before-migrate-'+today()+'.json',snap(),'application/json')}catch(e){}
+    D.friends=j.friends||[];D.chats=j.chats||{};if('tix' in j)D.tix=j.tix||[];if('od' in j)D.od=j.od||[];if(j.cal)D.cal=j.cal;
+    if(j.mem)D.mem=Object.assign({items:[],cnt:{},cfg:{}},j.mem);if(j.wb)D.wb=Object.assign({books:[],bind:{},st:{},cfg:{}},j.wb);if(j.nt)D.nt=j.nt;if(j.mo)D.mo=j.mo;n=cntMsg(D.chats)}
+  else{n=imp(j);const mg=(a,b)=>(b||[]).forEach(x=>{if(x&&!a.some(y=>mgKey(y)==mgKey(x)))a.push(x)});
+    if(j.mem&&j.mem.items){D.mem.items=D.mem.items||[];mg(D.mem.items,j.mem.items)}if(j.wb&&j.wb.books){D.wb.books=D.wb.books||[];mg(D.wb.books,j.wb.books)}if(j.nt){D.nt=D.nt||[];mg(D.nt,j.nt)}}
+  if(W.icfg&&j.cfg)D.cfg=Object.assign(D.cfg,j.cfg);
+  if(W.iapi&&j.api){const f=typeof fixApi=='function'?fixApi:x=>x;if(j.api.main)D.main=f(j.api.main);if(j.api.sub)D.sub=f(j.api.sub);if(j.api.presets)D.presets=j.api.presets;if(j.api.cur)D.cur=j.api.cur}
+  save();W.res=(over?'已覆盖，当前共 ':'已合并，新增 ')+n+' 条消息。'+(W.iapi?'':'提示：备份不含 API 密钥，如有需要请重新填写。')+' 点下面按钮重新载入。';bkKeep(bkRender)}
+
+Object.assign(ACT,{
+ bkex:async()=>{try{const d=bk(),b=await bkBody();saveFile('pocket-backup-'+today()+(d.enc?'.enc':'')+'.json',b,'application/json')}catch(e){toast(e.message||'导出失败')}},
+ bkpwok:()=>{const v=($('#bk-pw')||{}).value;$('#sheet').className='';if(PWR){const r=PWR;PWR=null;r(v||null)}},
+ bkenc:()=>{const d=bk();if(d.enc){d.enc=0;save();return bkRender()}if(!bxPw())return ACT.bkpw();d.enc=1;save();bkRender()},
+ bkpw:()=>{ioSh(ioHd('Encryption / 备份密码')+'<p class="xp-d" style="margin:0">用密码加密备份（AES-256-GCM）。<b>忘记密码无法恢复。</b>云端和导出的文件都只有密文。</p>'+fld('密码（至少 6 位）','<input id="bk-p1" type="password" autocomplete="new-password">')+fld('再输一次','<input id="bk-p2" type="password" autocomplete="new-password">')+'<button class="bt k w" data-act="bkpwset">启用加密</button>'+ioX)},
+ bkpwset:()=>{const a=$('#bk-p1').value,b=$('#bk-p2').value;if(a.length<6)return toast('密码至少 6 位');if(a!=b)return toast('两次输入不一致');BKPW=a;const d=bk();d.enc=1;if(d.keep)d.epw=a;save();$('#sheet').className='';toast('已启用备份加密');bkRender()},
+ bkkeep:()=>{const d=bk();if(d.keep){d.keep=0;delete d.epw;save();return bkRender()}if(!BKPW)return toast('先设置备份密码');d.keep=1;d.epw=BKPW;save();bkRender()},
+ bkb:()=>{BKV='main';bkRender()},
+ mig:()=>{BKV='mig';bkRender()},mx:()=>{BKV='mx';bkRender()},mi:()=>{BKV='mi';W.raw='';W.j=null;W.encd=null;W.res='';W.mode='merge';W.icfg=0;W.iapi=0;bkRender()},
+ wo:x=>{W.opt[x]=W.opt[x]?0:1;bkKeep(bkRender)},
+ mxgo:async()=>{const o=W.opt,pw=($('#wx-pw')||{}).value||'';W.pw=pw;if(o.api&&!pw)return toast('包含 API 配置时必须设置密码');
+  try{const j={v:2,app:'pocket',ts:Date.now(),friends:D.friends,chats:D.chats,mo:D.mo};if(o.cal){j.tix=D.tix;j.od=D.od||[];j.cal=D.cal||{}}if(o.mem){j.mem=D.mem;j.wb=D.wb}if(o.nt)j.nt=D.nt;if(o.cfg)j.cfg=D.cfg;if(o.api)j.api={main:D.main,sub:D.sub,presets:D.presets,cur:D.cur};
+   let t=JSON.stringify(j,(k,v)=>(!o.img&&k=='img'&&typeof v=='string'&&v.length>200)?undefined:v);if(pw)t=await bxEnc(t,pw);
+   W.out={text:t,name:'pocket-migrate-'+today()+(pw?'.enc':'')+'.json',kb:Math.round(t.length/1024),enc:!!pw,nf:D.friends.length,nm:cntMsg(D.chats)}}catch(e){toast('生成失败：'+(e.message||'错误'))}bkKeep(bkRender)},
+ mxsave:()=>{if(W.out)saveFile(W.out.name,W.out.text,'application/json')},
+ mxcopy:()=>{if(!W.out)return;(navigator.clipboard?navigator.clipboard.writeText(W.out.text):Promise.reject()).then(()=>toast('已复制，到新设备粘贴即可'),()=>toast('复制失败，请改用保存文件'))},
+ mifile:()=>{const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;f.text().then(x=>{try{miParse(x)}catch(e){toast(e.message)}bkKeep(bkRender)})};i.click()},
+ miread:()=>{try{miParse(($('#wi-t')||{}).value||'')}catch(e){toast(e.message)}bkKeep(bkRender)},
+ midec:async()=>{const pw=($('#wi-pw')||{}).value;if(!pw||!W.encd)return toast('请输入密码');try{W.j=JSON.parse(await bxDec(W.encd,pw));W.encd=null}catch(e){toast(e.message||'解密失败')}bkKeep(bkRender)},
+ mimode:()=>{W.mode=W.mode=='over'?'merge':'over';bkKeep(bkRender)},miopt:x=>{W[x]=W[x]?0:1;bkKeep(bkRender)},
+ migo:()=>{if(!W.j)return;if(W.mode=='over')cfm('覆盖会替换当前的好友、聊天等数据。会先下载一份当前数据的备份，确定继续吗？',()=>miDo(true));else miDo(false)},
+ mireload:()=>{setTimeout(()=>location.reload(),600)},
+ /* 定时消息 */
+ svset:()=>{const s=sv(),c=s.ch;ioSh(ioHd('Server / 服务器与推送')+'<p class="xp-d" style="margin:0">部署步骤：新建 Cloudflare Worker 并粘贴脚本（点「复制服务器脚本」）→ 创建 KV 命名空间并绑定为 KV → 设置环境变量 SECRET → 触发器添加 Cron <b>* * * * *</b>。推送通道三选一，也可以只投递到聊天。</p>'
+   +fld('Worker 地址','<input id="sv-u" autocapitalize="off" placeholder="https://xxx.workers.dev" value="'+esc(s.url)+'">')+fld('访问令牌（SECRET）','<input id="sv-k" type="password" value="'+esc(s.token)+'">')
+   +fld('推送方式','<select id="sv-c">'+[['none','仅投递到聊天'],['ntfy','ntfy（主题）'],['bark','Bark（设备 Key）'],['hook','Webhook（URL）']].map(x=>'<option value="'+x[0]+'"'+(x[0]==c.type?' selected':'')+'>'+x[1]+'</option>').join('')+'</select>')
+   +fld('参数：主题 / Key / URL','<input id="sv-a" autocapitalize="off" value="'+esc(c.a||'')+'">')+fld('自建推送服务器（可选）','<input id="sv-b" autocapitalize="off" placeholder="ntfy 默认 https://ntfy.sh · Bark 默认 https://api.day.app" value="'+esc(c.b||'')+'">')
+   +'<button class="bt k w" data-act="svsave">保存并同步</button><button class="bt w" style="margin-top:10px" data-act="svtest">发送测试推送</button>'+ioX)},
+ svsave:()=>{const s=sv(),u=$('#sv-u').value.trim();if(u&&!/^https?:\/\//i.test(u))return toast('地址需以 http(s):// 开头');Object.assign(s,{url:u,token:$('#sv-k').value.trim(),ch:{type:$('#sv-c').value,a:$('#sv-a').value.trim(),b:$('#sv-b').value.trim()}});save();$('#sheet').className='';bkRender();svSync()},
+ svtest:async()=>{const s=sv(),u=$('#sv-u').value.trim();Object.assign(s,{url:u,token:$('#sv-k').value.trim(),ch:{type:$('#sv-c').value,a:$('#sv-a').value.trim(),b:$('#sv-b').value.trim()}});save();if(!svOn())return toast('先填写地址和令牌');
+  try{await svSync(1);const r=await svf('/test',{method:'POST'});if(!r.ok)throw Error('HTTP '+r.status);toast('已发送测试推送')}catch(e){toast('测试失败：'+(e.message||'错误'))}},
+ svcode:()=>{(navigator.clipboard?navigator.clipboard.writeText(WORKER_SRC):Promise.reject()).then(()=>toast('已复制 Worker 脚本'),()=>saveFile('pocket-worker.js',WORKER_SRC,'text/javascript'))},
+ svnew:()=>{const fs=D.friends.filter(f=>f.wid!='filehelper');if(!fs.length)return toast('先添加一位好友');const t=new Date(Date.now()+864e5);t.setHours(8,0,0,0);const p=n=>String(n).padStart(2,'0'),v=t.getFullYear()+'-'+p(t.getMonth()+1)+'-'+p(t.getDate())+'T'+p(t.getHours())+':'+p(t.getMinutes());
+   ioSh(ioHd('Scheduled / 新建定时消息')+fld('谁来发','<select id="sv-f">'+fs.map(f=>'<option value="'+f.id+'">'+esc(f.remark||f.name)+'</option>').join('')+'</select>')+fld('发送时间','<input id="sv-t" type="datetime-local" value="'+v+'">')
+    +fld('重复','<select id="sv-r"><option value="once">只发一次</option><option value="daily">每天</option><option value="weekly">每周</option></select>')
+    +fld('消息内容（可多条，用空行分隔；重复时轮流发送）','<textarea id="sv-x" rows="4"></textarea>')+fld('场合 / 主题（让角色代写时用）','<input id="sv-o" placeholder="例如：早安叫醒、提醒喝水、晚安">')
+    +'<button class="bt w" data-act="svgen">让角色写 5 条</button><button class="bt k w" style="margin-top:10px" data-act="svadd">保存</button>'+ioX)},
+ svgen:async()=>{const f=D.friends.find(x=>x.id==$('#sv-f').value);if(!f)return toast('先选好友');if(!(D.main&&D.main.url&&D.main.model))return toast('请先连接模型');const o=($('#sv-o').value||'').trim()||'日常问候';toast('生成中…');
+  try{const sys='你是「'+(f.remark||f.name)+'」。角色设定：\n'+(f.role||'')+'\n\n你要以这个角色的口吻，主动给用户发微信消息。只输出 JSON 字符串数组，不要其他文字：["消息1","消息2"]。每条 10~40 字，像真实聊天，彼此不要重复。';
+   const t=await ask(D.main,sys,[{role:'user',content:'场合：'+o+'。请写 5 条。'}]),a=JSON.parse(t.slice(t.indexOf('['),t.lastIndexOf(']')+1));if(!Array.isArray(a)||!a.length)throw Error('格式不对');$('#sv-x').value=a.map(String).join('\n\n');toast('已生成，可以修改后保存')}
+  catch(e){toast('生成失败：'+(e.message||'错误'))}},
+ svadd:()=>{const f=D.friends.find(x=>x.id==$('#sv-f').value),t=new Date($('#sv-t').value).getTime(),x=($('#sv-x').value||'').split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);
+  if(!f)return toast('先选好友');if(isNaN(t)||t<Date.now()+6e4)return toast('请选择一个未来的时间');if(!x.length)return toast('请填写至少一条消息');
+  const d=bk();sv();d.jobs.push({id:uid(),fid:f.id,name:f.remark||f.name,at0:t,at:t,rep:$('#sv-r').value,texts:x.slice(0,30),on:1,done:0,n:0});save();$('#sheet').className='';bkRender();if(svOn())svSync(1);else toast('已保存；填好服务器后点「立即同步」')},
+ svtog:id=>{const j=bk().jobs.find(x=>x.id==id);if(!j)return;j.on=j.on?0:1;save();bkRender();if(svOn())svSync(1)},
+ svdel:id=>{const d=bk();d.jobs=d.jobs.filter(x=>x.id!=id);save();bkRender();if(svOn())svSync(1)},
+ svsync:()=>svSync(),svpull:()=>svPull()
+});
+document.addEventListener('input',e=>{if(e.target.id=='wx-pw')W.pw=e.target.value});
+{const s=document.createElement('style');s.textContent=`.bk-job{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--ln)}.bk-job>div{flex:1;min-width:0}.bk-job b{display:block;font:600 14px var(--ios)}.bk-job small{display:block;color:var(--mut);font:400 12px/1.5 var(--ios)}.bk-job button{font:600 12px var(--ios);padding:5px 11px;border-radius:999px;background:var(--soft)}.bk-job button.d{color:#ff3b30}
+.mg-t{font:700 13px var(--ios);padding:10px 0 4px;color:var(--mut)}.mg-q{display:flex;gap:6px;margin:10px 0 6px}.mg-q input{min-width:0;background:var(--bg);color:var(--fg);border:1px solid var(--ln);border-radius:10px;padding:9px 10px;font:500 16px var(--ios)}.mg-q #mg-n{flex:1}.mg-q #mg-h{width:104px}.mg-q button{padding:9px 14px;border-radius:10px;background:var(--fg);color:var(--bg);font:600 13px var(--ios)}`;document.head.appendChild(s)}
+
 document.getElementById('a-cal').insertAdjacentHTML('afterend','<section class="app" id="a-bk"></section>');
 document.getElementById('sms').parentNode.insertAdjacentHTML('beforeend','<symbol id="bki" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.5-8A5.5 5.5 0 0 1 17 8.5 4.5 4.5 0 0 1 17 18zM12 11v6M9.5 13.5 12 11l2.5 2.5"/></symbol>');
 CON.bk={p:[[50,24],[24,50],[76,50],[50,76],[50,50]],e:[[0,4],[1,4],[2,4],[3,4]]};META.bk={n:'18',t:'Backup',ic:'bki'};APPS.push(['bk','备份','Backup']);PWN.bk='备份';
@@ -4243,7 +4384,40 @@ const GUIDES=[
  steps:[
   {t:'手动导出',d:'设置 → 数据管理，点「导出」生成 JSON 并妥善保存；换设备时把 JSON 粘贴回来再导入即可。',go:'set:data'},
   {t:'配置云端自动备份',d:'主屏幕「备份」里填写地址：WebDAV（坚果云、Nextcloud 等）用 PUT，自建 Worker 或 Webhook 用 POST，并设置自动推送间隔。',go:'bk'},
-  {t:'换设备后恢复',d:'导入备份之后，别忘了重新填写 API 密钥。'}
+  {t:'给备份加密',d:'主屏幕「备份」里打开「加密备份」，设置至少 6 位的密码。之后导出的文件和云端推送的内容都是密文。忘记密码无法恢复；想让自动推送继续工作，需要再打开「在本机记住密码」。',go:'bk'},
+  {t:'换设备后恢复',d:'导入备份时如果文件是加密的，会弹出密码框。导入后别忘了重新填写 API 密钥；整机搬家推荐用「迁移向导」。'}
+ ]},
+
+{id:'mig',cat:'进阶',t:'迁移到新设备',d:'用迁移向导把数据整体搬家',min:4,
+ k:'迁移 搬家 换手机 换设备 导出 导入 覆盖 合并 向导 加密 新设备',
+ intro:'迁移向导分“旧设备导出”和“新设备导入”两步，可以选择搬哪些内容、加密文件，导入时还能选合并或覆盖。',
+ steps:[
+  {t:'旧设备：进入向导并导出',d:'主屏幕「备份」→「数据迁移向导」→「我在旧设备 · 导出」。',go:'bk'},
+  {t:'选择内容并设密码',d:'聊天与好友固定包含；日程、记忆库与世界书、备忘录、全局设置、图片可以勾选。想连 API 配置一起搬，必须设置迁移密码；不想加密就留空。'},
+  {t:'生成并保存',d:'点「生成迁移文件」，再「保存文件」或「复制到剪贴板」，通过聊天软件、网盘等传到新设备。'},
+  {t:'新设备：导入',d:'在新设备同样进入「数据迁移向导」→「我在新设备 · 导入」，选文件或粘贴内容；加密文件会要求输入密码，解密后能看到预览。'},
+  {t:'选择合并或覆盖',d:'默认是合并，只添加新设备上没有的内容。打开「覆盖模式」会用文件替换当前数据，并先自动下载一份当前数据的备份。需要的话再勾选导入设置和 API 配置，最后点「开始迁移」，完成后重新载入 App。'}
+ ],
+ tip:'普通备份文件（不是用向导导出的）也可以在「备份」里直接导入，同样支持加密文件。'},
+
+{id:'svmsg',cat:'进阶',t:'定时消息与推送',d:'让角色按时主动发消息，网页关着也能推送到手机',min:8,
+ k:'定时 消息 推送 通知 worker cloudflare ntfy bark webhook 服务器 早安 提醒 主动 cron kv',
+ intro:'网页本身没法在关闭后定时执行，所以需要你部署一个免费的 Cloudflare Worker：它到点把消息推送到手机，并存起来，下次打开 App 时自动收进聊天。',
+ steps:[
+  {t:'部署 Worker',d:'在 Cloudflare 新建一个 Worker，到「备份」点「复制服务器脚本（Worker）」，把脚本粘贴进去；再创建一个 KV 命名空间，绑定变量名填 KV；在环境变量里设置 SECRET（自己想一个访问令牌）；最后在触发器里添加 Cron：* * * * *。',go:'bk'},
+  {t:'填写服务器与推送设置',d:'「备份」→「服务器与推送设置」：填 Worker 地址和 SECRET。推送方式可选 ntfy（填主题名）、Bark（填设备 Key）、Webhook（填 URL），也可以选「仅投递到聊天」。点「发送测试推送」确认手机能收到。'},
+  {t:'新建定时消息',d:'点「新建定时消息」，选好友、发送时间和重复方式（一次 / 每天 / 每周），填内容。多条内容用空行分隔，重复时轮流发送；也可以先写「场合」，点「让角色写 5 条」代写（需要已连接模型）。',ask:'帮我想几个适合每天定时发送的场合，以及每个场合角色可以怎么说。'},
+  {t:'收取消息',d:'App 打开时会每 5 分钟自动收取，也可以手动点「收取已送达的消息」，消息会出现在对应好友的聊天里。'}
+ ],
+ tip:'消息文字会保存在你自己的 Worker（KV）里，并通过你选的推送服务送达；脚本只保留最近 7 天的送达记录。'},
+
+{id:'cal2',cat:'其他',t:'用月历添加日程',d:'点某一天，直接写下安排',min:1,
+ k:'日程 月历 日历 添加 提醒 安排 某天 删除 日期',
+ intro:'日程 App 的月历可以直接点日期添加，不用再弹窗填表。',
+ steps:[
+  {t:'打开日程',d:'主屏幕点「日程」，上方是月历，有安排的日子下面会有小圆点。',go:'cal'},
+  {t:'点一下某一天',d:'选中的日期会高亮，下面展开当天的安排列表。'},
+  {t:'直接添加',d:'在列表底部的输入框写标题、选时间，点「添加」或按回车。自己添加的日程右侧有「删」，可以随时删除。'}
  ]},
 
 {id:'note',cat:'其他',t:'备忘录与 AI 润色',d:'记点东西，再让模型帮你改、总结、续写',min:2,
@@ -4262,7 +4436,7 @@ const GUIDES=[
   {t:'微信 / 短信',d:'微信里和 AI 好友聊天；短信用来收验证码和通知。',go:'wx'},
   {t:'世界书 / 记忆库',d:'给角色补充设定和长期记忆。',go:'wb'},
   {t:'查手机 / 工具',d:'翻看角色的手机，或让角色在聊天里调用工具。',go:'chk'},
-  {t:'日程 / 地图 / 外卖',d:'日程汇总票根、外卖、纪念日和你自己的安排；地图能按角色设定画出 TA 的世界；外卖会帮你复制关键词并跳转外卖 App，由你自己确认付款。',go:'cal'},
+  {t:'日程 / 地图 / 外卖',d:'日程汇总票根、外卖、纪念日和你自己的安排（月历里点某天就能添加）；地图能按角色设定画出 TA 的世界；外卖会帮你复制关键词并跳转外卖 App，由你自己确认付款。',go:'cal'},
   {t:'音乐 / 阅读',d:'音乐有播放、曲库和记录；阅读可以导入小说，和好友一起读。',go:'mu'},
   {t:'备忘录 / 相册 / 计算器',d:'日常小工具，备忘录支持 AI 润色。',go:'nt'},
   {t:'天象 / 时钟 / 夜航 / 星签',d:'月相与星座和时钟；夜航有呼吸引导和环境音；星签可以抽一张塔罗牌。',go:'nox'},
@@ -4295,12 +4469,13 @@ const GG=id=>GUIDES.find(g=>g.id==id);
 const gdone=g=>((D.ai.done||{})[g.id]||[]).length;
 const gscore=(g,q)=>{if(!q)return 0;let s=0;if(g.t.toLowerCase().includes(q))s+=5;g.k.split(/\s+/).forEach(w=>{if(!w)return;w=w.toLowerCase();if(q.includes(w))s+=2;else if(q.length>=2&&w.includes(q))s+=1});return s};
 const aiReady=()=>!!(D.main&&String(D.main.url||'').trim()&&String(D.main.model||'').trim());
+const frN=()=>D.friends.filter(f=>f.wid!='filehelper').length;
 const memN=()=>D.cfg.memories.length+(D.mem&&D.mem.items?D.mem.items.length:0);
 function aiState(){const bk=D.bk||{};
-  return ['模型：'+(aiReady()?'已连接（'+D.main.model+'）':'未连接'),'微信账号：'+((D.me||D.acct)?'已注册':'未注册'),'AI 好友：'+D.friends.length+' 位',
+  return ['模型：'+(aiReady()?'已连接（'+D.main.model+'）':'未连接'),'微信账号：'+((D.me||D.acct)?'已注册':'未注册'),'AI 好友：'+frN()+' 位',
     '称呼/自我介绍：'+((D.cfg.nick||D.cfg.about)?'已填':'未填'),'记忆：'+memN()+' 条','世界书：'+(D.wb?D.wb.books.length:0)+' 本',
     '云端备份：'+(bk.url?'已配置':'未配置'),'教程进度：已学完 '+GUIDES.filter(g=>gdone(g)>=g.steps.length).length+'/'+GUIDES.length].join('；')}
-function chkItems(){const fr=D.friends.length,bk=D.bk||{},wb=D.wb?D.wb.books.length:0;
+function chkItems(){const fr=frN(),bk=D.bk||{},wb=D.wb?D.wb.books.length:0;
   return [
   {lv:'must',ok:aiReady(),t:'连接模型',okd:'已连接 · '+(D.main.model||''),nod:'还没填 API 地址和模型，助手和 AI 好友都用不了',go:'set:api',g:'api'},
   {lv:'must',ok:!!(D.me||D.acct),t:'注册微信',okd:'已注册',nod:'还没有微信账号，没法添加好友',go:'wx',g:'reg'},
