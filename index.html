@@ -4138,6 +4138,414 @@ $('#hg').innerHTML=APPS.map(a=>`<button class="ap" data-act="app:${a[0]}">${appI
 #a-bk .rd-l{font:600 12px var(--ios);color:var(--mut);margin:18px 0 6px}#a-bk .rd-imp{display:block;width:100%;text-align:center;padding:14px;border-radius:14px;background:var(--fg);color:var(--bg);font:600 14px var(--ios);margin:8px 0}#a-bk .rd-imp.o{background:var(--soft);color:var(--fg)}`;document.head.appendChild(s)}
 }
 
+
+/* ============================================================
+   助手 · 教学向导 + 模型问答
+   - 学习：分类教程，步骤可「带我去」、可打钩、有进度
+   - 对话：调用主 API；教学模式下带入手机功能知识库，回答里可嵌入跳转按钮
+   ============================================================ */
+{
+D.ai=D.ai||{convs:[],cur:null};
+D.ai.done=D.ai.done||{};
+if(D.ai.teach==null)D.ai.teach=1;
+const AIL={g:null,ret:0};
+
+/* ---------- 教程数据（步骤对照真实界面文案） ---------- */
+const GUIDES=[
+{id:'api',cat:'入门',t:'连接模型',d:'填好 API，助手和所有 AI 好友才能说话',min:3,
+ k:'api 模型 密钥 key 连接 配置 地址 openai anthropic gemini 接口 报错 连不上 中转',
+ intro:'这台手机本身不带 AI，需要你填一个模型接口。只要配置一次，助手、微信里的 AI 好友、备忘录润色等都会用它。',
+ steps:[
+  {t:'打开「模型与 API」',d:'进入 设置 → 模型与 API。',go:'set:api'},
+  {t:'切到「主 API」并选类型',d:'顶部切到「主 API」。用 OpenAI 或各类中转站选「OpenAI 兼容」；官方 Claude 选 Anthropic；Google 选 Gemini。'},
+  {t:'填写地址和密钥',d:'「API 地址」形如 https://api.example.com/v1（末尾多写了 /chat/completions 也会自动处理），「API 密钥」填 sk-… 开头的那串。',ask:'我该去哪里获取 API 地址和密钥？不同类型的接口分别怎么填？'},
+  {t:'拉取并选择模型',d:'点「拉取模型」，再到「选择模型」里挑一个。拉取失败也没关系，可以在「或手动输入模型名」里直接填，比如 gpt-4o-mini。'},
+  {t:'测试连接',d:'点「链接测试」，提示“连接成功”就可以用了。连不上就点「一键诊断」，它会告诉你卡在哪一步。',ask:'我点了链接测试但是失败了，请帮我排查可能的原因，先问我看到了什么提示。'}
+ ],
+ tip:'密钥只保存在这台设备的浏览器里。想存多套配置，可以在「API 预设」里「另存为新」。'},
+
+{id:'reg',cat:'入门',t:'注册微信账号',d:'用短信验证码完成注册，之后就能加好友聊天',min:2,
+ k:'微信 注册 登录 账号 验证码 短信 微信号 密码 qq 手机号',
+ intro:'这是手机里的模拟微信。第一次打开需要注册，验证码会发到「短信」App，并自动填好。',
+ steps:[
+  {t:'打开微信',d:'点主屏幕的「微信」，第一次会看到「加入 WeChat」注册页。',go:'wx'},
+  {t:'填写资料',d:'微信号以字母开头，4–20 位字母、数字、下划线或减号；手机号、QQ 号（5–12 位数字）和密码（至少 6 位）都要填。头像和个性签名可选。'},
+  {t:'获取两个验证码',d:'分别点「微信验证码」和「QQ验证码」旁边的「获取」。验证码会发到「短信」App，并自动填进输入框。',go:'sms'},
+  {t:'点「注 册」',d:'提示“注册成功”后就进入微信了。退出后可以用同一个账号重新登录。'}
+ ],
+ tip:'验证码获取后有 60 秒冷却。没自动填上的话，去「短信」里看，手动输入即可。'},
+
+{id:'friend',cat:'角色与聊天',t:'添加 AI 好友',d:'写一段角色设定，就能多一位会聊天的朋友',min:3,
+ k:'好友 角色 人设 设定 添加 创建 开场白 昵称 角色卡 导入 朋友',
+ intro:'微信里的每位好友都是一个 AI 角色。设定写得越具体，TA 说话就越像“这个人”。',
+ steps:[
+  {t:'点右下角的「＋」',d:'在微信页面右下角，点圆形的「＋」（添加好友）。',go:'wx'},
+  {t:'填写昵称',d:'昵称必填，微信号可不填，然后点「下一步」。'},
+  {t:'写角色设定',d:'在「角色设定」里写 TA 的身份、背景、性格和说话风格；「开场白」可选，填了就是 TA 的第一句话。',ask:'请帮我写一段适合填进「角色设定」的人设。先问我想要什么类型的角色，再给出成稿。'},
+  {t:'完成添加',d:'点「完成添加」。好友会出现在「通讯录」里，点开就能聊天。'}
+ ],
+ tip:'也支持导入角色卡（JSON）。想让 TA 记得更多设定，可以配合「世界书」使用。'},
+
+{id:'chat',cat:'角色与聊天',t:'聊天与消息操作',d:'发送、重答、编辑、撤回……常用操作一次学会',min:2,
+ k:'聊天 消息 重答 编辑 撤回 复制 收藏 引用 长按 回复 朗读 发送 太长 太短 分段 回车',
+ intro:'和 AI 好友聊天时，下面这些操作能帮你控制对话走向。',
+ steps:[
+  {t:'进入聊天',d:'微信 →「通讯录」点开一位好友，输入文字后点发送。',go:'wx'},
+  {t:'操作某条消息',d:'点按或长按消息气泡，会出现复制、收藏、引用、删除等操作；自己的消息两分钟内可以撤回，也能编辑；好友的最后一条还能「重答」，让 TA 换一种说法。'},
+  {t:'调整回复风格',d:'觉得 TA 回复太长或太短？到 设置 → 对话，可以改「回复长度」「回复语言」，以及是否默认分段回复。',go:'set:dlg',ask:'好友的回复太长了，怎么设置才能更像微信聊天的短句？'},
+  {t:'回车键怎么用',d:'设置 → 外观与交互 里的「回车键发送」可以开关：关掉后回车换行，用发送按钮发出。',go:'set:look'}
+ ]},
+
+{id:'persona',cat:'角色与聊天',t:'让 AI 更懂你',d:'称呼、自我介绍、记忆和提示词模板',min:3,
+ k:'称呼 记忆 提示词 系统提示词 模板 关于我 全局 人设 偏好 了解我',
+ intro:'这些设置对所有 AI 好友生效，一次填好，每个角色都会记得你。',
+ steps:[
+  {t:'告诉 TA 怎么称呼你',d:'设置 → 对话，填「希望角色如何称呼你」和「关于你」（职业、兴趣、作息都可以写）。',go:'set:dlg'},
+  {t:'使用提示词模板',d:'设置 → 提示词库 里有「温柔陪伴」「毒舌损友」等模板，点「应用」就会设为全局系统提示词；也可以自己新建模板。',go:'set:lib'},
+  {t:'添加记忆',d:'设置 → 记忆，保持「启用记忆」打开，添加一条，比如“我对花生过敏”，所有角色都会记得。',go:'set:mem',ask:'帮我想几条适合写进「记忆」的内容。写之前先问我几个问题。'}
+ ],
+ tip:'想要更完整的长期记忆，可以打开主屏的「记忆库」。'},
+
+{id:'lore',cat:'进阶',t:'用世界书补充设定',d:'关键词触发的背景资料，让角色不忘设定',min:4,
+ k:'世界书 lore 设定 关键词 酒馆 背景 条目 常驻 sillytavern 世界观',
+ intro:'世界书像一本“资料集”：聊天里出现关键词时，对应条目会自动加进提示词，适合放世界观、人物关系等较长的设定。',
+ steps:[
+  {t:'打开世界书',d:'主屏幕点「世界书」。',go:'wb'},
+  {t:'新建一本',d:'点「新建」；也可以点「导入 JSON」，把酒馆（SillyTavern）里的世界书直接带过来。'},
+  {t:'添加条目',d:'进入书后添加条目：填写触发关键词和内容。设为「常驻」的条目每次对话都会带上。'},
+  {t:'让角色用上',d:'书可以点「全局启用」对所有角色生效，也可以只绑定给指定的角色。'}
+ ]},
+
+{id:'chk',cat:'进阶',t:'查手机',d:'看看某个角色的手机里会有什么',min:3,
+ k:'查手机 手机 角色 生成 报告 上下文 翻看 偷看',
+ intro:'选一个角色，AI 会根据 TA 的人设生成 TA 手机里的内容，像偷偷翻看一样。',
+ steps:[
+  {t:'打开查手机',d:'主屏幕点「查手机」。',go:'chk'},
+  {t:'（可选）调整带入的上下文',d:'点「上下文与生成设置」，选择要带入人设、说话风格、聊天记录、记忆、世界书等哪些内容。'},
+  {t:'选一个角色',d:'在列表中点开想查看的角色，就能生成 TA 手机里的各类内容。'},
+  {t:'标记、重写与汇总',d:'生成后可以标记、编辑、重写某一项，最后汇总成一份报告。'}
+ ]},
+
+{id:'mcp',cat:'进阶',t:'让 TA 使用工具',d:'查天气、设提醒、记备忘……在聊天里直接调用',min:3,
+ k:'工具 mcp 天气 提醒 备忘 查询 调用 服务器 音乐 汇率 农历',
+ intro:'打开工具后，好友在聊天中可以调用本机工具（查天气汇率、翻日期农历、读记忆、记备忘、设提醒、控制音乐），也能接入你自己的 MCP 服务器。',
+ steps:[
+  {t:'打开工具',d:'主屏幕点「工具」。',go:'mcp'},
+  {t:'选择谁可以使用',d:'在「谁可以使用工具」里点选好友，被点亮的角色才会调用工具。'},
+  {t:'启用本机工具',d:'「本机工具」里点工具名称即可启用或停用，也可以先点右侧「测试」看看效果。标「写入」的工具默认关闭，需要时再手动打开。'},
+  {t:'（可选）接入 MCP 服务器',d:'在「MCP 服务器」里添加你自己的服务器地址，连接成功后会显示可用工具数量。'}
+ ],
+ tip:'自建服务器通常需要允许跨域访问（CORS），否则浏览器连不上。'},
+
+{id:'bak',cat:'进阶',t:'备份与迁移',d:'数据只在本机浏览器里，换机或清缓存会丢',min:3,
+ k:'备份 导出 导入 迁移 webdav 数据 丢失 换手机 json 恢复 云端',
+ intro:'所有聊天、角色和设置都只存在这台设备的浏览器里，换机或清理缓存就会丢，建议定期备份。备份文件不含 API 密钥。',
+ steps:[
+  {t:'手动导出',d:'设置 → 数据管理，点「导出」生成 JSON 并妥善保存；换设备时把 JSON 粘贴回来再导入即可。',go:'set:data'},
+  {t:'配置云端自动备份',d:'主屏幕「备份」里填写地址：WebDAV（坚果云、Nextcloud 等）用 PUT，自建 Worker 或 Webhook 用 POST，并设置自动推送间隔。',go:'bk'},
+  {t:'换设备后恢复',d:'导入备份之后，别忘了重新填写 API 密钥。'}
+ ]},
+
+{id:'note',cat:'其他',t:'备忘录与 AI 润色',d:'记点东西，再让模型帮你改、总结、续写',min:2,
+ k:'备忘录 笔记 润色 总结 续写 记事 存入 记录',
+ intro:'备忘录里的文字可以直接交给模型处理。',
+ steps:[
+  {t:'新建备忘',d:'打开备忘录，点右上角的「＋」，写点什么。',go:'nt'},
+  {t:'让模型帮忙',d:'在备忘下方点「润色」「总结」或「续写」，模型会直接改写或补充这段文字（需要已连接模型）。'},
+  {t:'把助手的回答存进来',d:'在助手的对话里，点回答下方的「存入备忘录」。'}
+ ]},
+
+{id:'tour',cat:'其他',t:'认识各个 App',d:'一分钟了解主屏上都有什么',min:2,
+ k:'功能 app 应用 主屏 有什么 介绍 能做什么 总览 新手',
+ intro:'主屏幕上的图标可以左右滑动翻页。下面按用途把它们过一遍。',
+ steps:[
+  {t:'微信 / 短信',d:'微信里和 AI 好友聊天；短信用来收验证码和通知。',go:'wx'},
+  {t:'世界书 / 记忆库',d:'给角色补充设定和长期记忆。',go:'wb'},
+  {t:'查手机 / 工具',d:'翻看角色的手机，或让角色在聊天里调用工具。',go:'chk'},
+  {t:'日程 / 地图 / 外卖',d:'日程汇总票根、外卖、纪念日和你自己的安排；地图能按角色设定画出 TA 的世界；外卖会帮你复制关键词并跳转外卖 App，由你自己确认付款。',go:'cal'},
+  {t:'音乐 / 阅读',d:'音乐有播放、曲库和记录；阅读可以导入小说，和好友一起读。',go:'mu'},
+  {t:'备忘录 / 相册 / 计算器',d:'日常小工具，备忘录支持 AI 润色。',go:'nt'},
+  {t:'天象 / 时钟 / 夜航 / 星签',d:'月相与星座和时钟；夜航有呼吸引导和环境音；星签可以抽一张塔罗牌。',go:'nox'},
+  {t:'备份 / 设置',d:'备份数据，以及调整模型、对话、外观等各项设置。',go:'set'}
+ ]},
+
+{id:'muse',cat:'其他',t:'用好助手的工具箱',d:'体检、造角色、出教程、追问和考考我',min:2,
+ k:'助手 工具箱 体检 角色生成 生成角色 出一课 自定义教程 追问 考考我 测验 教学模式',
+ intro:'助手除了教你用手机、回答问题，还有几个顶部「工具」标签里的小工具。',
+ steps:[
+  {t:'一键体检',d:'「工具」→「一键体检」会检查模型、微信、好友、记忆、备份等配置到哪一步，没做的项目可以直接点「带我去」。'},
+  {t:'角色生成器',d:'「工具」→「角色生成器」，用一句话描述想要的角色，模型会写好昵称、角色设定和开场白，可以直接修改，再点「创建为好友」（需要先连接模型）。'},
+  {t:'出一课',d:'想学的东西教程里没有？「工具」→「出一课」写下主题，模型会现写一门教程，保存后出现在教程列表的「我的」分类里。'},
+  {t:'追问与考考我',d:'对话里助手的回答末尾会给出可点的追问建议；任意教程底部的「考考我」会让模型出选择题检验你学会了没有。'}
+ ]},
+
+{id:'fix',cat:'其他',t:'常见问题排查',d:'连不上、没回复、超时了怎么办',min:3,
+ k:'报错 失败 连不上 没反应 超时 429 401 403 404 无回复 乱码 流式 卡住 请求失败 转圈',
+ intro:'遇到“请求失败”之类的提示，先从下面几步排查。',
+ steps:[
+  {t:'提示 HTTP 4xx / 请求失败',d:'401、403 多半是密钥不对；404 检查 API 地址（程序会自动尝试补上 /v1）；429 是请求太频繁或额度用完。先到 设置 → 模型与 API 点「一键诊断」。',go:'set:api'},
+  {t:'一直转圈 / 请求超时',d:'设置 → 生成参数与网络 里可以调大「请求超时」。',go:'set:par'},
+  {t:'回复断断续续或为空',d:'在「模型与 API」里把「流式模式」改成「强制非流式」试试；或点「重置流式黑名单」后再试。',go:'set:api'},
+  {t:'还是解决不了',d:'把报错原文发给助手，让它帮你分析。',ask:'我遇到了报错，接下来我会把报错内容贴给你，请帮我分析原因。'}
+ ]}
+];
+(D.ai.custom=D.ai.custom||[]).forEach(g=>GUIDES.push(g));
+const CATS=['入门','角色与聊天','进阶','其他','我的'];
+const GG=id=>GUIDES.find(g=>g.id==id);
+const gdone=g=>((D.ai.done||{})[g.id]||[]).length;
+const gscore=(g,q)=>{if(!q)return 0;let s=0;if(g.t.toLowerCase().includes(q))s+=5;g.k.split(/\s+/).forEach(w=>{if(!w)return;w=w.toLowerCase();if(q.includes(w))s+=2;else if(q.length>=2&&w.includes(q))s+=1});return s};
+const aiReady=()=>!!(D.main&&String(D.main.url||'').trim()&&String(D.main.model||'').trim());
+const memN=()=>D.cfg.memories.length+(D.mem&&D.mem.items?D.mem.items.length:0);
+function aiState(){const bk=D.bk||{};
+  return ['模型：'+(aiReady()?'已连接（'+D.main.model+'）':'未连接'),'微信账号：'+((D.me||D.acct)?'已注册':'未注册'),'AI 好友：'+D.friends.length+' 位',
+    '称呼/自我介绍：'+((D.cfg.nick||D.cfg.about)?'已填':'未填'),'记忆：'+memN()+' 条','世界书：'+(D.wb?D.wb.books.length:0)+' 本',
+    '云端备份：'+(bk.url?'已配置':'未配置'),'教程进度：已学完 '+GUIDES.filter(g=>gdone(g)>=g.steps.length).length+'/'+GUIDES.length].join('；')}
+function chkItems(){const fr=D.friends.length,bk=D.bk||{},wb=D.wb?D.wb.books.length:0;
+  return [
+  {lv:'must',ok:aiReady(),t:'连接模型',okd:'已连接 · '+(D.main.model||''),nod:'还没填 API 地址和模型，助手和 AI 好友都用不了',go:'set:api',g:'api'},
+  {lv:'must',ok:!!(D.me||D.acct),t:'注册微信',okd:'已注册',nod:'还没有微信账号，没法添加好友',go:'wx',g:'reg'},
+  {lv:'must',ok:fr>0,t:'添加 AI 好友',okd:fr+' 位好友',nod:'通讯录是空的，添加一位就能开始聊天',go:'wx',g:'friend'},
+  {lv:'tip',ok:!!(D.cfg.nick||D.cfg.about),t:'介绍一下你自己',okd:'已填写',nod:'填上称呼和自我介绍，角色会更懂你',go:'set:dlg',g:'persona'},
+  {lv:'tip',ok:memN()>0,t:'添加记忆',okd:memN()+' 条',nod:'还没有记忆，角色不会记得你的偏好',go:'set:mem',g:'persona'},
+  {lv:'opt',ok:wb>0,t:'世界书',okd:wb+' 本',nod:'可选：用世界书补充较长的世界观和设定',go:'wb',g:'lore'},
+  {lv:'tip',ok:!!bk.url,t:'云端备份',okd:bk.last?'上次推送 '+fD(bk.last):'已配置，尚未推送',nod:'数据只在本机浏览器里，换机或清缓存会丢',go:'bk',g:'bak'}]}
+
+/* ---------- 模型提示词 ---------- */
+const KB=()=>GUIDES.map(g=>'【'+g.t+'｜教程id:'+g.id+'】'+(g.intro||g.d)+'\n'+g.steps.map((s,i)=>(i+1)+'. '+s.t+'：'+s.d).join('\n')+(g.tip?'\n提示：'+g.tip:'')).join('\n\n');
+function aiSys(c){
+  let p=(D.cfg.sys?D.cfg.sys+'\n':'');
+  if(!D.ai.teach){
+    p+='你是 POCKET 内置的 AI 助手，回答简洁清晰，可使用 Markdown。';
+  }else{
+    p+='你是 POCKET 小手机内置的「小助手」，有两个职责：\n'
+     +'1. 教用户使用这台手机：用户问“怎么做某件事”时，按步骤手把手教。\n'
+     +'2. 回答用户的任何其他问题，像一位靠谱的朋友。\n'
+     +'教学规则：\n'
+     +'- 用“1. 2. 3.”编号，每步一句话，使用界面上真实的名称（页面、按钮、标签）；不要编造不存在的功能，不确定就直说，并建议用户去相关设置里看看。\n'
+     +'- 一次最多讲 5 步；步骤更多时先讲前几步，再问用户做完没有、卡在哪。\n'
+     +'- 需要用户去某个页面时，在那一步的末尾另起一行写跳转标记，界面会把它渲染成按钮：{{go:应用id}} 或 {{go:set:设置子页id}}，例如 {{go:wx}}、{{go:set:api}}。已有现成教程时，可用 {{guide:教程id}} 引导用户打开。标记只能使用下面列出的 id，一条回答最多放 3 个标记。\n'
+     +'- 回答保持简洁，可使用 Markdown。\n'
+     +'- 回答的最后可附 2~3 个用户可能想追问的问题，每个单独成行，格式 {{q:追问内容}}，追问内容不超过 16 个字。\n'
+     +'- 下面有「用户当前状态」，据此对症教学：已经做完的步骤不用再讲，没做的优先提醒。\n'
+     +'- 与手机功能无关的问题，直接正常回答，不必硬扯教学。\n\n'
+     +'可用应用 id：'+APPS.map(a=>a[0]+'='+a[1]).join('，')+'\n'
+     +'可用设置子页 id：'+Object.keys(ST).map(k=>k+'='+ST[k]).join('，')+'\n'
+     +'现有教程：'+GUIDES.map(g=>g.id+'='+g.t).join('，')+'\n\n'
+     +'【手机功能知识库】\n'+KB()+'\n\n【用户当前状态】'+aiState()+'\n';
+  }
+  if(D.cfg.nick)p+='\n称呼用户为「'+D.cfg.nick+'」。';
+  if(D.cfg.memOn&&D.cfg.memories.length)p+='\n已知用户信息：'+D.cfg.memories.join('；')+'。';
+  if(c&&c.ctx){const G=GG(c.ctx.g),s=G&&G.steps[c.ctx.s];if(G)p+='\n用户正在学习教程「'+G.t+'」'+(s?'，当前在第 '+(c.ctx.s+1)+' 步「'+s.t+'」：'+s.d:'')+'。请围绕这一步给出具体帮助，必要时先问用户看到了什么。';}
+  return p;
+}
+
+/* ---------- 回答里的跳转标记 → 按钮 ---------- */
+const goLabel=t=>{const [id,sub]=String(t).split(':');if(!META[id]||!document.getElementById('a-'+id))return null;const a=APPS.find(x=>x[0]==id);let n=a?a[1]:META[id].t;if(sub&&id=='set'&&ST[sub])n+=' · '+ST[sub];return n};
+let FQ=[];
+const unesc=s=>s.replace(/&quot;/g,'"').replace(/&gt;/g,'>').replace(/&lt;/g,'<').replace(/&amp;/g,'&');
+const mdx=(t,last)=>md(String(t||'').replace(/\{\{[^}]*$/,''))
+  .replace(/\{\{q:([^}]{1,60})\}\}/g,(m,x)=>{if(!last)return '';FQ.push(unesc(x.trim()));return '<button class="ag-tk q" data-act="aifq:'+(FQ.length-1)+'">'+x.trim()+'</button>'})
+  .replace(/\{\{go:([\w:]+)\}\}/g,(m,x)=>{const l=goLabel(x);return l?'<button class="ag-tk" data-act="aigo:'+x+'">带我去 · '+esc(l)+'</button>':''})
+  .replace(/\{\{guide:(\w+)\}\}/g,(m,x)=>{const g=GG(x);return g?'<button class="ag-tk" data-act="aig:'+x+'">教程 · '+esc(g.t)+'</button>':''});
+
+/* ---------- 跳转到其他 App（并保留“返回教程”） ---------- */
+function aiGo(t){const [id,sub]=String(t).split(':');if(!META[id]||!document.getElementById('a-'+id))return toast('找不到这个页面');
+  AIL.ret=1;show(id);if(id=='set'&&sub&&ST[sub])ACT.sn(sub);aiPill()}
+const pill=document.createElement('button');pill.id='ai-ret';pill.dataset.act='aiback';pill.innerHTML='‹ 返回教程<span data-act="aibx">✕</span>';ph.appendChild(pill);
+function aiPill(){const on=AIL.ret&&!$('#a-ai').classList.contains('on')&&!$('#a-home').classList.contains('on');pill.classList.toggle('on',!!on)}
+{const _s=show;show=function(id){if(id=='ai')AIL.ret=0;const r=_s.apply(this,arguments);aiPill();return r}}
+{const _h=ACT.home;ACT.home=function(){const r=_h.apply(this,arguments);aiPill();return r}}
+
+/* ---------- 提问：新开一段对话并自动发送 ---------- */
+function aiAsk(text,ctx){if(aic)return toast('助手正在回答中…');
+  const c={id:'c'+Date.now(),title:text.slice(0,16),msgs:[],t:Date.now(),ctx:ctx||null};
+  D.ai.convs.unshift(c);D.ai.cur=c.id;aiv='chat';renderAi();
+  const i=$('#aii');if(i){i.value=text;aiSend()}}
+const stepAsk=(g,i)=>{const G=GG(g),s=G.steps[i];return s.ask?('（我正在学「'+G.t+'」的第 '+(i+1)+' 步「'+s.t+'」）'+s.ask):('我正在学「'+G.t+'」，做到第 '+(i+1)+' 步「'+s.t+'」时卡住了，能更具体地教我一遍吗？')};
+const QK2=[
+  {t:'教我连接模型',g:'api'},
+  {t:'怎么添加 AI 好友？',q:'怎么添加一个 AI 好友？请一步一步教我。'},
+  {t:'这台手机能做什么？',q:'这台手机有哪些功能？分别适合什么场景？'},
+  {t:'帮我写一段角色设定',q:'我想添加一个 AI 好友，请帮我写一段角色设定（人设、背景、说话风格），先问我想要什么类型。'},
+  {t:'角色回复太长怎么办？',q:'好友回复太长了，怎么调成更像微信聊天的短句？'}
+];
+/* 未连接模型时的本地回复 */
+function aiOffline(u){const t=((u&&u.t)||'').toLowerCase();
+  const m=GUIDES.map(g=>({g,s:gscore(g,t)})).filter(x=>x.s>0&&x.g.id!='api').sort((a,b)=>b.s-a.s).slice(0,2);
+  return '我现在还没连上模型，没法自由回答。不过连接只要几步：\n1. 打开 设置 → 模型与 API\n2. 填好 API 地址和密钥，拉取并选择模型\n3. 点「链接测试」\n{{go:set:api}}{{guide:api}}'
+    +(m.length?'\n\n你问的内容，下面这些教程也许能直接帮到你（不需要模型）：\n'+m.map(x=>'{{guide:'+x.g.id+'}}').join(''):'')}
+
+/* ---------- 视图 ---------- */
+const aiTabs=a=>'<div class="tabs">'+[['learn','学习'],['tools','工具'],['chat','对话']].map(([v,t])=>'<button class="'+(a==v?'a':'')+'" data-act="aitab:'+v+'">'+t+'</button>').join('')+'</div>';
+function gRow(g){const n=g.steps.length,d=gdone(g),i=GUIDES.indexOf(g);
+  return '<button class="ag-row'+(d>=n?' dn':'')+'" data-act="aig:'+g.id+'"><i class="ag-n">'+String(i+1).padStart(2,'0')+'</i><span class="ag-t"><b>'+esc(g.t)+'</b><small>'+esc(g.d)+'</small></span><em class="ag-p">'+(d>=n?'已学完':d?d+' / '+n:n+' 步')+'</em>'+ic('next')+'</button>'}
+function gList(q){q=(q||'').trim().toLowerCase();
+  if(q){const L=GUIDES.map(g=>({g,s:gscore(g,q)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s);
+    return L.length?L.map(x=>gRow(x.g)).join(''):'<p class="empty" style="font-size:15px">没有找到相关教程。点上面的「问助手」，让模型来教你。</p>'}
+  return CATS.map(c=>{const r=GUIDES.filter(g=>g.cat==c);return r.length?'<div class="mono sec">'+c+'</div>'+r.map(gRow).join(''):''}).join('')}
+function learnHTML(){const n=GUIDES.length,dn=GUIDES.filter(g=>gdone(g)>=g.steps.length).length,cont=GUIDES.find(g=>gdone(g)>0&&gdone(g)<g.steps.length),rd=aiReady(),un=GUIDES.filter(g=>gdone(g)<g.steps.length),daily=un.length?un[Math.floor(Date.now()/864e5)%un.length]:null;
+  return '<div class="scroll"><div class="mono">06 / Muse</div><hr class="k"><div class="hd"><h2 class="tt">助手</h2></div>'+aiTabs('learn')
+   +'<div class="card" style="margin-top:18px"><span class="mono">'+(rd?'模型已连接':'模型未连接')+'</span><b style="font-size:22px">'+(rd?esc(D.main.model):'先连接模型，才能向助手提问')+'</b>'
+   +(rd?'<span class="mono" style="text-transform:none;letter-spacing:.04em">教程随时可看；有问题可以直接问助手。</span>':'<div class="row" style="margin-top:12px"><button class="bt k" data-act="aig:api">教我连接 →</button></div>')+'</div>'
+   +fld('想学点什么？或者遇到什么问题？','<input id="ail-q" placeholder="例如：怎么添加好友 / 回复太长怎么办" autocomplete="off">')
+   +'<div class="row" style="margin-top:12px"><button class="bt k" data-act="ailask">问助手</button></div>'
+   +'<p class="mono" style="text-transform:none;letter-spacing:.04em;line-height:1.8;margin-top:10px">输入时会自动筛选下面的教程；点「问助手」则由模型来回答。</p>'
+   +(daily?'<div class="mono sec">今日一课</div>'+gRow(daily):'')
+   +(cont&&(!daily||cont.id!=daily.id)?'<div class="mono sec">继续学习</div>'+gRow(cont):'')
+   +'<div class="mono sec" style="margin-top:26px">全部教程 · 已学完 '+dn+' / '+n+'</div><div id="ail-list">'+gList('')+'</div></div>'}
+function guideHTML(){const g=GG(AIL.g);if(!g){aiv='learn';return learnHTML()}
+  const D0=D.ai.done[g.id]||[],n=g.steps.length,pc=Math.round(D0.length/n*100);
+  const steps=g.steps.map((s,i)=>{const ok=D0.includes(i);
+    return '<div class="ag-step'+(ok?' ok':'')+'"><div class="ag-sh"><span class="mono">STEP '+String(i+1).padStart(2,'0')+'</span><button class="ag-ck" data-act="aid:'+g.id+':'+i+'" aria-label="标记完成">'+(ok?'✓':'')+'</button></div><b>'+esc(s.t)+'</b><p>'+esc(s.d)+'</p>'
+     +((s.go||s.ask)?'<div class="row">'+(s.go?'<button class="bt" data-act="aigo:'+s.go+'">带我去 →</button>':'')+(s.ask?'<button class="bt" data-act="aigq:'+g.id+':'+i+'">'+ic('spark')+' 让助手帮我</button>':'')+'</div>':'')+'</div>'}).join('');
+  return '<div class="chh"><button data-act="aitab:learn">'+ic('back')+'</button><b class="pt">教程</b><span style="width:24px"></span></div>'
+   +'<div class="scroll"><div class="mono">'+esc(g.cat)+' · '+n+' 步 · 约 '+g.min+' 分钟</div><h2 class="ag-h">'+esc(g.t)+'</h2><p class="ag-i">'+esc(g.intro||g.d)+'</p>'
+   +'<div class="ag-pb"><i style="width:'+pc+'%"></i></div><div class="mono" style="margin-bottom:8px">已完成 '+D0.length+' / '+n+'</div>'
+   +steps+(g.tip?'<div class="ag-tip">'+esc(g.tip)+'</div>':'')
+   +'<div class="row" style="margin-top:30px"><button class="bt k" data-act="aigs">'+ic('spark')+' 卡住了？问助手</button><button class="bt" data-act="aiquiz">考考我</button>'+(g.custom?'<button class="bt" data-act="aidel">删除</button>':'')+'</div></div>'}
+function chatHTML(){const c=aiC(),on=D.ai.teach;
+  return '<div class="chh"><div style="flex:1;min-width:0"><h2 class="tt">助手</h2><button class="mono" data-act="amod" style="display:block;text-align:left">'+esc(c?c.title:'新对话')+' · '+esc(D.main.model||'未连接')+'</button></div><button data-act="aih">'+ic('copy')+'</button><button data-act="ain">'+ic('plus')+'</button></div>'
+   +'<div class="ag-tabs">'+aiTabs('chat')+'</div><div class="msgs ai" id="aim"></div>'
+   +'<div class="ag-mode"><button class="'+(on?'on':'')+'" data-act="aiteach">教学模式 · '+(on?'开':'关')+'</button><span class="mono" style="letter-spacing:.06em;text-transform:none">'+(on?'按真实界面一步步教你':'普通问答')+'</span></div>'
+   +'<div class="aiin"><button class="gh2" data-act="aimic">'+ic('mic')+'</button><textarea id="aii" rows="1" placeholder="问点什么，或说「教我……」"></textarea><button id="aisn" data-act="ais">'+ic('up')+'</button></div>'}
+const head=t=>'<div class="chh"><button data-act="aitab:tools">'+ic('back')+'</button><b class="pt">'+t+'</b><span style="width:24px"></span></div>';
+const jsonOf=t=>{try{t=String(t).replace(/```(?:json)?/gi,'');const a=t.indexOf('{'),b=t.lastIndexOf('}');return JSON.parse(t.slice(a,b+1))}catch(e){return null}};
+const GEN={idea:'',res:null,busy:0,made:null},MK={topic:'',res:null,busy:0};
+const GEN_SYS='你是角色设定设计师。根据用户的一句话想法，设计一个适合在聊天里扮演的 AI 角色。只输出一个 JSON 对象，不要任何其他文字或 Markdown，字段如下：{"name":"昵称，2~6 个字","wid":"微信号，字母开头 4~20 位字母数字下划线，可留空字符串","role":"角色设定，200~350 字，包含身份背景、性格、说话风格、与用户的关系，用「你是……」的写法","hello":"开场白，一句自然的话"}';
+const mkSys=()=>'你是 POCKET 小手机的教程作者。根据用户想学的主题，写一门简短的使用教程。只能依据下面的手机功能知识写，不确定的功能不要编造；步骤 3~6 步，每步说明具体可执行。只输出一个 JSON 对象，不要任何其他文字或 Markdown：{"t":"教程名，12 字以内","d":"一句话简介","intro":"导语，一两句话","min":3,"tip":"可选提示，没有则为空字符串","steps":[{"t":"步骤标题","d":"具体说明","go":"可选，跳转目标，没有则为空字符串"}]}。\ngo 只能是以下之一：'+APPS.map(a=>a[0]+'('+a[1]+')').join('、')+'，或 set:子页id，子页 id 有：'+Object.keys(ST).join('、')+'。\n\n【手机功能知识库】\n'+KB();
+function toolsHTML(){const rows=[['check','一键体检','检查手机配置到哪一步了，缺什么直接带你去补'],['gen','角色生成器','一句话描述，模型帮你写好角色设定并创建好友'],['mk','出一课','想学的东西教程里没有？让模型现写一门']];
+  return '<div class="scroll"><div class="mono">06 / Muse</div><hr class="k"><div class="hd"><h2 class="tt">助手</h2></div>'+aiTabs('tools')+rows.map((r,i)=>'<button class="ag-row" data-act="aitab:'+r[0]+'"><i class="ag-n">'+String(i+1).padStart(2,'0')+'</i><span class="ag-t"><b>'+r[1]+'</b><small>'+r[2]+'</small></span>'+ic('next')+'</button>').join('')+'</div>'}
+function checkHTML(){const L=chkItems(),n=L.filter(x=>x.ok).length;
+  return head('一键体检')+'<div class="scroll"><div class="mono">工具 · 体检</div><h2 class="ag-h">'+n+' / '+L.length+'</h2><p class="ag-i">'+(n==L.length?'都配置好了，可以尽情使用。':'下面是还没做完的事，点「带我去」就能处理。')+'</p><div class="ag-pb"><i style="width:'+Math.round(n/L.length*100)+'%"></i></div>'
+   +L.map(x=>'<div class="ag-step'+(x.ok?' ok':'')+'"><div class="ag-sh"><span class="mono">'+({must:'必做',tip:'建议',opt:'可选'})[x.lv]+'</span><span class="ag-ck">'+(x.ok?'✓':'')+'</span></div><b>'+esc(x.t)+'</b><p>'+esc(x.ok?x.okd:x.nod)+'</p>'+(x.ok?'':'<div class="row"><button class="bt" data-act="aigo:'+x.go+'">带我去 →</button><button class="bt" data-act="aig:'+x.g+'">看教程</button></div>')+'</div>').join('')
+   +'<button class="bt k w" data-act="aichk">'+ic('spark')+' 让助手给我建议</button></div>'}
+const noModel=()=>aiReady()?'':'<p class="ag-i" style="color:var(--mut)">需要先连接模型。<button class="ag-tk" data-act="aig:api">教我连接</button></p>';
+function genHTML(){const r=GEN.res;
+  return head('角色生成器')+'<div class="scroll"><div class="mono">工具 · Character</div><h2 class="ag-h">一句话<br>造个朋友</h2>'
+   +fld('你想要什么样的角色？','<textarea id="ag-gi" rows="3" placeholder="例如：嘴硬心软的大学学姐，爱熬夜，说话爱用省略号">'+esc(GEN.idea)+'</textarea>')
+   +'<div class="row"><button class="bt k" data-act="aigen"'+(GEN.busy?' disabled':'')+'>'+(GEN.busy?'生成中…':r?'重新生成':'生成')+'</button></div>'+noModel()
+   +(r?'<div class="mono sec" style="margin-top:26px">生成结果 · 可直接修改</div>'+fld('昵称','<input id="ag-gn" value="'+esc(r.name)+'">')+fld('微信号（可选）','<input id="ag-gw" autocapitalize="off" value="'+esc(r.wid)+'">')+fld('角色设定','<textarea id="ag-gr" rows="8">'+esc(r.role)+'</textarea>')+fld('开场白（可选）','<input id="ag-gh" value="'+esc(r.hello)+'">')+'<button class="bt k w" data-act="aigmk">创建为好友</button>':'')
+   +(GEN.made?'<div class="ag-tip" style="margin-top:18px">已创建「'+esc(GEN.made)+'」。<button class="ag-tk" data-act="aigenwx">去微信聊天</button></div>':'')+'</div>'}
+function mkHTML(){const r=MK.res;
+  return head('出一课')+'<div class="scroll"><div class="mono">工具 · Lesson</div><h2 class="ag-h">想学什么，<br>我来写</h2>'
+   +fld('你想学的主题','<textarea id="ag-mi" rows="3" placeholder="例如：怎么让角色记住我的生日 / 怎么把备份传到坚果云">'+esc(MK.topic)+'</textarea>')
+   +'<div class="row"><button class="bt k" data-act="aimk"'+(MK.busy?' disabled':'')+'>'+(MK.busy?'生成中…':r?'重新生成':'生成教程')+'</button></div>'+noModel()
+   +(r?'<div class="mono sec" style="margin-top:26px">预览 · '+r.steps.length+' 步 · 约 '+r.min+' 分钟</div><h2 class="ag-h" style="font-size:32px">'+esc(r.t)+'</h2><p class="ag-i">'+esc(r.intro||r.d)+'</p>'
+     +r.steps.map((s,i)=>'<div class="ag-step"><span class="mono">STEP '+String(i+1).padStart(2,'0')+'</span><b>'+esc(s.t)+'</b><p>'+esc(s.d)+'</p>'+(s.go?'<span class="mono">带我去 · '+esc(goLabel(s.go))+'</span>':'')+'</div>').join('')
+     +(r.tip?'<div class="ag-tip">'+esc(r.tip)+'</div>':'')+'<button class="bt k w" data-act="aimksave">保存到「我的」教程</button>':'')+'</div>'}
+const aiKeep=fn=>{const A=$('#a-ai'),s=A.querySelector('.scroll'),y=s?s.scrollTop:0;fn();const s2=A.querySelector('.scroll');if(s2)s2.scrollTop=y};
+
+renderAi=function(){const A=$('#a-ai');
+  if(aiv=='hist'){A.innerHTML='<div class="chh"><button data-act="aib">'+ic('back')+'</button><b class="pt">历史对话</b><span style="width:24px"></span></div><div class="scroll">'+(D.ai.convs.length?D.ai.convs.map(v=>'<div class="lb"><div data-act="aio:'+v.id+'" style="cursor:pointer"><b>'+esc(v.title)+'</b><small>'+v.msgs.length+' 条 · '+fD(v.t)+'</small></div><button data-act="aix:'+v.id+'">'+ic('trash')+'</button></div>').join(''):'<p class="empty">暂无对话</p>')+'</div>';return}
+  if(aiv=='learn'){A.innerHTML=learnHTML();return}
+  if(aiv=='guide'){A.innerHTML=guideHTML();return}
+  if(aiv=='tools'){A.innerHTML=toolsHTML();return}
+  if(aiv=='check'){A.innerHTML=checkHTML();return}
+  if(aiv=='gen'){A.innerHTML=genHTML();return}
+  if(aiv=='mk'){A.innerHTML=mkHTML();return}
+  A.innerHTML=chatHTML();aiDraw()};
+
+aiDraw=function(live){const c=aiC(),e=$('#aim');if(!e)return;FQ=[];
+  e.innerHTML=c&&c.msgs.length?c.msgs.map((m,i)=>'<div class="am '+m.r+'">'+(m.r=='u'?esc(m.t):(mdx(m.t,i==c.msgs.length-1)||'…'))+'</div>'+(m.r=='a'&&i==c.msgs.length-1&&!aic?'<div class="ma a"><button data-act="aicp">'+ic('copy')+'复制</button><button data-act="aire">'+ic('refresh')+'重答</button><button data-act="aisp">'+ic('spark')+'朗读</button><button data-act="ains">'+ic('edit')+'存入备忘录</button></div>':'')).join('')
+    :'<div class="aih"><p>想学点什么，<br>或遇到什么问题？</p><div class="qk">'+QK2.map((q,i)=>'<button data-act="aiqs:'+i+'">'+q.t+'</button>').join('')+'</div></div>';
+  const nb=e.scrollHeight-e.scrollTop-e.clientHeight<120;if(nb||!live)e.scrollTop=1e9;const b=$('#aisn');if(b){b.dataset.act=aic?'aistop':'ais';b.innerHTML=ic(aic?'stop':'up')}};
+
+aiSend=async function(re){const i=$('#aii');let c=aiC();
+  if(!re){const t=i.value.trim();if(!t||aic)return;if(!c){c={id:'c'+Date.now(),title:t.slice(0,16),msgs:[],t:Date.now()};D.ai.convs.unshift(c);D.ai.cur=c.id}c.msgs.push({r:'u',t});i.value='';i.style.height='auto'}
+  c.t=Date.now();
+  if(!aiReady()){c.msgs.push({r:'a',t:aiOffline(c.msgs[c.msgs.length-1])});save();aiDraw();return}
+  const m={r:'a',t:''};c.msgs.push(m);aic=new AbortController();aiDraw();
+  const hist=c.msgs.slice(0,-1).slice(-D.cfg.mem).map(x=>({role:x.r=='u'?'user':'assistant',content:x.t}));
+  try{const r=await askS(D.main,aiSys(c),hist,aic.signal,o=>{m.t=o;aiDraw(1)});m.t=r;D.stat.calls++}catch(e){if(e.name!='AbortError'){D.stat.fails++;toast('请求失败：'+errMsg(e))}}
+  if(!m.t){const k=c.msgs.indexOf(m);if(k>-1)c.msgs.splice(k,1)}
+  aic=null;save();aiDraw()};
+
+Object.assign(ACT,{
+  aitab:x=>{aiv=x;renderAi()},
+  aig:x=>{if(!GG(x))return;AIL.g=x;aiv='guide';renderAi()},
+  aid:(g,i)=>{const G=GG(g);if(!G)return;const a=(D.ai.done[g]=D.ai.done[g]||[]),k=+i,p=a.indexOf(k);if(p<0)a.push(k);else a.splice(p,1);save();aiKeep(renderAi);if(p<0&&a.length==G.steps.length)toast('这一课学完了')},
+  aigo:(x,y)=>aiGo(y?x+':'+y:x),
+  aigq:(g,i)=>{if(!GG(g))return;aiAsk(stepAsk(g,+i),{g,s:+i})},
+  aigs:()=>{const g=GG(AIL.g);if(!g)return;const d=D.ai.done[g.id]||[];let s=g.steps.findIndex((_,i)=>!d.includes(i));if(s<0)s=0;aiAsk('我在学「'+g.t+'」，但不知道哪一步出了问题。请先问我做到哪一步、看到了什么，再帮我解决。',{g:g.id,s})},
+  ailask:()=>{const q=($('#ail-q')||{}).value;if(!q||!q.trim())return toast('先写下你想问的');aiAsk(q.trim())},
+  aiqs:x=>{const q=QK2[+x];if(!q)return;if(q.g)ACT.aig(q.g);else aiAsk(q.q)},
+  aiteach:()=>{D.ai.teach=D.ai.teach?0:1;save();aiKeep(renderAi);toast(D.ai.teach?'教学模式已开启':'教学模式已关闭')},
+  aiback:()=>{AIL.ret=0;show('ai')},
+  aifq:x=>{const t=FQ[+x],i=$('#aii');if(!t||!i||aic)return;i.value=t;aiSend()},
+  aichk:()=>aiAsk('我刚做了手机体检，当前状态：'+aiState()+'。请告诉我接下来最值得先做的 2~3 件事，并给出跳转按钮。'),
+  aiquiz:()=>{const g=GG(AIL.g);if(!g)return;aiAsk('请就教程「'+g.t+'」出 3 道选择题考考我。一次只出一题，等我回答后再给反馈，再出下一题。',{g:g.id,s:0})},
+  aidel:()=>{const g=GG(AIL.g);if(!g||!g.custom)return;cfm('删除教程「'+g.t+'」？',()=>{D.ai.custom=D.ai.custom.filter(x=>x.id!=g.id);GUIDES.splice(GUIDES.indexOf(g),1);delete D.ai.done[g.id];save();aiv='learn';renderAi()})},
+  aigen:async()=>{const i=$('#ag-gi'),t=(i?i.value:GEN.idea).trim();GEN.idea=t;if(!t)return toast('先写一句你想要的角色');if(!aiReady())return toast('请先连接模型');if(GEN.busy)return;
+    GEN.busy=1;GEN.made=null;aiKeep(renderAi);
+    try{const j=jsonOf(await ask(D.main,GEN_SYS,[{role:'user',content:t}]));if(!j||!j.name||!j.role)throw Error('模型没有返回有效的角色，请重试');
+      GEN.res={name:String(j.name).slice(0,20),wid:/^[A-Za-z][A-Za-z0-9_-]{3,19}$/.test(j.wid||'')?j.wid:'',role:String(j.role),hello:String(j.hello||'')};D.stat.calls++}
+    catch(e){D.stat.fails++;toast('生成失败：'+errMsg(e))}
+    GEN.busy=0;if(aiv=='gen')aiKeep(renderAi)},
+  aigmk:()=>{if(!GEN.res)return;const name=($('#ag-gn').value||'').trim(),role=($('#ag-gr').value||'').trim(),h=($('#ag-gh').value||'').trim();
+    if(!name)return toast('请填写昵称');if(!role)return toast('请填写角色设定');
+    const f={id:'f'+Date.now(),role,name,wid:($('#ag-gw').value||'').trim(),hello:h};D.friends.push(f);D.chats[f.id]=h?[{r:'a',t:h,ts:Date.now()}]:[];save();
+    GEN.made=name;GEN.res=null;aiKeep(renderAi);toast('已添加好友：'+name)},
+  aigenwx:()=>{aiGo('wx');setTimeout(()=>{if(D.me)ACT.wt('1')},50)},
+  aimk:async()=>{const i=$('#ag-mi'),t=(i?i.value:MK.topic).trim();MK.topic=t;if(!t)return toast('先写下你想学的主题');if(!aiReady())return toast('请先连接模型');if(MK.busy)return;
+    MK.busy=1;aiKeep(renderAi);
+    try{const j=jsonOf(await ask(D.main,mkSys(),[{role:'user',content:t}]));
+      if(!j||!j.t||!Array.isArray(j.steps)||!j.steps.length)throw Error('模型没有返回有效的教程，请重试');
+      const st=j.steps.filter(s=>s&&s.t&&s.d).slice(0,8).map(s=>{const o={t:String(s.t).slice(0,40),d:String(s.d).slice(0,300)};if(s.go&&goLabel(String(s.go)))o.go=String(s.go);return o});
+      if(!st.length)throw Error('教程内容为空，请重试');
+      MK.res={t:String(j.t).slice(0,20),d:String(j.d||j.intro||'').slice(0,60),intro:String(j.intro||'').slice(0,200),min:Math.min(15,Math.max(1,+j.min||3)),tip:String(j.tip||'').slice(0,160),steps:st};D.stat.calls++}
+    catch(e){D.stat.fails++;toast('生成失败：'+errMsg(e))}
+    MK.busy=0;if(aiv=='mk')aiKeep(renderAi)},
+  aimksave:()=>{const r=MK.res;if(!r)return;const g={id:'u'+Date.now(),cat:'我的',custom:1,t:r.t,d:r.d,min:r.min,intro:r.intro,tip:r.tip,k:(r.t+' '+r.d+' '+MK.topic).toLowerCase(),steps:r.steps};
+    D.ai.custom.push(g);GUIDES.push(g);save();MK.res=null;MK.topic='';AIL.g=g.id;aiv='guide';renderAi();toast('已保存到「我的」教程')},
+  aibx:(x,y,t)=>{AIL.ret=0;aiPill()}
+});
+
+/* 输入时筛选教程；回车 = 问助手 */
+ph.addEventListener('input',e=>{const t=e.target,id=t.id;
+  if(id=='ail-q'){const l=$('#ail-list');if(l)l.innerHTML=gList(t.value)}
+  else if(id=='ag-gi')GEN.idea=t.value;else if(id=='ag-mi')MK.topic=t.value;
+  else if(GEN.res&&({'ag-gn':'name','ag-gw':'wid','ag-gr':'role','ag-gh':'hello'})[id])GEN.res[({'ag-gn':'name','ag-gw':'wid','ag-gr':'role','ag-gh':'hello'})[id]]=t.value});
+ph.addEventListener('keydown',e=>{if(e.target.id=='ail-q'&&e.key=='Enter'){e.preventDefault();ACT.ailask()}});
+
+/* 样式 */
+{const s=document.createElement('style');s.textContent=`
+.ag-row{display:flex;align-items:center;gap:14px;width:100%;padding:16px 0;border-bottom:1px solid var(--ln);text-align:left}
+.ag-row .ag-n{font:300 30px/1 var(--serif);font-style:normal;color:var(--mut);width:42px;flex:none}
+.ag-row .ag-t{flex:1;min-width:0}.ag-row .ag-t b{display:block;font:400 17px/1.35 var(--serif)}
+.ag-row .ag-t small{display:block;margin-top:3px;color:var(--mut);font:300 13px/1.5 var(--serif)}
+.ag-row .ag-p{font:400 9px var(--mono);letter-spacing:.18em;color:var(--mut);font-style:normal;white-space:nowrap}
+.ag-row.dn .ag-t b{color:var(--mut)}
+.ag-pb{height:1px;background:var(--ln);margin:18px 0 8px;position:relative}.ag-pb i{position:absolute;left:0;top:-.5px;height:2px;background:var(--fg);transition:width .8s var(--ez)}
+.ag-h{font:300 42px/1.1 var(--serif);margin:8px 0 6px;letter-spacing:-.01em}
+.ag-i{font:300 16px/1.75 var(--serif);margin:8px 0}
+.ag-step{border-top:1px solid var(--ln);padding:18px 0}
+.ag-step .ag-sh{display:flex;justify-content:space-between;align-items:center}
+.ag-step b{display:block;font:400 19px/1.4 var(--serif);margin:8px 0 6px}
+.ag-step p{font:300 15.5px/1.8 var(--serif)}
+.ag-step .row{margin-top:14px}.ag-step .row .bt{display:inline-flex;align-items:center;gap:6px}
+.ag-ck{width:26px;height:26px;border:1px solid var(--ln);border-radius:50%;display:grid;place-items:center;font-size:13px;transition:.5s var(--ez)}
+.ag-step.ok .ag-ck{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.ag-step.ok b,.ag-step.ok p{opacity:.45}
+.ag-tip{margin-top:6px;padding:14px 16px;border:1px dashed var(--ln);border-radius:16px;font:300 14px/1.7 var(--serif);color:var(--mut)}
+#a-ai .bt.w{display:flex;align-items:center;justify-content:center;gap:8px}
+.ag-tk{display:inline-flex;align-items:center;margin:8px 8px 2px 0;padding:7px 13px;border:1px solid var(--fg);border-radius:999px;font:400 12px var(--sys);text-align:left}
+.ag-tk:active{background:var(--fg);color:var(--bg)}
+.ag-tk.q{border-color:var(--ln);color:var(--mut)}
+.ag-sh .ag-ck{cursor:default}
+.ag-tabs{padding:0 var(--px) 6px}.ag-tabs .tabs{margin-top:10px}
+.ag-mode{display:flex;align-items:center;gap:10px;padding:8px var(--px) 0}
+.ag-mode button{border:1px solid var(--ln);border-radius:999px;padding:6px 12px;font:400 11px var(--sys);transition:.4s var(--ez)}
+.ag-mode button.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+#ai-ret{position:absolute;right:14px;bottom:92px;z-index:60;display:none;align-items:center;gap:8px;padding:10px 12px 10px 16px;border-radius:999px;background:var(--fg);color:var(--bg);font:400 12px var(--sys);box-shadow:0 10px 30px -8px rgba(0,0,0,.4)}
+#ai-ret.on{display:flex}#ai-ret span{opacity:.6;padding:0 4px 0 6px}
+`;document.head.appendChild(s)}
+
+aiv='learn';
+
+/* 一次性提示 */
+if(!D.aiIntro){D.aiIntro=1;save();setTimeout(()=>{try{notify({app:'sys',title:'小助手上线',text:'点「助手」学习怎么用这台手机，遇到问题也可以直接问它。',go:'ai:'})}catch(e){}},11000)}
+}
+
 })().catch(e=>console.error(e));
 </script>
 </body>
